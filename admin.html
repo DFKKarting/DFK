@@ -2075,15 +2075,24 @@ function buildWeekendNaam(circuit, datums) {
 }
 
 // Zoek een bestaand weekend binnen 3 dagen van de datum, of maak er automatisch één aan
+function maandagVan(datumStr) {
+  const d = new Date(datumStr + 'T12:00:00');
+  const dag = d.getDay(); // 0=zo, 1=ma, ..., 6=za
+  const vanafMaandag = dag === 0 ? 6 : dag - 1;
+  d.setDate(d.getDate() - vanafMaandag);
+  return d.toISOString().slice(0, 10);
+}
+
 async function autoWeekendKoppelen(datum, circuit) {
   const d = new Date(datum + 'T12:00:00');
-  const drempel = 3 * 24 * 60 * 60 * 1000; // 3 dagen
+  const drempel = 6 * 24 * 60 * 60 * 1000; // max 6 dagen (binnen 1 week)
+  const weekStart = maandagVan(datum);
 
-  // Zoek event dat al een weekend heeft, dicht bij deze datum ligt én hetzelfde circuit heeft
+  // Zoek event dat al een weekend heeft, in dezelfde kalenderweek (ma–zo) én hetzelfde circuit heeft
   const nabij = _allEvents.find(ev => {
     if (!ev.weekend_id || ev.id === editEventId) return false;
     const diff = Math.abs(new Date(ev.datum + 'T12:00:00') - d);
-    return diff <= drempel && ev.circuit === circuit;
+    return diff <= drempel && ev.circuit === circuit && maandagVan(ev.datum) === weekStart;
   });
 
   if (nabij) {
