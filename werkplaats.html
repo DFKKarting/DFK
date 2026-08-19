@@ -111,8 +111,9 @@
     .laad-controls{display:none;flex-direction:column;gap:8px;margin-bottom:1.2rem}
     .zoek-wrap{position:relative}
     .zoek-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;pointer-events:none}
-    .zoek-input{width:100%;background:#fff;border:1.5px solid #e5e7eb;color:#111827;padding:11px 12px 11px 38px;font-size:15px;border-radius:8px;outline:none;font-family:inherit}
+    .zoek-input{width:100%;background:#fff;border:1.5px solid #e5e7eb;color:#111827;-webkit-text-fill-color:#111827;padding:11px 12px 11px 38px;font-size:15px;border-radius:8px;outline:none;font-family:inherit;color-scheme:light}
     .zoek-input:focus{border-color:#dc2626}
+    .zoek-input::placeholder{color:#9ca3af;-webkit-text-fill-color:#9ca3af;opacity:1}
     .filter-btns{display:flex;gap:6px}
     .filter-btn{flex:1;padding:9px 6px;text-align:center;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;border-radius:8px;cursor:pointer;transition:all .15s;font-family:inherit}
     .filter-btn.on{border-color:#dc2626;color:#dc2626;background:#fef2f2}
