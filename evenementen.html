@@ -155,11 +155,11 @@
     .benz-btn.on{background:#fef2f2;color:#111827;border-color:#dc2626}
 
     /* ── Inschrijven paneel ── */
-    .inschrijf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:1rem}
-    .inschrijf-overlay.open{display:flex}
-    .inschrijf-panel{position:relative;width:500px;max-width:100%;max-height:90vh;background:#fff;border:1px solid #e5e7eb;border-radius:12px;z-index:600;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:scale(.95);opacity:0;transition:transform .2s ease,opacity .2s ease}
+    .inschrijf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500}
+    .inschrijf-overlay.open{display:block}
+    .inschrijf-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(.96);width:500px;max-width:calc(100vw - 2rem);max-height:90vh;background:#fff;border:1px solid #e5e7eb;border-radius:12px;z-index:600;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);opacity:0;visibility:hidden;transition:transform .2s ease,opacity .2s ease,visibility .2s}
     .inschrijf-panel .panel-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:2rem}
-    .inschrijf-panel.open{transform:scale(1);opacity:1}
+    .inschrijf-panel.open{transform:translate(-50%,-50%) scale(1);opacity:1;visibility:visible}
     .ev-confirm-box{background:#fef2f2;border:1px solid #fecaca;border-left:3px solid #dc2626;border-radius:8px;padding:14px;margin-bottom:16px}
     .ev-confirm-name{font-weight:800;font-size:18px;color:#111827;margin-bottom:6px}
     .ev-confirm-meta{font-size:13px;color:#6b7280}
