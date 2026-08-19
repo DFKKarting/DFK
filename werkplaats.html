@@ -9,229 +9,125 @@
   <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Werkplaats</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
-    html, body { background: #0a0a0a; min-height: 100vh; font-family: 'Barlow', sans-serif; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:#f3f4f6;min-height:100vh;font-family:'Inter',system-ui,sans-serif}
 
-    /* ── Navigatie ── */
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      height: 60px; background: #111; border-bottom: 3px solid #E02020;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.5rem;
-    }
-    .nav-left { display: flex; align-items: center; gap: 12px; padding-right: 1rem; border-right: 1px solid #222; }
-    .nav-badge {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      color: #aa88ff; background: #1a1a3a; border: 1px solid #aa88ff44;
-      border-radius: 3px; padding: 3px 8px;
-    }
-    .nav-tabs { display: flex; height: 100%; margin-left: 1rem; }
-    .tab-btn {
-      display: flex; align-items: center; padding: 0 20px; height: 100%;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-      color: #999; background: transparent; border: none;
-      border-bottom: 3px solid transparent; margin-bottom: -3px;
-      cursor: pointer; transition: color 0.15s;
-    }
-    .tab-btn:hover { color: #ccc; }
-    .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
+    .nav{position:sticky;top:0;z-index:100;height:54px;background:#111827;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+    .nav-left{display:flex;align-items:center;gap:12px;padding-right:1rem;border-right:1px solid #374151}
+    .nav-badge{font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#a78bfa;background:#1e1b4b;border:1px solid #7c3aed44;border-radius:6px;padding:3px 8px}
+    .nav-tabs{display:flex;height:100%;margin-left:1rem}
+    .tab-btn{display:flex;align-items:center;padding:0 18px;height:100%;font-weight:600;font-size:13px;color:#9ca3af;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:color .15s;font-family:inherit}
+    .tab-btn:hover{color:#d1d5db}
+    .tab-btn.on{color:#fff;border-bottom-color:#dc2626}
 
-    .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
-    .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
-    .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
+    .mobile-tab-bar{display:none;background:#111827;border-bottom:1px solid #374151;position:sticky;top:54px;z-index:99}
+    .mobile-tab{flex:1;padding:12px 8px;text-align:center;font-weight:600;font-size:13px;color:#9ca3af;border:none;border-bottom:2px solid transparent;background:transparent;cursor:pointer;margin-bottom:-1px;font-family:inherit}
+    .mobile-tab.on{color:#fff;border-bottom-color:#dc2626}
 
-    @media (max-width: 768px) {
-      .nav-tabs { display: none !important; }
-      .mobile-tab-bar { display: flex; }
+    @media(max-width:768px){
+      .nav-tabs{display:none!important}
+      .mobile-tab-bar{display:flex}
     }
 
-    /* ── Dropdown ── */
-    .nav-right { position: relative; }
-    .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
-    .nav-user-btn:hover { background: #1a1a1a; }
-    .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-    .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
-    .nav-chevron { font-size: 10px; color: #999; }
-    .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
-    .dropdown.open { display: block; }
-    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
-    .dropdown-item:last-child { border-bottom: none; }
-    .dropdown-item:hover { background: #1c1c1c; color: #fff; }
-    .dropdown-item.danger { color: #ff5555; }
-    .dropdown-item.danger:hover { background: #1c1c1c; }
-    .di-icon { font-size: 15px; width: 18px; text-align: center; }
+    .nav-right{position:relative}
+    .nav-user-btn{display:flex;align-items:center;gap:8px;background:#1f2937;border:1.5px solid #374151;border-radius:8px;padding:6px 12px;cursor:pointer;color:#d1d5db;font-size:13px;font-family:inherit}
+    .nav-user-btn:hover{border-color:#dc2626;color:#fff}
+    .nav-avatar{width:28px;height:28px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+    .nav-naam{font-size:13px;color:#d1d5db}
+    .nav-chevron{font-size:10px;color:#9ca3af}
+    .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:12px;min-width:200px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .dropdown.open{display:block}
+    .dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#d1d5db;font-size:14px;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
+    .dropdown-item:last-child{border-bottom:none}
+    .dropdown-item:hover{background:#374151;color:#fff}
+    .dropdown-item.danger{color:#f87171}
+    .di-icon{font-size:15px;width:18px;text-align:center}
 
-    /* ── Panelen ── */
-    .tab-panel { display: none; padding: 1.5rem 1rem; }
-    @media (min-width: 600px) { .tab-panel { padding: 1.5rem 1.5rem; } }
-    .tab-panel.on { display: block; }
+    .tab-panel{display:none;padding:1.5rem 1rem}
+    @media(min-width:600px){.tab-panel{padding:1.5rem}}
+    .tab-panel.on{display:block}
 
-    /* ── Sectie titels ── */
-    .sectie-titel {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
-      font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
-      color: #E02020; margin-bottom: 0.8rem;
-    }
-    .sectie-rij {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 0.8rem;
-    }
-    .sectie-rij .sectie-titel { margin-bottom: 0; }
-    .pdf-btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 14px; background: #1c1c1c; border: 1px solid #333;
-      color: #aaa; border-radius: 3px; cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-      transition: all 0.15s;
-    }
-    .pdf-btn:hover { border-color: #E02020; color: #fff; }
+    .sectie-titel{font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#dc2626;margin-bottom:.8rem}
+    .sectie-rij{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+    .sectie-rij .sectie-titel{margin-bottom:0}
+    .pdf-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;color:#374151;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;transition:all .15s;font-family:inherit}
+    .pdf-btn:hover{border-color:#dc2626;color:#dc2626}
 
-    /* ── Weekend selector ── */
-    .wk-selector { margin-bottom: 1.5rem; }
-    .wk-huidig { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #E02020; border-radius: 4px; padding: 12px 16px; cursor: pointer; user-select: none; }
-    .wk-huidig:hover { background: #1c1010; }
-    .wk-huidig-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; flex: 1; }
-    .wk-huidig-meta { font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif; margin-top: 2px; }
-    .wk-wissel-pijl { font-size: 13px; color: #aaa; transition: transform 0.2s; flex-shrink: 0; }
-    .wk-huidig.open .wk-wissel-pijl { transform: rotate(180deg); color: #E02020; }
-    .wk-lijst { display: none; flex-direction: column; gap: 6px; margin-top: 6px; }
-    .wk-lijst.open { display: flex; }
-    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-    .event-kaart {
-      background: #111; border: 1px solid #222; border-left: 3px solid #333; border-radius: 4px;
-      padding: 10px 14px; cursor: pointer; transition: border-color 0.15s;
-      user-select: none;
-    }
-    .event-kaart:hover { border-color: #444; border-left-color: #999; }
-    .event-kaart.geselecteerd { border-color: #333; border-left-color: #E02020; background: #1a0e0e; }
-    .event-kaart-naam {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 14px; letter-spacing: 1px; color: #ccc; margin-bottom: 3px;
-    }
-    .event-kaart.geselecteerd .event-kaart-naam { color: #fff; }
-    .event-kaart-meta { font-size: 11px; color: #999; font-family: 'Barlow', sans-serif; }
+    .wk-selector{margin-bottom:1.5rem}
+    .wk-huidig{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #dc2626;border-radius:8px;padding:12px 16px;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .wk-huidig:hover{background:#fef2f2}
+    .wk-huidig-naam{font-weight:700;font-size:15px;color:#111827;flex:1}
+    .wk-huidig-meta{font-size:12px;color:#6b7280;margin-top:2px}
+    .wk-wissel-pijl{font-size:13px;color:#9ca3af;transition:transform .2s;flex-shrink:0}
+    .wk-huidig.open .wk-wissel-pijl{transform:rotate(180deg);color:#dc2626}
+    .wk-lijst{display:none;flex-direction:column;gap:6px;margin-top:6px}
+    .wk-lijst.open{display:flex}
+    .event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+    .event-kaart{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #d1d5db;border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .event-kaart:hover{border-color:#d1d5db;border-left-color:#9ca3af}
+    .event-kaart.geselecteerd{border-color:#fecaca;border-left-color:#dc2626;background:#fef2f2}
+    .event-kaart-naam{font-weight:700;font-size:14px;color:#374151;margin-bottom:3px}
+    .event-kaart.geselecteerd .event-kaart-naam{color:#111827}
+    .event-kaart-meta{font-size:11px;color:#9ca3af}
 
-    /* ── Laadlijst ── */
-    .laad-teller {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-      color: #aaa; margin-bottom: 1rem;
-    }
-    .laad-teller span { color: #fff; font-size: 16px; }
+    .laad-teller{font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:1rem}
+    .laad-teller span{color:#111827;font-size:16px}
 
-    .groep-header {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      padding: 8px 14px; margin: 10px 0 2px;
-      color: #fff; background: #2a1010; border-left: 4px solid #E02020;
-      border-radius: 3px;
-    }
-    .groep-header.blauw { background: #0c1f30; border-left-color: #4caaf0; color: #fff; }
+    .groep-header{font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:8px 14px;margin:10px 0 2px;color:#111827;background:#fef2f2;border-left:4px solid #dc2626;border-radius:6px}
+    .groep-header.blauw{background:#eff6ff;border-left-color:#3b82f6;color:#1e40af}
 
-    .laad-rij {
-      display: flex; align-items: center;
-      background: #141414; border-bottom: 1px solid #1e1e1e;
-      border-left: 4px solid #E02020;
-      padding: 10px 12px; gap: 10px;
-      min-height: 54px;
-      transition: background 0.1s;
-    }
-    .laad-rij.huur { border-left-color: #4caaf0; }
-    .laad-rij:hover { background: #1c1c1c; }
+    .laad-rij{display:flex;align-items:center;background:#fff;border-bottom:1px solid #f3f4f6;border-left:4px solid #dc2626;padding:10px 12px;gap:10px;min-height:54px;transition:background .1s}
+    .laad-rij.huur{border-left-color:#3b82f6}
+    .laad-rij:hover{background:#f9fafb}
 
-    .rij-hoofd { flex: 1; min-width: 0; }
-    .rij-naam {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 18px; color: #fff; line-height: 1.1;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .rij-klasse {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 13px; color: #f5c518; margin-top: 2px;
-    }
-    .rij-events {
-      font-size: 11px; color: #999; margin-top: 2px;
+    .rij-hoofd{flex:1;min-width:0}
+    .rij-naam{font-weight:700;font-size:18px;color:#111827;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rij-klasse{font-weight:700;font-size:13px;color:#d97706;margin-top:2px}
+    .rij-events{font-size:11px;color:#9ca3af;margin-top:2px}
+
+    .rij-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex-shrink:0}
+    .tag{font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+    .tag.werkplaats-kart,.tag.werkplaats-banden,.tag.werkplaats-bak{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+    .tag.huur{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe}
+
+    @media(max-width:480px){
+      .rij-naam{font-size:16px}
+      .rij-tags{max-width:120px}
+      .tag{font-size:10px;padding:2px 6px}
     }
 
-    .rij-tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; flex-shrink: 0; }
-    .tag {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 3px 8px; border-radius: 3px; white-space: nowrap;
-    }
-    .tag.werkplaats-kart   { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
-    .tag.werkplaats-banden { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
-    .tag.werkplaats-bak    { background: #1a3a1a; color: #6de86d; border: 1px solid #2a5a2a; }
-    .tag.huur              { background: #0e2035; color: #6dc8ff; border: 1px solid #1a4060; }
+    .empty-state{text-align:center;padding:4rem 2rem}
+    .empty-state-icon{font-size:48px;margin-bottom:1rem}
+    .empty-state-text{font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:#d1d5db}
 
-    @media (max-width: 480px) {
-      .rij-naam { font-size: 16px; }
-      .rij-tags { max-width: 120px; }
-      .tag { font-size: 10px; padding: 2px 6px; }
-    }
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid #e5e7eb;border-top-color:#dc2626;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
-    .empty-state { text-align: center; padding: 4rem 2rem; }
-    .empty-state-icon { font-size: 48px; margin-bottom: 1rem; }
-    .empty-state-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; color: #333; }
+    .laad-controls{display:none;flex-direction:column;gap:8px;margin-bottom:1.2rem}
+    .zoek-wrap{position:relative}
+    .zoek-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;pointer-events:none}
+    .zoek-input{width:100%;background:#fff;border:1.5px solid #e5e7eb;color:#111827;padding:11px 12px 11px 38px;font-size:15px;border-radius:8px;outline:none;font-family:inherit}
+    .zoek-input:focus{border-color:#dc2626}
+    .filter-btns{display:flex;gap:6px}
+    .filter-btn{flex:1;padding:9px 6px;text-align:center;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;border-radius:8px;cursor:pointer;transition:all .15s;font-family:inherit}
+    .filter-btn.on{border-color:#dc2626;color:#dc2626;background:#fef2f2}
+    .filter-btn.groen.on{border-color:#16a34a;color:#065f46;background:#d1fae5}
 
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #333; border-top-color: #E02020; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .laad-toggle-rij{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .laad-toggle{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;padding:6px 11px;border-radius:6px;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;transition:all .12s;font-family:inherit}
+    .laad-toggle:hover{border-color:#d1d5db;color:#374151}
+    .tog-check{width:13px;height:13px;border:1.5px solid #d1d5db;border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;line-height:1;background:#fff}
+    .laad-toggle.on{border-color:#16a34a;background:#d1fae5;color:#065f46}
+    .laad-toggle.on .tog-check{background:#16a34a;border-color:#16a34a;color:#fff}
 
-    /* ── Zoek + filter ── */
-    .laad-controls { display: none; flex-direction: column; gap: 8px; margin-bottom: 1.2rem; }
-    .zoek-wrap { position: relative; }
-    .zoek-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; pointer-events: none; }
-    .zoek-input {
-      width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff;
-      padding: 11px 12px 11px 38px; font-size: 15px; border-radius: 4px; outline: none;
-      font-family: 'Barlow', sans-serif;
-    }
-    .zoek-input:focus { border-color: #E02020; }
-    .filter-btns { display: flex; gap: 6px; }
-    .filter-btn {
-      flex: 1; padding: 9px 6px; text-align: center;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-      border: 1px solid #2a2a2a; background: #161616; color: #999;
-      border-radius: 3px; cursor: pointer; transition: all 0.15s;
-    }
-    .filter-btn.on         { border-color: #E02020; color: #fff; background: #2a1010; }
-    .filter-btn.groen.on   { border-color: #2a8a2a; color: #fff; background: #1a3a1a; }
-
-    /* ── Laad-toggle knoppen ── */
-    .laad-toggle-rij { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .laad-toggle {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-      padding: 6px 11px; border-radius: 3px; cursor: pointer;
-      border: 1px solid #2a2a2a; background: #1a1a1a; color: #999;
-      transition: all 0.12s;
-    }
-    .laad-toggle:hover { border-color: #444; color: #aaa; }
-    .tog-check {
-      width: 13px; height: 13px; border: 1px solid #444; border-radius: 2px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      font-size: 9px; line-height: 1;
-    }
-    .laad-toggle.on { border-color: #3aaa3a; background: #1a3a1a; color: #6de86d; }
-    .laad-toggle.on .tog-check { background: #3aaa3a; border-color: #4acc4a; color: #fff; }
-
-    /* ── Geladen staat ── */
-    .laad-rij.geladen { border-left-color: #3aaa3a; background: #0e170e; }
-    .rij-geladen-vink { font-size: 22px; color: #3aaa3a; flex-shrink: 0; align-self: center; line-height: 1; }
-    .groep-header.geladen-header { background: #0e200e; border-left-color: #3aaa3a; }
+    .laad-rij.geladen{border-left-color:#16a34a;background:#f0fdf4}
+    .rij-geladen-vink{font-size:22px;color:#16a34a;flex-shrink:0;align-self:center;line-height:1}
+    .groep-header.geladen-header{background:#d1fae5;border-left-color:#16a34a;color:#065f46}
   </style>
 </head>
 <body>
@@ -285,7 +181,7 @@
     </div>
     <div class="wk-lijst" id="wk-lijst">
       <div class="event-grid" id="weekend-grid">
-        <div style="color:#999;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
+        <div style="color:#9ca3af;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
       </div>
     </div>
   </div>
@@ -421,7 +317,7 @@ async function laadWeekenden() {
 
   if (error) {
     document.getElementById('weekend-grid').innerHTML =
-      `<div style="color:#E02020;font-size:13px;grid-column:1/-1;">Fout: ${error.message}</div>`;
+      `<div style="color:#dc2626;font-size:13px;grid-column:1/-1;">Fout: ${error.message}</div>`;
     return;
   }
 
@@ -445,7 +341,7 @@ async function laadWeekenden() {
 
   if (!_allWeekenden.length) {
     document.getElementById('weekend-grid').innerHTML =
-      '<div style="color:#999;font-size:13px;grid-column:1/-1;">Geen weekenden gevonden.</div>';
+      '<div style="color:#9ca3af;font-size:13px;grid-column:1/-1;">Geen weekenden gevonden.</div>';
     return;
   }
 
@@ -505,16 +401,16 @@ function renderWeekendGrid() {
   if (_allWeekenden.length) {
     html += _allWeekenden.map(_kaartHTML).join('');
   } else {
-    html += `<div style="color:#999;font-size:13px;grid-column:1/-1;">Geen actieve weekenden.</div>`;
+    html += `<div style="color:#9ca3af;font-size:13px;grid-column:1/-1;">Geen actieve weekenden.</div>`;
   }
 
   if (_voorbijWeekenden.length) {
     html += `
       <div style="grid-column:1/-1;margin-top:8px;">
         <div onclick="toggleVoorbijWeekenden()" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 0;user-select:none;">
-          <span id="voorbij-pijl" style="font-size:10px;color:#555;">▸</span>
-          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;">Afgelopen weekenden</span>
-          <span style="font-size:11px;color:#444;font-family:'Barlow',sans-serif;">(${_voorbijWeekenden.length})</span>
+          <span id="voorbij-pijl" style="font-size:10px;color:#6b7280;">▸</span>
+          <span style="font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Afgelopen weekenden</span>
+          <span style="font-size:11px;color:#9ca3af;">(${_voorbijWeekenden.length})</span>
         </div>
         <div id="voorbij-grid" class="event-grid" style="display:none;">
           ${_voorbijWeekenden.map(_kaartHTML).join('')}
@@ -560,7 +456,7 @@ async function buildLaadlijst() {
     return;
   }
 
-  lijst.innerHTML        = `<div style="color:#999;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
+  lijst.innerHTML        = `<div style="color:#9ca3af;font-size:13px;padding:1rem 0;"><span class="spinner"></span>Lijst samenstellen...</div>`;
   teller.innerHTML       = '';
   controls.style.display = 'none';
   pdfBtn.style.display   = 'none';
@@ -578,7 +474,7 @@ async function buildLaadlijst() {
   ]);
 
   if (inschrijvRes.error) {
-    lijst.innerHTML = `<div style="color:#E02020;font-size:13px;">Fout: ${inschrijvRes.error.message}</div>`;
+    lijst.innerHTML = `<div style="color:#dc2626;font-size:13px;">Fout: ${inschrijvRes.error.message}</div>`;
     return;
   }
 
@@ -1010,8 +906,9 @@ async function uitloggen() {
 function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.background = color === 'green' ? '#1a5c1a' : color === 'red' ? '#5c1a1a' : '#3a3a00';
-  t.style.color = color === 'green' ? '#4cff4c' : color === 'red' ? '#ff6666' : '#cccc00';
+  t.style.background = color === 'green' ? '#d1fae5' : color === 'red' ? '#fee2e2' : '#fef9c3';
+  t.style.color = color === 'green' ? '#065f46' : color === 'red' ? '#991b1b' : '#713f12';
+  t.style.border = color === 'green' ? '1px solid #a7f3d0' : color === 'red' ? '1px solid #fecaca' : '1px solid #fde68a';
   t.style.transform = 'translateX(-50%) translateY(0)';
   t.style.opacity = '1';
   clearTimeout(t._timer);
@@ -1024,23 +921,23 @@ function openAccountOverlay() {
   overlay.style.display = 'flex';
   const r = _werkplaatsProfile || {};
   document.getElementById('account-body').innerHTML = `
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
-    <p style="font-size:13px;color:#999;margin-bottom:1.8rem;">${r.email||''}</p>
+    <div style="font-weight:700;font-size:22px;color:#111827;letter-spacing:1px;margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:1.8rem;">${r.email||''}</p>
 
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:1.2rem;">Naam</div>
+    <div style="font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:1.2rem;">Naam</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;">
-      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Voornaam</label><input id="acc-voornaam" value="${r.voornaam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
-      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Naam</label><input id="acc-naam" value="${r.naam||''}" style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;" /></div>
+      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#374151;margin-bottom:6px;">Voornaam</label><input id="acc-voornaam" value="${r.voornaam||''}" style="display:block;width:100%;background:#fff;border:1px solid #d1d5db;color:#111827;padding:11px 12px;font-size:14px;border-radius:8px;outline:none;font-family:inherit;" /></div>
+      <div><label style="display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#374151;margin-bottom:6px;">Naam</label><input id="acc-naam" value="${r.naam||''}" style="display:block;width:100%;background:#fff;border:1px solid #d1d5db;color:#111827;padding:11px 12px;font-size:14px;border-radius:8px;outline:none;font-family:inherit;" /></div>
     </div>
 
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:1.2rem;margin-top:1.5rem;">Wachtwoord wijzigen</div>
-    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Nieuw wachtwoord <span style="color:#999;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
-    <div style="position:relative;"><input id="acc-ww" type="password" placeholder="Nieuw wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1rem;" /><button onclick="var i=document.getElementById('acc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button></div>
-    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">Wachtwoord bevestigen</label>
-    <div style="position:relative;"><input id="acc-ww2" type="password" placeholder="Herhaal wachtwoord..." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 48px 11px 12px;font-size:14px;border-radius:3px;outline:none;font-family:'Barlow',sans-serif;margin-bottom:1.5rem;" /><button onclick="var i=document.getElementById('acc-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button></div>
+    <div style="font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:1.2rem;margin-top:1.5rem;">Wachtwoord wijzigen</div>
+    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#374151;margin-bottom:6px;">Nieuw wachtwoord <span style="color:#9ca3af;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
+    <div style="position:relative;"><input id="acc-ww" type="password" placeholder="Nieuw wachtwoord..." style="display:block;width:100%;background:#fff;border:1px solid #d1d5db;color:#111827;padding:11px 48px 11px 12px;font-size:14px;border-radius:8px;outline:none;font-family:inherit;margin-bottom:1rem;" /><button onclick="var i=document.getElementById('acc-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;">👁</button></div>
+    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#374151;margin-bottom:6px;">Wachtwoord bevestigen</label>
+    <div style="position:relative;"><input id="acc-ww2" type="password" placeholder="Herhaal wachtwoord..." style="display:block;width:100%;background:#fff;border:1px solid #d1d5db;color:#111827;padding:11px 48px 11px 12px;font-size:14px;border-radius:8px;outline:none;font-family:inherit;margin-bottom:1.5rem;" /><button onclick="var i=document.getElementById('acc-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:30%;transform:translateY(-50%);background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;">👁</button></div>
 
-    <button onclick="slaWerkplaatsAccountOp('${r.id}')" style="width:100%;padding:14px;background:#E02020;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:0.8rem;">✓ Opslaan</button>
-    <button onclick="sluitAccountOverlay()" style="width:100%;padding:14px;background:transparent;color:#999;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Annuleren</button>
+    <button onclick="slaWerkplaatsAccountOp('${r.id}')" style="width:100%;padding:14px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:0.8rem;">✓ Opslaan</button>
+    <button onclick="sluitAccountOverlay()" style="width:100%;padding:14px;background:transparent;color:#6b7280;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Annuleren</button>
   `;
 }
 
@@ -1073,15 +970,15 @@ async function slaWerkplaatsAccountOp(id) {
 }
 </script>
 
-<div id="account-overlay" style="display:none; position:fixed; inset:0; background:#0a0a0a; z-index:300; flex-direction:column; overflow:hidden;">
-  <div style="height:56px; background:#111; border-bottom:3px solid #E02020; display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; flex-shrink:0;">
-    <button onclick="sluitAccountOverlay()" style="background:none; border:1px solid #2a2a2a; border-radius:3px; color:#aaa; font-size:13px; padding:6px 14px; cursor:pointer; font-family:'Barlow',sans-serif;">← Terug</button>
-    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:18px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Mijn account</div>
+<div id="account-overlay" style="display:none; position:fixed; inset:0; background:#f3f4f6; z-index:300; flex-direction:column; overflow:hidden;">
+  <div style="height:54px; background:#111827; display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; flex-shrink:0;">
+    <button onclick="sluitAccountOverlay()" style="background:none; border:1px solid #374151; border-radius:6px; color:#9ca3af; font-size:13px; padding:6px 14px; cursor:pointer; font-family:inherit;">← Terug</button>
+    <div style="font-weight:700; font-size:16px; color:#fff; letter-spacing:1px; text-transform:uppercase;">Mijn account</div>
   </div>
   <div id="account-body" style="padding:2rem; max-width:480px; width:100%; margin:0 auto; overflow-y:auto;"></div>
 </div>
 
-<div id="toast" style="position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(200px); opacity:0; border-radius:4px; padding:12px 24px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; letter-spacing:2px; text-transform:uppercase; z-index:999; transition:transform 0.3s ease, opacity 0.3s ease; pointer-events:none; max-width:90vw; text-align:center;"></div>
+<div id="toast" style="position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(200px); opacity:0; border-radius:12px; padding:12px 24px; font-family:inherit; font-weight:700; font-size:14px; letter-spacing:1px; z-index:999; transition:transform 0.3s ease, opacity 0.3s ease; pointer-events:none; max-width:90vw; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
 
 <script>
 (function() {

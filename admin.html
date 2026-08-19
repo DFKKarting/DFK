@@ -9,406 +9,372 @@
   <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
-    body { background: #0a0a0a; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#f3f4f6;font-family:'Inter',system-ui,sans-serif}
 
-    #dfk-root * { box-sizing: border-box; }
-    #dfk-root { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; font-family: 'Barlow', sans-serif; }
+    #dfk-root *{box-sizing:border-box}
+    #dfk-root{background:#f3f4f6;min-height:100vh;display:flex;flex-direction:column;font-family:'Inter',system-ui,sans-serif}
 
-    #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
-    #dfk-root .nav-badge { background: #E02020; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; margin-left: 10px; }
-    #dfk-root .nav-back { font-size: 12px; color: #999; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; background: none; border: none; }
-    #dfk-root .nav-back:hover { color: #ccc; }
+    #dfk-root .nav{background:#111827;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
+    #dfk-root .nav-badge{background:#dc2626;color:#fff;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-left:10px}
+    #dfk-root .nav-back{font-size:12px;color:#9ca3af;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit}
+    #dfk-root .nav-back:hover{color:#d1d5db}
 
-    #dfk-root .nav-right { position: relative; }
-    #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
-    #dfk-root .nav-user-btn:hover { background: #1a1a1a; }
-    #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-    #dfk-root .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
-    #dfk-root .nav-chevron { font-size: 10px; color: #999; }
-    #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
-    #dfk-root .dropdown.open { display: block; }
-    #dfk-root .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
-    #dfk-root .dropdown-item:last-child { border-bottom: none; }
-    #dfk-root .dropdown-item:hover { background: #1c1c1c; color: #fff; }
-    #dfk-root .dropdown-item.danger { color: #ff5555; }
-    #dfk-root .dropdown-item.danger:hover { background: #1c1c1c; }
-    #dfk-root .di-icon { font-size: 15px; width: 18px; text-align: center; }
+    #dfk-root .nav-right{position:relative}
+    #dfk-root .nav-user-btn{display:flex;align-items:center;gap:8px;background:#1f2937;border:1.5px solid #374151;border-radius:8px;padding:6px 12px;cursor:pointer;color:#d1d5db;font-size:13px;font-family:inherit}
+    #dfk-root .nav-user-btn:hover{border-color:#dc2626;color:#fff}
+    #dfk-root .nav-avatar{width:28px;height:28px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+    #dfk-root .nav-naam{font-size:13px;color:#d1d5db}
+    #dfk-root .nav-chevron{font-size:10px;color:#9ca3af}
+    #dfk-root .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:12px;min-width:200px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    #dfk-root .dropdown.open{display:block}
+    #dfk-root .dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#d1d5db;font-size:14px;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
+    #dfk-root .dropdown-item:last-child{border-bottom:none}
+    #dfk-root .dropdown-item:hover{background:#374151;color:#fff}
+    #dfk-root .dropdown-item.danger{color:#f87171}
+    #dfk-root .di-icon{font-size:15px;width:18px;text-align:center}
 
-    #dfk-root .layout { display: grid; grid-template-columns: 1fr; gap: 0; flex: 1; }
-    #dfk-root .layout.show-right { grid-template-columns: 1fr 420px; }
-    #dfk-root .left-col { padding: 2rem; overflow-y: auto; }
-    #dfk-root .layout.show-right .left-col { border-right: 1px solid #1e1e1e; }
-    #dfk-root .right-col { display: none; padding: 2rem; background: #0d0d0d; overflow-y: auto; overflow-x: hidden; }
-    #dfk-root .layout.show-right .right-col { display: block; }
-    #dfk-root .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
-    #dfk-root .col-header .page-title { margin-bottom: 0; }
-    #dfk-root .open-form-btn { padding: 8px 16px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
-    #dfk-root .open-form-btn:hover { background: #c01010; }
-    #dfk-root .close-panel-btn { display: block; width: 100%; padding: 9px; background: transparent; color: #444; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 1.5rem; text-align: center; }
-    #dfk-root .close-panel-btn:hover { color: #aaa; border-color: #333; }
+    #dfk-root .layout{display:grid;grid-template-columns:1fr;gap:0;flex:1}
+    #dfk-root .layout.show-right{grid-template-columns:1fr 420px}
+    #dfk-root .left-col{padding:1.5rem;overflow-y:auto}
+    #dfk-root .layout.show-right .left-col{border-right:1px solid #e5e7eb}
+    #dfk-root .right-col{display:none;padding:1.5rem;background:#f9fafb;overflow-y:auto;overflow-x:hidden}
+    #dfk-root .layout.show-right .right-col{display:block}
+    #dfk-root .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+    #dfk-root .col-header .page-title{margin-bottom:0}
+    #dfk-root .open-form-btn{padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+    #dfk-root .open-form-btn:hover{background:#b91c1c}
+    #dfk-root .close-panel-btn{display:block;width:100%;padding:9px;background:transparent;color:#9ca3af;border:1.5px solid #e5e7eb;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:1.2rem;text-align:center;font-family:inherit}
+    #dfk-root .close-panel-btn:hover{color:#374151;border-color:#d1d5db}
 
-    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
-    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
-    #dfk-root .toggle-group { display: flex; gap: 6px; }
-    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #aaa; }
-    #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
-    #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
-    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
-    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
-    #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
-    #dfk-root .r-kart-keuze { display: flex; gap: 10px; margin-bottom: 1.2rem; }
-    #dfk-root .r-kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c; border: 1px solid #444; border-radius: 3px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
-    #dfk-root .r-kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
+    #dfk-root .toggle-row{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    #dfk-root .toggle-row span{font-size:13px;color:#374151}
+    #dfk-root .toggle-group{display:flex;gap:6px}
+    #dfk-root .tog-btn{padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#9ca3af;font-family:inherit}
+    #dfk-root .tog-btn.yes.on{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+    #dfk-root .tog-btn.no.on{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+    #dfk-root .benzine-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+    #dfk-root .benz-btn{padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;text-align:left;font-family:inherit}
+    #dfk-root .benz-btn.on{background:#fef2f2;color:#111827;border-color:#dc2626}
+    #dfk-root .r-kart-keuze{display:flex;gap:10px;margin-bottom:1.2rem}
+    #dfk-root .r-kart-type-btn{flex:1;padding:12px 10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;color:#6b7280;font-weight:700;font-size:13px;cursor:pointer;text-align:center;font-family:inherit}
+    #dfk-root .r-kart-type-btn.on{background:#fef2f2;border-color:#dc2626;color:#111827}
 
-    #dfk-root .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
-    #dfk-root .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
-    #dfk-root .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
+    #dfk-root .mobile-tab-bar{display:none;background:#111827;border-bottom:1px solid #374151;position:sticky;top:54px;z-index:99}
+    #dfk-root .mobile-tab{flex:1;padding:12px 8px;text-align:center;font-weight:600;font-size:13px;color:#9ca3af;border:none;border-bottom:2px solid transparent;background:transparent;cursor:pointer;margin-bottom:-1px;font-family:inherit}
+    #dfk-root .mobile-tab.on{color:#fff;border-bottom-color:#dc2626}
 
-    @media (max-width: 768px) {
-      #dfk-root .nav-tabs { display: none !important; }
-      #dfk-root .nav-back { font-size: 11px; }
-      #dfk-root .mobile-tab-bar { display: flex; }
-      #dfk-root .layout.show-right { grid-template-columns: 1fr; }
-      #dfk-root .layout.show-right .left-col { display: none; }
-      #dfk-root .layout.show-right .right-col { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200; overflow-y: auto; padding: 1.5rem; }
+    @media(max-width:768px){
+      #dfk-root .nav-tabs{display:none!important}
+      #dfk-root .mobile-tab-bar{display:flex}
+      #dfk-root .layout.show-right{grid-template-columns:1fr}
+      #dfk-root .layout.show-right .left-col{display:none}
+      #dfk-root .layout.show-right .right-col{display:block;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;overflow-y:auto;padding:1.5rem;background:#f9fafb}
     }
 
-    #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-    #dfk-root .page-sub { font-size: 13px; color: #999; margin-bottom: 1.8rem; }
-    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
+    #dfk-root .page-title{font-weight:800;font-size:22px;color:#111827;margin-bottom:4px}
+    #dfk-root .page-sub{font-size:13px;color:#6b7280;margin-bottom:1.5rem}
+    #dfk-root .section-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:1rem}
+    #dfk-root .field-label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px}
+    #dfk-root .field-input{display:block;width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:10px 12px;font-size:14px;border-radius:8px;margin-bottom:12px;outline:none;font-family:inherit}
+    #dfk-root .field-input:focus{border-color:#dc2626}
+    #dfk-root input[type="date"],#dfk-root input[type="datetime-local"]{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;-webkit-appearance:none;appearance:none}
+    #dfk-root .field-select{display:block;width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:10px 12px;font-size:14px;border-radius:8px;margin-bottom:12px;outline:none;font-family:inherit;cursor:pointer}
+    #dfk-root .field-select:focus{border-color:#dc2626}
+    #dfk-root .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    #dfk-root .two-col .field-input,#dfk-root .two-col .field-select{margin-bottom:0}
+    #dfk-root .hint{font-size:11px;color:#9ca3af;margin-bottom:6px;margin-top:-4px}
 
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
-    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
-    #dfk-root .field-input:focus { border-color: #E02020; }
-    #dfk-root input[type="date"], #dfk-root input[type="datetime-local"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
-    #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
-    #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
-    #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
-    #dfk-root .hint { font-size: 11px; color: #aaa; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+    #dfk-root .edit-banner{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1.2rem;font-size:13px;color:#92400e;display:none}
+    #dfk-root .edit-banner.show{display:flex;align-items:center;justify-content:space-between}
 
-    #dfk-root .edit-banner { background: #1a1a00; border: 1px solid #555500; border-radius: 4px; padding: 10px 14px; margin-bottom: 1.2rem; font-size: 13px; color: #cccc00; display: none; }
-    #dfk-root .edit-banner.show { display: flex; align-items: center; justify-content: space-between; }
+    #dfk-root .chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+    #dfk-root .chk-item{display:flex;align-items:center;gap:8px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .12s}
+    #dfk-root .chk-item.on{border-color:#dc2626;background:#fef2f2}
+    #dfk-root .chk-box{width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+    #dfk-root .chk-item.on .chk-box{background:#dc2626;border-color:#dc2626}
+    #dfk-root .chk-mark{color:#fff;font-size:11px;font-weight:700;display:none}
+    #dfk-root .chk-item.on .chk-mark{display:block}
+    #dfk-root .chk-label{font-size:13px;color:#374151}
+    #dfk-root .chk-item.on .chk-label{color:#111827;font-weight:600}
 
-    #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
-    #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
-    #dfk-root .chk-item.on { border-color: #E02020; background: #2a1010; }
-    #dfk-root .chk-box { width: 16px; height: 16px; border: 1px solid #555; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
-    #dfk-root .chk-item.on .chk-box { background: #E02020; border-color: #E02020; }
-    #dfk-root .chk-mark { color: #fff; font-size: 11px; font-weight: 700; display: none; }
-    #dfk-root .chk-item.on .chk-mark { display: block; }
-    #dfk-root .chk-label { font-size: 13px; color: #ccc; }
-    #dfk-root .chk-item.on .chk-label { color: #fff; }
+    #dfk-root .add-btn{display:block;width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit}
+    #dfk-root .add-btn:hover{background:#b91c1c}
+    #dfk-root .add-btn.edit-mode{background:#d97706}
+    #dfk-root .add-btn.edit-mode:hover{background:#b45309}
+    #dfk-root .reset-btn{display:block;width:100%;padding:11px;background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;margin-top:8px;font-family:inherit}
+    #dfk-root .reset-btn:hover{color:#374151;border-color:#d1d5db}
 
-    #dfk-root .add-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 0.5rem; }
-    #dfk-root .add-btn:hover { background: #c01010; }
-    #dfk-root .add-btn.edit-mode { background: #c08000; }
-    #dfk-root .add-btn.edit-mode:hover { background: #a06000; }
-    #dfk-root .reset-btn { display: block; width: 100%; padding: 11px; background: transparent; color: #999; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
-    #dfk-root .reset-btn:hover { color: #aaa; border-color: #333; }
+    #dfk-root .circuit-add-row{display:flex;gap:8px;margin-bottom:6px}
+    #dfk-root .circuit-add-row .field-input{margin-bottom:0;flex:1}
+    #dfk-root .circuit-add-btn{flex-shrink:0;padding:0 16px;background:#f9fafb;border:1.5px solid #e5e7eb;color:#374151;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+    #dfk-root .circuit-add-btn:hover{border-color:#dc2626;color:#dc2626}
+    #dfk-root .sel-del-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+    #dfk-root .sel-del-row .field-select{margin-bottom:0;flex:1}
+    #dfk-root .sel-del-btn{flex-shrink:0;padding:0 12px;height:42px;background:#f9fafb;border:1.5px solid #e5e7eb;color:#6b7280;border-radius:8px;font-size:18px;line-height:1;cursor:pointer}
+    #dfk-root .sel-del-btn:hover{border-color:#dc2626;color:#dc2626}
 
-    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 0.6rem; }
-    #dfk-root .circuit-add-row .field-input { margin-bottom: 0; flex: 1; }
-    #dfk-root .circuit-add-btn { flex-shrink: 0; padding: 0 16px; background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
-    #dfk-root .circuit-add-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .sel-del-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem; }
-    #dfk-root .sel-del-row .field-select { margin-bottom: 0; flex: 1; }
-    #dfk-root .sel-del-btn { flex-shrink: 0; padding: 0 12px; height: 38px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #999; border-radius: 3px; font-size: 18px; line-height: 1; cursor: pointer; }
-    #dfk-root .sel-del-btn:hover { border-color: #E02020; color: #E02020; }
+    #dfk-root .dl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:-4px;margin-bottom:12px}
+    #dfk-root .dl-chip{padding:5px 10px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:11px;color:#374151;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit}
+    #dfk-root .dl-chip:hover{border-color:#dc2626;color:#dc2626}
+    #dfk-root .dl-chip-del{color:#9ca3af;font-size:12px;line-height:1}
+    #dfk-root .dl-chip-del:hover{color:#dc2626}
+    #dfk-root .dl-chips-label{font-size:11px;color:#9ca3af;width:100%;margin-bottom:2px}
 
-    #dfk-root .dl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -0.5rem; margin-bottom: 1rem; }
-    #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #aaa; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
-    #dfk-root .dl-chip:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .dl-chip-del { color: #999; font-size: 12px; line-height: 1; }
-    #dfk-root .dl-chip-del:hover { color: #ff5555; }
-    #dfk-root .dl-chips-label { font-size: 11px; color: #999; width: 100%; margin-bottom: 2px; }
-
-    #dfk-root .event-list { display: flex; flex-direction: column; gap: 10px; }
-    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #2a8a2a; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    #dfk-root .ev-row.past { border-left-color: #333; opacity: 0.5; }
-    #dfk-root .ev-row.vandaag { border-left-color: #4cff4c; background: #0d1a0d; }
-    #dfk-root .ev-row.gesloten { border-left-color: #E02020; }
-    #dfk-root .ev-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
-    #dfk-root .ev-date-block { text-align: center; min-width: 48px; flex-shrink: 0; }
-    #dfk-root .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; line-height: 1; }
-    #dfk-root .ev-month { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; color: #E02020; letter-spacing: 2px; text-transform: uppercase; }
-    #dfk-root .ev-divider { width: 1px; height: 40px; background: #2a2a2a; flex-shrink: 0; }
-    #dfk-root .ev-info { flex: 1; min-width: 0; }
-    #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #dfk-root .ev-meta { font-size: 12px; color: #999; margin-top: 2px; }
-    #dfk-root .ev-klassen { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
-    #dfk-root .ev-klasse-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 2px 7px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
-    #dfk-root .ev-deadline { font-size: 11px; color: #aaa; margin-top: 3px; }
-    #dfk-root .ev-deadline.closed { color: #E02020; font-weight: 600; }
-    #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
-    #dfk-root .ev-btn.riders { color: #aaccff; border-color: #4477dd; background: #0d1a33; }
-    #dfk-root .ev-btn.riders:hover { background: #1a2a4a; border-color: #88aaff; color: #fff; }
-    #dfk-root .inschrijving-rider-row { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px; }
-    #dfk-root .inschrijving-rider-info { flex: 1; min-width: 0; }
-    #dfk-root .inschrijving-rider-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .inschrijving-rider-meta { font-size: 12px; color: #999; margin-top: 2px; }
-    #dfk-root .inschrijving-rider-reg { font-size: 11px; color: #444; margin-top: 3px; }
-    #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #aaa; }
-    #dfk-root .ev-btn:hover { color: #fff; border-color: #999; }
-    #dfk-root .ev-btn.edit { color: #fff; border-color: #aaaa00; background: #666600; }
-    #dfk-root .ev-btn.edit:hover { background: #888800; border-color: #dddd00; }
-    #dfk-root .ev-btn.del { color: #fff; border-color: #aa2222; background: #881111; }
-    @media (max-width: 600px) {
-      #dfk-root .ev-row { padding: 12px; gap: 10px; align-items: flex-start; }
-      #dfk-root .ev-row.ev-row-weekend { align-items: center; }
-      #dfk-root .ev-divider { display: none; }
-      #dfk-root .ev-info { flex: 1; min-width: 0; }
-      #dfk-root .ev-name { white-space: normal; font-size: 15px; }
-      #dfk-root .ev-row:not(.ev-row-weekend) .ev-actions { width: 100%; border-top: 1px solid #222; padding-top: 8px; margin-top: 2px; justify-content: flex-end; }
-      #dfk-root .ev-row:not(.ev-row-weekend) .ev-btn { flex: 1; text-align: center; padding: 8px 6px; font-size: 12px; }
-    }
-    #dfk-root .ev-btn.del:hover { background: #2a1010; border-color: #ff5555; }
-    /* ── Weekend zichtbaarheidsschakelaar ── */
-    #dfk-root .wk-switch { width: 42px; height: 24px; border-radius: 12px; background: #2a2a2a; border: 1px solid #383838; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s; flex-shrink: 0; }
-    #dfk-root .wk-switch.on { background: #163016; border-color: #2a5a2a; }
-    #dfk-root .wk-switch-knop { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #444; top: 2px; left: 2px; transition: transform 0.2s, background 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-    #dfk-root .wk-switch.on .wk-switch-knop { transform: translateX(18px); background: #4cff4c; }
-    #dfk-root .ev-row.verborgen { opacity: 0.4; border-left-color: #333; }
-    #dfk-root .wk-vis-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-top: 2px; text-align: center; }
-
-    #dfk-root .weekend-groep { margin-bottom: 4px; }
-    #dfk-root .weekend-groep-header {
-      display: flex; align-items: center; gap: 12px;
-      background: #181818; border: 1px solid #2a2a2a; border-left: 3px solid #E02020;
-      border-radius: 4px; padding: 11px 14px; cursor: pointer; transition: background 0.15s;
-    }
-    #dfk-root .weekend-groep-header:hover { background: #1e1e1e; }
-    #dfk-root .weekend-groep-header.past { border-left-color: #333; opacity: 0.55; }
-    #dfk-root .wg-chevron { font-size: 9px; color: #999; transition: transform 0.18s; flex-shrink: 0; }
-    #dfk-root .weekend-groep-header.open .wg-chevron { transform: rotate(90deg); color: #E02020; }
-    #dfk-root .wg-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .wg-meta { font-size: 11px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .wg-badge { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #999; flex-shrink: 0; }
-    #dfk-root .weekend-groep-events { display: none; padding-left: 14px; padding-top: 4px; }
-    #dfk-root .weekend-groep-events.open { display: flex; flex-direction: column; gap: 6px; }
-    #dfk-root .weekend-groep-events .ev-row { border-left-width: 2px; }
-    #dfk-root .wg-pdf-balk { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 4px; border-top: 1px solid #1e1e1e; margin-top: 4px; }
-    #dfk-root .wg-pdf-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: #141414; border: 1px solid #2a2a2a; border-radius: 3px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-    #dfk-root .wg-pdf-btn:hover { border-color: #E02020; color: #fff; background: #1c1010; }
-    #dfk-root .wg-pdf-icon { font-size: 13px; }
-
-    /* ── Weekend detailpagina ── */
-    #dfk-root .wd-back { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #999; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 1.4rem; }
-    #dfk-root .wd-back:hover { color: #ccc; }
-    #dfk-root .wd-header { margin-bottom: 1.6rem; }
-    #dfk-root .wd-titel-rij { display: flex; align-items: center; gap: 10px; }
-    #dfk-root .wd-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: 2px; text-transform: uppercase; line-height: 1.1; }
-    #dfk-root .wd-edit-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1; flex-shrink: 0; transition: color 0.15s; }
-    #dfk-root .wd-edit-btn:hover { color: #E02020; }
-    #dfk-root .wd-naam-input { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 2px; text-transform: uppercase; background: #1a1a1a; border: 1px solid #E02020; border-radius: 3px; padding: 2px 10px; flex: 1; outline: none; }
-    #dfk-root .wd-naam-opslaan { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 4px 12px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; flex-shrink: 0; }
-    #dfk-root .wd-naam-opslaan:hover { background: #c01010; }
-    #dfk-root .wd-naam-annuleer { background: none; border: 1px solid #333; color: #999; border-radius: 3px; padding: 4px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; flex-shrink: 0; }
-    #dfk-root .wd-naam-annuleer:hover { color: #aaa; border-color: #999; }
-    #dfk-root .wd-datum { font-size: 13px; color: #999; margin-top: 4px; }
-    #dfk-root .wd-stats { display: flex; gap: 16px; margin-top: 10px; }
-    #dfk-root .wd-stat { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; color: #999; }
-    #dfk-root .wd-stat span { color: #fff; font-size: 16px; }
-    #dfk-root .wd-section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1rem; margin-top: 1.8rem; }
-    #dfk-root .wd-dl-wrapper { position: relative; display: inline-block; margin-bottom: 1.8rem; }
-    #dfk-root .wd-dl-btn { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #1c1c1c; border: 1px solid #333; border-radius: 4px; color: #ccc; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-    #dfk-root .wd-dl-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .wd-dl-btn.open { border-color: #E02020; color: #fff; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-    #dfk-root .wd-dl-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 260px; background: #1c1c1c; border: 1px solid #E02020; border-top: none; border-radius: 0 4px 4px 4px; z-index: 50; overflow: hidden; }
-    #dfk-root .wd-dl-menu.open { display: block; }
-    #dfk-root .wd-dl-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ccc; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border-bottom: 1px solid #2a2a2a; transition: background 0.1s; }
-    #dfk-root .wd-dl-item:last-child { border-bottom: none; }
-    #dfk-root .wd-dl-item:hover { background: #2a1010; color: #fff; }
-    #dfk-root .wd-dl-item-icon { font-size: 16px; flex-shrink: 0; }
-
-    #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
-    #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
-
-    /* ── Archief jaar/maand ── */
-    #dfk-root .archief-jaar { margin-bottom: 6px; }
-    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
-    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
-    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
-    #dfk-root .archief-pijl { font-size: 12px; color: #999; width: 12px; transition: color 0.15s; }
-    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
-    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
-    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
-    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
-    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
-    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
-    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
-
-
-
-
-    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(200px); opacity: 0; border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease, opacity 0.3s ease; pointer-events: none; max-width: 90vw; text-align: center; word-break: break-word; }
-    #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
-    #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
-    #dfk-root .toast.red { background: #3a0000; color: #ff6666; border: 1px solid #880000; }
-    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    #dfk-root .nav-tabs { display: flex; height: 100%; margin-left: 1.5rem; }
-    #dfk-root .nav-tab { display: flex; align-items: center; padding: 0 20px; height: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; cursor: pointer; border: none; border-bottom: 3px solid transparent; background: transparent; transition: color 0.15s; margin-bottom: -3px; }
-    #dfk-root .nav-tab:hover { color: #ccc; }
-    #dfk-root .nav-tab.on { color: #fff; border-bottom-color: #E02020; }
-
-    #dfk-root .admin-panel { display: none; flex: 1; flex-direction: column; }
-    #dfk-root .admin-panel.on { display: flex; }
-
-    #dfk-root .rider-list { display: flex; flex-direction: column; gap: 10px; }
-    #dfk-root .rider-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
-    #dfk-root .rider-row:hover { border-color: #444; }
-    #dfk-root .rider-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
-    #dfk-root .rider-avatar { width: 40px; height: 40px; background: #E02020; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 16px; color: #fff; flex-shrink: 0; }
-    #dfk-root .rider-info { flex: 1; min-width: 0; }
-    #dfk-root .rider-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .rider-meta { font-size: 12px; color: #999; margin-top: 2px; }
-    #dfk-root .rider-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
-    #dfk-root .rider-badge.eigen { background: #1a3a1a; color: #4ccc4c; }
-    #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
-    #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
-    #dfk-root .rider-badge.werkplaats { background: #1a1a3a; color: #aa88ff; }
-    #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    /* Compacte rijderlijst */
-    #dfk-root .rider-row { padding: 7px 12px; gap: 10px; }
-    #dfk-root .rider-avatar { width: 30px; height: 30px; font-size: 11px; flex-shrink: 0; }
-    #dfk-root .rider-name { font-size: 13px; }
-    #dfk-root .rider-meta { font-size: 11px; margin-top: 1px; }
-    /* Zoek / sort / filter toolbar */
-    #dfk-root .rijder-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-    #dfk-root .rijder-zoek { flex: 1; min-width: 150px; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 8px 12px; font-size: 13px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; }
-    #dfk-root .rijder-zoek::placeholder { color: #444; }
-    #dfk-root .rijder-zoek:focus { border-color: #E02020; }
-    #dfk-root .rijder-sel { background: #1c1c1c; border: 1px solid #333; color: #aaa; padding: 8px 10px; font-size: 12px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; cursor: pointer; }
-    #dfk-root .rijder-sel:focus { border-color: #E02020; }
-    #dfk-root .rijder-count { font-size: 11px; color: #444; font-family: 'Barlow', sans-serif; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
-    #dfk-root .rol-select { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 5px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
-
-    /* ── Inschrijvingen full-screen overlay ────── */
-    #dfk-root .inschr-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
-    #dfk-root .inschr-overlay.open { display: flex; }
-    #dfk-root .inschr-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
-    #dfk-root .inschr-ev-info { flex: 1; min-width: 0; overflow: hidden; }
-    #dfk-root .inschr-ev-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; color: #fff; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #dfk-root .inschr-ev-sub { font-size: 12px; color: #999; margin-top: 1px; }
-    #dfk-root .inschr-body { flex: 1; overflow-y: auto; padding: 2rem; }
-    #dfk-root .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; align-items: center; }
-    #dfk-root .filter-chip { padding: 7px 16px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #999; transition: border-color 0.1s, color 0.1s; }
-    #dfk-root .filter-chip.on { background: #2a1010; border-color: #E02020; color: #fff; }
-    #dfk-root .filter-chip:hover:not(.on) { border-color: #999; color: #ccc; }
-    #dfk-root .inschr-sort { margin-left: auto; background: #1c1c1c; border: 1px solid #333; color: #ccc; padding: 7px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
-    #dfk-root .inschr-grid { display: flex; flex-direction: column; gap: 6px; }
-    /* Compacte rij */
-    #dfk-root .inschr-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 10px 14px; cursor: pointer; transition: border-color 0.15s; }
-    #dfk-root .inschr-row:hover { border-color: #444; }
-    #dfk-root .inschr-row.open { background: #161616; border-color: #333; }
-    #dfk-root .inschr-row.huur { border-left-color: #4caaf0; background: #0e141a; }
-    #dfk-root .inschr-row.huur:hover { border-color: #2a4a6a; }
-    #dfk-root .inschr-row.huur.open { background: #101820; }
-    #dfk-root .inschr-sectie-label.huur-label { color: #4caaf0; }
-    #dfk-root .inschr-row-top { display: flex; align-items: center; gap: 10px; }
-    #dfk-root .inschr-row-meta { flex: 1; min-width: 0; }
-    #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #dfk-root .inschr-reg { font-size: 11px; color: #999; margin-top: 2px; }
-    #dfk-root .inschr-row-rechts { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-    #dfk-root .inschr-klasse-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 15px; color: #fff; letter-spacing: 1px; text-align: right; }
-    #dfk-root .inschr-nr { color: #E02020; }
-    #dfk-root .inschr-row-arrow { font-size: 10px; color: #444; transition: transform 0.2s; flex-shrink: 0; }
-    #dfk-root .inschr-row.open .inschr-row-arrow { transform: rotate(180deg); color: #aaa; }
-    /* Uitklapbaar detail */
-    #dfk-root .inschr-expand { display: none; margin-top: 10px; padding-top: 12px; border-top: 1px solid #1e1e1e; padding-left: 40px; flex-direction: column; gap: 10px; }
-    #dfk-root .inschr-row.open .inschr-expand { display: flex; }
-    #dfk-root .inschr-sectie { display: flex; flex-direction: column; gap: 4px; }
-    #dfk-root .inschr-sectie-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E02020; }
-    #dfk-root .inschr-sectie-value { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
-    #dfk-root .inschr-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    #dfk-root .inschr-chip { padding: 4px 9px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; font-size: 11px; color: #aaa; font-family: 'Barlow', sans-serif; }
-    #dfk-root .inschr-chip.ok { border-color: #1a4000; color: #66cc44; background: #0a1a00; }
-    #dfk-root .inschr-chip.benzine { border-color: #3a2200; color: #ffaa33; background: #180f00; }
-    #dfk-root .inschr-uitschr-btn { margin-top: 10px; padding: 6px 14px; background: #1c1010; border: 1px solid #3a1a1a; color: #ff5555; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
-    #dfk-root .inschr-uitschr-btn:hover { background: #2a1010; border-color: #ff5555; }
-    @media (max-width: 768px) {
-      #dfk-root .inschr-topbar { padding: 0.6rem 1rem; height: auto; flex-wrap: wrap; gap: 0.5rem; }
-      #dfk-root .inschr-ev-info { order: -1; width: 100%; }
-      #dfk-root .inschr-ev-naam { font-size: 15px; white-space: normal; }
-      #dfk-root .inschr-ev-sub { font-size: 11px; }
-      #dfk-root .inschr-body { padding: 1rem; }
-      #dfk-root .inschr-expand { padding-left: 10px; }
+    #dfk-root .event-list{display:flex;flex-direction:column;gap:8px}
+    #dfk-root .ev-row{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #16a34a;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    #dfk-root .ev-row.past{border-left-color:#d1d5db;opacity:.6}
+    #dfk-root .ev-row.vandaag{border-left-color:#16a34a;background:#f0fdf4}
+    #dfk-root .ev-row.gesloten{border-left-color:#dc2626}
+    #dfk-root .ev-row.editing{border-color:#f59e0b;border-left-color:#f59e0b;background:#fffbeb}
+    #dfk-root .ev-date-block{text-align:center;min-width:44px;flex-shrink:0}
+    #dfk-root .ev-day{font-weight:900;font-size:24px;color:#111827;line-height:1}
+    #dfk-root .ev-month{font-weight:700;font-size:11px;color:#dc2626;letter-spacing:1px;text-transform:uppercase}
+    #dfk-root .ev-divider{width:1px;height:36px;background:#e5e7eb;flex-shrink:0}
+    #dfk-root .ev-info{flex:1;min-width:0}
+    #dfk-root .ev-name{font-weight:700;font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #dfk-root .ev-meta{font-size:12px;color:#6b7280;margin-top:2px}
+    #dfk-root .ev-klassen{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+    #dfk-root .ev-klasse-tag{background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;padding:2px 7px;font-size:11px;color:#374151;font-weight:700}
+    #dfk-root .ev-deadline{font-size:11px;color:#6b7280;margin-top:3px}
+    #dfk-root .ev-deadline.closed{color:#dc2626;font-weight:600}
+    #dfk-root .ev-inschrijvingen{font-size:11px;color:#dc2626;margin-top:3px;font-weight:700}
+    #dfk-root .ev-actions{display:flex;gap:6px;flex-shrink:0}
+    #dfk-root .ev-btn{padding:5px 10px;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-family:inherit}
+    #dfk-root .ev-btn:hover{color:#111827;border-color:#d1d5db}
+    #dfk-root .ev-btn.riders{color:#2563eb;border-color:#bfdbfe;background:#eff6ff}
+    #dfk-root .ev-btn.riders:hover{background:#dbeafe;border-color:#93c5fd}
+    #dfk-root .ev-btn.edit{color:#d97706;border-color:#fde68a;background:#fffbeb}
+    #dfk-root .ev-btn.edit:hover{background:#fef3c7;border-color:#fcd34d}
+    #dfk-root .ev-btn.del{color:#dc2626;border-color:#fecaca;background:#fef2f2}
+    #dfk-root .ev-btn.del:hover{background:#fee2e2;border-color:#f87171}
+    #dfk-root .inschrijving-rider-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:8px}
+    #dfk-root .inschrijving-rider-info{flex:1;min-width:0}
+    #dfk-root .inschrijving-rider-naam{font-weight:700;font-size:14px;color:#111827}
+    #dfk-root .inschrijving-rider-meta{font-size:12px;color:#6b7280;margin-top:2px}
+    #dfk-root .inschrijving-rider-reg{font-size:11px;color:#9ca3af;margin-top:3px}
+    @media(max-width:600px){
+      #dfk-root .ev-row{padding:10px;gap:8px;align-items:flex-start}
+      #dfk-root .ev-row.ev-row-weekend{align-items:center}
+      #dfk-root .ev-divider{display:none}
+      #dfk-root .ev-name{white-space:normal;font-size:13px}
+      #dfk-root .ev-row:not(.ev-row-weekend) .ev-actions{width:100%;border-top:1px solid #f3f4f6;padding-top:8px;margin-top:2px;justify-content:flex-end}
+      #dfk-root .ev-row:not(.ev-row-weekend) .ev-btn{flex:1;text-align:center;padding:7px 4px;font-size:11px}
     }
 
-    /* ── Admin inschrijf modal ── */
-    #dfk-root .ai-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 400; align-items: center; justify-content: center; }
-    #dfk-root .ai-backdrop.open { display: flex; }
-    #dfk-root .ai-modal { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 6px; padding: 1.5rem; width: min(420px, 95vw); }
-    #dfk-root .ai-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.2rem; }
-    #dfk-root .ai-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 4px; margin-top: 1rem; display: block; }
-    #dfk-root .ai-label:first-of-type { margin-top: 0; }
-    #dfk-root .ai-input { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
-    #dfk-root .ai-input:focus { border-color: #E02020; }
-    #dfk-root .ai-select { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; cursor: pointer; }
-    #dfk-root .ai-select:focus { border-color: #E02020; }
-    #dfk-root .ai-rijder-lijst { max-height: 200px; overflow-y: auto; border: 1px solid #2a2a2a; border-radius: 3px; background: #111; margin-top: 2px; display: none; }
-    #dfk-root .ai-rijder-lijst.open { display: block; }
-    #dfk-root .ai-rijder-opt { padding: 9px 12px; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; border-bottom: 1px solid #1e1e1e; }
-    #dfk-root .ai-rijder-opt:last-child { border-bottom: none; }
-    #dfk-root .ai-rijder-opt:hover { background: #1c1c1c; color: #fff; }
-    #dfk-root .ai-rijder-opt.selected { background: #1c1010; color: #fff; }
-    #dfk-root .ai-rijder-sub { font-size: 11px; color: #999; margin-top: 2px; }
-    #dfk-root .ai-rijder-item:hover { background: #1c1c1c; color: #fff; }
-    #dfk-root .ai-footer { display: flex; gap: 8px; margin-top: 1.4rem; justify-content: flex-end; }
-    #dfk-root .ai-btn { padding: 9px 20px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #aaa; }
-    #dfk-root .ai-btn.primary { background: #E02020; border-color: #E02020; color: #fff; }
-    #dfk-root .ai-btn.primary:hover { background: #c01818; }
-    #dfk-root .ai-btn:hover:not(.primary) { border-color: #999; color: #ccc; }
+    #dfk-root .wk-switch{width:42px;height:24px;border-radius:12px;background:#e5e7eb;border:1px solid #d1d5db;cursor:pointer;position:relative;transition:background .2s,border-color .2s;flex-shrink:0}
+    #dfk-root .wk-switch.on{background:#d1fae5;border-color:#a7f3d0}
+    #dfk-root .wk-switch-knop{position:absolute;width:18px;height:18px;border-radius:50%;background:#9ca3af;top:2px;left:2px;transition:transform .2s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    #dfk-root .wk-switch.on .wk-switch-knop{transform:translateX(18px);background:#16a34a}
+    #dfk-root .ev-row.verborgen{opacity:.4;border-left-color:#d1d5db}
+    #dfk-root .wk-vis-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-top:2px;text-align:center}
 
-    /* ── Rechtensysteem ── */
-    #dfk-root .rider-badge.office { background: #1a3a1a; color: #4ccc4c; }
-    body:not(.kan-evenementen) .vereist-evenementen { display: none !important; }
-    body:not(.kan-zichtbaarheid) .vereist-zichtbaarheid { display: none !important; }
-    body:not(.kan-inschrijvingen) .vereist-inschrijvingen { display: none !important; }
-    body:not(.kan-rijders) .vereist-rijders { display: none !important; }
-    body:not(.kan-werkplaats) .vereist-werkplaats { display: none !important; }
-    body:not(.kan-crew) .vereist-crew { display: none !important; }
-    body.niet-admin #nav-rol-badge { background: #1a3a1a; color: #4cff4c; border: 1px solid #2a6a2a; }
-    body:not(.kan-rijders) .vereist-rijders-edit { display: none !important; }
-    /* Rechten checkboxes in crew-edit */
-    #dfk-root .rechten-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
-    #dfk-root .recht-item { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 3px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
-    #dfk-root .recht-item.on { background: #0d1a0d; border-color: #2a6a2a; }
-    #dfk-root .recht-item.disabled { opacity: 0.4; cursor: default; }
-    #dfk-root .recht-box { width: 18px; height: 18px; border: 1px solid #444; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
-    #dfk-root .recht-item.on .recht-box { background: #2a6a2a; border-color: #4cff4c; }
-    #dfk-root .recht-vinkje { color: #4cff4c; font-size: 11px; font-weight: 700; display: none; }
-    #dfk-root .recht-item.on .recht-vinkje { display: block; }
-    #dfk-root .recht-label { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; flex: 1; }
-    #dfk-root .recht-item.on .recht-label { color: #fff; }
+    #dfk-root .weekend-groep{margin-bottom:4px}
+    #dfk-root .weekend-groep-header{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:11px 14px;cursor:pointer;transition:background .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    #dfk-root .weekend-groep-header:hover{background:#f9fafb}
+    #dfk-root .weekend-groep-header.past{border-left-color:#d1d5db;opacity:.6}
+    #dfk-root .wg-chevron{font-size:9px;color:#9ca3af;transition:transform .18s;flex-shrink:0}
+    #dfk-root .weekend-groep-header.open .wg-chevron{transform:rotate(90deg);color:#dc2626}
+    #dfk-root .wg-naam{font-weight:700;font-size:15px;color:#111827}
+    #dfk-root .wg-meta{font-size:11px;color:#6b7280;margin-top:2px}
+    #dfk-root .wg-badge{margin-left:auto;font-weight:700;font-size:11px;color:#9ca3af;flex-shrink:0}
+    #dfk-root .weekend-groep-events{display:none;padding-left:14px;padding-top:4px}
+    #dfk-root .weekend-groep-events.open{display:flex;flex-direction:column;gap:6px}
+    #dfk-root .weekend-groep-events .ev-row{border-left-width:2px}
+    #dfk-root .wg-pdf-balk{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px;border-top:1px solid #e5e7eb;margin-top:4px}
+    #dfk-root .wg-pdf-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;color:#374151;font-weight:700;font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+    #dfk-root .wg-pdf-btn:hover{border-color:#dc2626;color:#dc2626}
+    #dfk-root .wg-pdf-icon{font-size:13px}
 
-    /* ── Mijn account overlay ── */
-    #dfk-root .account-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
-    #dfk-root .account-overlay.open { display: flex; }
-    #dfk-root .account-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
-    #dfk-root .account-body { flex: 1; overflow-y: auto; padding: 2rem; max-width: 600px; width: 100%; margin: 0 auto; }
+    #dfk-root .wd-back{display:flex;align-items:center;gap:8px;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:0;margin-bottom:1.4rem;font-family:inherit}
+    #dfk-root .wd-back:hover{color:#374151}
+    #dfk-root .wd-header{margin-bottom:1.6rem}
+    #dfk-root .wd-titel-rij{display:flex;align-items:center;gap:10px}
+    #dfk-root .wd-titel{font-weight:800;font-size:26px;color:#111827;line-height:1.1}
+    #dfk-root .wd-edit-btn{background:none;border:none;color:#d1d5db;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0;transition:color .15s}
+    #dfk-root .wd-edit-btn:hover{color:#dc2626}
+    #dfk-root .wd-naam-input{font-weight:800;font-size:24px;color:#111827;background:#fff;border:1.5px solid #dc2626;border-radius:8px;padding:4px 10px;flex:1;outline:none;font-family:inherit}
+    #dfk-root .wd-naam-opslaan{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;font-family:inherit}
+    #dfk-root .wd-naam-opslaan:hover{background:#b91c1c}
+    #dfk-root .wd-naam-annuleer{background:none;border:1.5px solid #e5e7eb;color:#6b7280;border-radius:8px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;font-family:inherit}
+    #dfk-root .wd-naam-annuleer:hover{color:#374151;border-color:#d1d5db}
+    #dfk-root .wd-datum{font-size:13px;color:#6b7280;margin-top:4px}
+    #dfk-root .wd-stats{display:flex;gap:16px;margin-top:10px}
+    #dfk-root .wd-stat{font-weight:700;font-size:13px;color:#6b7280}
+    #dfk-root .wd-stat span{color:#111827;font-size:16px}
+    #dfk-root .wd-section-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:1rem;margin-top:1.5rem}
+    #dfk-root .wd-dl-wrapper{position:relative;display:inline-block;margin-bottom:1.5rem}
+    #dfk-root .wd-dl-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;color:#374151;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
+    #dfk-root .wd-dl-btn:hover{border-color:#dc2626;color:#dc2626}
+    #dfk-root .wd-dl-btn.open{border-color:#dc2626;color:#dc2626;border-bottom-left-radius:0;border-bottom-right-radius:0}
+    #dfk-root .wd-dl-menu{display:none;position:absolute;top:100%;left:0;min-width:260px;background:#fff;border:1.5px solid #dc2626;border-top:none;border-radius:0 8px 8px 8px;z-index:50;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    #dfk-root .wd-dl-menu.open{display:block}
+    #dfk-root .wd-dl-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#374151;font-size:13px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background .1s;font-family:inherit}
+    #dfk-root .wd-dl-item:last-child{border-bottom:none}
+    #dfk-root .wd-dl-item:hover{background:#fef2f2;color:#dc2626}
+    #dfk-root .wd-dl-item-icon{font-size:16px;flex-shrink:0}
 
-    /* ── Rijder bewerken overlay ── */
-    #dfk-root .rijder-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
-    #dfk-root .rijder-overlay.open { display: flex; }
-    #dfk-root .rijder-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
-    #dfk-root .rijder-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
+    #dfk-root .empty{text-align:center;padding:2rem 1rem;color:#9ca3af;font-size:13px}
+    #dfk-root .empty-icon{font-size:28px;margin-bottom:.4rem}
 
-    /* ── Event formulier overlay ── */
-    #dfk-root .event-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
-    #dfk-root .event-overlay.open { display: flex; }
-    #dfk-root .event-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
-    #dfk-root .event-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
+    #dfk-root .archief-jaar{margin-bottom:6px}
+    #dfk-root .archief-jaar-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;user-select:none}
+    #dfk-root .archief-jaar-header:hover{border-color:#d1d5db;background:#f9fafb}
+    #dfk-root .archief-jaar-label{font-weight:800;font-size:16px;color:#111827;flex:1}
+    #dfk-root .archief-pijl{font-size:12px;color:#9ca3af;width:12px}
+    #dfk-root .archief-tel{font-size:11px;color:#9ca3af}
+    #dfk-root .archief-jaar-body{padding-left:12px;margin-top:4px;display:flex;flex-direction:column;gap:4px}
+    #dfk-root .archief-maand-header{display:flex;align-items:center;gap:10px;padding:7px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;user-select:none}
+    #dfk-root .archief-maand-header:hover{border-color:#d1d5db}
+    #dfk-root .archief-maand-label{font-weight:700;font-size:12px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;flex:1}
+    #dfk-root .archief-maand-body{padding-left:10px;margin-top:4px;display:flex;flex-direction:column;gap:6px}
+
+    #dfk-root .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(200px);opacity:0;border-radius:12px;padding:12px 24px;font-weight:700;font-size:14px;z-index:999;transition:transform .3s ease,opacity .3s ease;pointer-events:none;max-width:90vw;text-align:center;word-break:break-word}
+    #dfk-root .toast.green{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+    #dfk-root .toast.yellow{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    #dfk-root .toast.red{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+    #dfk-root .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+    #dfk-root .nav-tabs{display:flex;height:100%;margin-left:1.5rem}
+    #dfk-root .nav-tab{display:flex;align-items:center;padding:0 18px;height:100%;font-weight:600;font-size:13px;color:#9ca3af;cursor:pointer;border:none;border-bottom:2px solid transparent;background:transparent;transition:color .15s;margin-bottom:-1px;font-family:inherit}
+    #dfk-root .nav-tab:hover{color:#d1d5db}
+    #dfk-root .nav-tab.on{color:#fff;border-bottom-color:#dc2626}
+
+    #dfk-root .admin-panel{display:none;flex:1;flex-direction:column}
+    #dfk-root .admin-panel.on{display:flex}
+
+    #dfk-root .rider-list{display:flex;flex-direction:column;gap:8px}
+    #dfk-root .rider-row{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    #dfk-root .rider-row:hover{border-color:#d1d5db}
+    #dfk-root .rider-row.editing{border-color:#f59e0b;border-left-color:#f59e0b;background:#fffbeb}
+    #dfk-root .rider-avatar{width:30px;height:30px;background:#dc2626;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#fff;flex-shrink:0}
+    #dfk-root .rider-info{flex:1;min-width:0}
+    #dfk-root .rider-name{font-weight:700;font-size:13px;color:#111827}
+    #dfk-root .rider-meta{font-size:11px;color:#6b7280;margin-top:1px}
+    #dfk-root .rider-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-weight:700;font-size:10px;letter-spacing:.5px;text-transform:uppercase;margin-left:6px}
+    #dfk-root .rider-badge.eigen{background:#d1fae5;color:#065f46}
+    #dfk-root .rider-badge.huur{background:#dbeafe;color:#1d4ed8}
+    #dfk-root .rider-badge.admin{background:#fef3c7;color:#92400e}
+    #dfk-root .rider-badge.werkplaats{background:#ede9fe;color:#5b21b6}
+    #dfk-root .rider-badge.office{background:#d1fae5;color:#065f46}
+    #dfk-root .rider-actions{display:flex;gap:6px;flex-shrink:0}
+
+    #dfk-root .rijder-toolbar{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+    #dfk-root .rijder-zoek{flex:1;min-width:150px;background:#fff;border:1.5px solid #e5e7eb;color:#111827;padding:8px 12px;font-size:13px;border-radius:8px;outline:none;font-family:inherit}
+    #dfk-root .rijder-zoek::placeholder{color:#d1d5db}
+    #dfk-root .rijder-zoek:focus{border-color:#dc2626}
+    #dfk-root .rijder-sel{background:#fff;border:1.5px solid #e5e7eb;color:#374151;padding:8px 10px;font-size:12px;border-radius:8px;outline:none;font-family:inherit;cursor:pointer}
+    #dfk-root .rijder-sel:focus{border-color:#dc2626}
+    #dfk-root .rijder-count{font-size:11px;color:#9ca3af;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+    #dfk-root .rol-select{background:#fff;border:1.5px solid #e5e7eb;color:#374151;border-radius:6px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit}
+
+    #dfk-root .inschr-overlay{display:none;position:fixed;inset:0;background:#f3f4f6;z-index:300;flex-direction:column;overflow:hidden}
+    #dfk-root .inschr-overlay.open{display:flex}
+    #dfk-root .inschr-topbar{background:#111827;padding:0 1.5rem;height:54px;display:flex;align-items:center;gap:1.5rem;flex-shrink:0;position:sticky;top:0;z-index:10}
+    #dfk-root .inschr-ev-info{flex:1;min-width:0;overflow:hidden}
+    #dfk-root .inschr-ev-naam{font-weight:800;font-size:18px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #dfk-root .inschr-ev-sub{font-size:12px;color:#9ca3af;margin-top:1px}
+    #dfk-root .inschr-body{flex:1;overflow-y:auto;padding:1.5rem}
+    #dfk-root .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.2rem;align-items:center}
+    #dfk-root .filter-chip{padding:6px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;transition:all .1s;font-family:inherit}
+    #dfk-root .filter-chip.on{background:#fef2f2;border-color:#dc2626;color:#111827}
+    #dfk-root .filter-chip:hover:not(.on){border-color:#d1d5db;color:#374151}
+    #dfk-root .inschr-sort{margin-left:auto;background:#fff;border:1.5px solid #e5e7eb;color:#374151;padding:7px 12px;border-radius:8px;font-size:13px;outline:none;cursor:pointer;font-family:inherit}
+    #dfk-root .inschr-grid{display:flex;flex-direction:column;gap:6px}
+    #dfk-root .inschr-row{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    #dfk-root .inschr-row:hover{border-color:#d1d5db}
+    #dfk-root .inschr-row.open{background:#f9fafb;border-color:#d1d5db}
+    #dfk-root .inschr-row.huur{border-left-color:#3b82f6;background:#eff6ff}
+    #dfk-root .inschr-row.huur:hover{border-color:#bfdbfe}
+    #dfk-root .inschr-row.huur.open{background:#dbeafe}
+    #dfk-root .inschr-sectie-label.huur-label{color:#3b82f6}
+    #dfk-root .inschr-row-top{display:flex;align-items:center;gap:10px}
+    #dfk-root .inschr-row-meta{flex:1;min-width:0}
+    #dfk-root .inschr-naam{font-weight:700;font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #dfk-root .inschr-reg{font-size:11px;color:#6b7280;margin-top:2px}
+    #dfk-root .inschr-row-rechts{display:flex;align-items:center;gap:12px;flex-shrink:0}
+    #dfk-root .inschr-klasse-badge{font-weight:900;font-size:14px;color:#111827;text-align:right}
+    #dfk-root .inschr-nr{color:#dc2626}
+    #dfk-root .inschr-row-arrow{font-size:10px;color:#d1d5db;transition:transform .2s;flex-shrink:0}
+    #dfk-root .inschr-row.open .inschr-row-arrow{transform:rotate(180deg);color:#6b7280}
+    #dfk-root .inschr-expand{display:none;margin-top:10px;padding-top:12px;border-top:1px solid #f3f4f6;padding-left:40px;flex-direction:column;gap:10px}
+    #dfk-root .inschr-row.open .inschr-expand{display:flex}
+    #dfk-root .inschr-sectie{display:flex;flex-direction:column;gap:4px}
+    #dfk-root .inschr-sectie-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#dc2626}
+    #dfk-root .inschr-sectie-value{font-size:13px;color:#374151}
+    #dfk-root .inschr-chips{display:flex;flex-wrap:wrap;gap:4px}
+    #dfk-root .inschr-chip{padding:4px 9px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;color:#374151}
+    #dfk-root .inschr-chip.ok{border-color:#a7f3d0;color:#065f46;background:#d1fae5}
+    #dfk-root .inschr-chip.benzine{border-color:#fde68a;color:#92400e;background:#fef3c7}
+    #dfk-root .inschr-uitschr-btn{margin-top:10px;padding:6px 14px;background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit}
+    #dfk-root .inschr-uitschr-btn:hover{background:#fee2e2;border-color:#f87171}
+    @media(max-width:768px){
+      #dfk-root .inschr-topbar{padding:.6rem 1rem;height:auto;flex-wrap:wrap;gap:.5rem}
+      #dfk-root .inschr-ev-info{order:-1;width:100%}
+      #dfk-root .inschr-ev-naam{font-size:15px;white-space:normal}
+      #dfk-root .inschr-body{padding:1rem}
+      #dfk-root .inschr-expand{padding-left:10px}
+    }
+
+    #dfk-root .ai-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center}
+    #dfk-root .ai-backdrop.open{display:flex}
+    #dfk-root .ai-modal{background:#fff;border:1px solid #e5e7eb;border-top:3px solid #dc2626;border-radius:12px;padding:1.5rem;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.15)}
+    #dfk-root .ai-titel{font-weight:800;font-size:18px;color:#111827;margin-bottom:1.2rem}
+    #dfk-root .ai-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:4px;margin-top:1rem;display:block}
+    #dfk-root .ai-label:first-of-type{margin-top:0}
+    #dfk-root .ai-input{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:9px 12px;border-radius:8px;font-family:inherit;font-size:14px;outline:none}
+    #dfk-root .ai-input:focus{border-color:#dc2626}
+    #dfk-root .ai-select{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:9px 12px;border-radius:8px;font-family:inherit;font-size:14px;outline:none;cursor:pointer}
+    #dfk-root .ai-select:focus{border-color:#dc2626}
+    #dfk-root .ai-rijder-lijst{max-height:200px;overflow-y:auto;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;margin-top:2px;display:none}
+    #dfk-root .ai-rijder-lijst.open{display:block}
+    #dfk-root .ai-rijder-opt{padding:9px 12px;cursor:pointer;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;font-family:inherit}
+    #dfk-root .ai-rijder-opt:last-child{border-bottom:none}
+    #dfk-root .ai-rijder-opt:hover{background:#f9fafb;color:#111827}
+    #dfk-root .ai-rijder-opt.selected{background:#fef2f2;color:#111827}
+    #dfk-root .ai-rijder-sub{font-size:11px;color:#9ca3af;margin-top:2px}
+    #dfk-root .ai-footer{display:flex;gap:8px;margin-top:1.4rem;justify-content:flex-end}
+    #dfk-root .ai-btn{padding:9px 20px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-family:inherit}
+    #dfk-root .ai-btn.primary{background:#dc2626;border-color:#dc2626;color:#fff}
+    #dfk-root .ai-btn.primary:hover{background:#b91c1c}
+    #dfk-root .ai-btn:hover:not(.primary){border-color:#d1d5db;color:#111827}
+
+    body:not(.kan-evenementen) .vereist-evenementen{display:none!important}
+    body:not(.kan-zichtbaarheid) .vereist-zichtbaarheid{display:none!important}
+    body:not(.kan-inschrijvingen) .vereist-inschrijvingen{display:none!important}
+    body:not(.kan-rijders) .vereist-rijders{display:none!important}
+    body:not(.kan-werkplaats) .vereist-werkplaats{display:none!important}
+    body:not(.kan-crew) .vereist-crew{display:none!important}
+    body.niet-admin #nav-rol-badge{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+    body:not(.kan-rijders) .vereist-rijders-edit{display:none!important}
+    #dfk-root .rechten-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:1.5rem}
+    #dfk-root .recht-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;cursor:pointer;transition:border-color .15s}
+    #dfk-root .recht-item.on{background:#f0fdf4;border-color:#16a34a}
+    #dfk-root .recht-item.disabled{opacity:.4;cursor:default}
+    #dfk-root .recht-box{width:18px;height:18px;border:1.5px solid #d1d5db;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+    #dfk-root .recht-item.on .recht-box{background:#16a34a;border-color:#16a34a}
+    #dfk-root .recht-vinkje{color:#fff;font-size:11px;font-weight:700;display:none}
+    #dfk-root .recht-item.on .recht-vinkje{display:block}
+    #dfk-root .recht-label{font-size:13px;color:#374151;flex:1}
+    #dfk-root .recht-item.on .recht-label{color:#111827;font-weight:600}
+
+    #dfk-root .account-overlay{display:none;position:fixed;inset:0;background:#f3f4f6;z-index:300;flex-direction:column;overflow:hidden}
+    #dfk-root .account-overlay.open{display:flex}
+    #dfk-root .account-topbar{background:#111827;padding:0 1.5rem;height:54px;display:flex;align-items:center;gap:1.5rem;flex-shrink:0}
+    #dfk-root .account-body{flex:1;overflow-y:auto;padding:2rem;max-width:600px;width:100%;margin:0 auto}
+    #dfk-root .rijder-overlay{display:none;position:fixed;inset:0;background:#f3f4f6;z-index:300;flex-direction:column;overflow-y:auto}
+    #dfk-root .rijder-overlay.open{display:flex}
+    #dfk-root .rijder-overlay-topbar{background:#111827;padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-shrink:0;position:sticky;top:0;z-index:10}
+    #dfk-root .rijder-overlay-body{flex:1;padding:2rem;max-width:700px;width:100%;margin:0 auto}
+    #dfk-root .event-overlay{display:none;position:fixed;inset:0;background:#f3f4f6;z-index:300;flex-direction:column;overflow-y:auto}
+    #dfk-root .event-overlay.open{display:flex}
+    #dfk-root .event-overlay-topbar{background:#111827;padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-shrink:0;position:sticky;top:0;z-index:10}
+    #dfk-root .event-overlay-body{flex:1;padding:2rem;max-width:700px;width:100%;margin:0 auto}
   </style>
 </head>
 <body>
@@ -590,9 +556,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <input type="hidden" id="ai-rijder-id" />
 
       <!-- Preview na selectie -->
-      <div id="ai-preview" style="display:none; margin-top:1rem; background:#1a1a1a; border:1px solid #2a2a2a; border-left:3px solid #E02020; border-radius:3px; padding:12px 14px;">
-        <div id="ai-preview-naam" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:#fff;letter-spacing:1px;"></div>
-        <div id="ai-preview-info" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
+      <div id="ai-preview" style="display:none; margin-top:1rem; background:#f0fdf4; border:1px solid #a7f3d0; border-left:3px solid #dc2626; border-radius:8px; padding:12px 14px;">
+        <div id="ai-preview-naam" style="font-weight:700;font-size:17px;color:#111827;letter-spacing:0.5px;"></div>
+        <div id="ai-preview-info" style="font-size:12px;color:#6b7280;margin-top:4px;"></div>
         <!-- Klasse keuze alleen als rijder meerdere klassen heeft die matchen -->
         <div id="ai-klasse-wrap" style="display:none;margin-top:10px;">
           <label class="ai-label" style="margin-top:0;">Klasse</label>
@@ -611,14 +577,14 @@ document.addEventListener('DOMContentLoaded', function() {
   <!-- ── Event formulier overlay ── -->
   <div id="event-overlay" class="event-overlay">
     <div class="event-overlay-topbar">
-      <button class="nav-back" onclick="sluitEventOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="event-overlay-titel">Evenement toevoegen</div>
+      <button class="nav-back" onclick="sluitEventOverlay()" style="padding:6px 14px;border:1px solid #374151;border-radius:6px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-weight:700;font-size:16px;color:#fff;letter-spacing:1px;text-transform:uppercase;" id="event-overlay-titel">Evenement toevoegen</div>
       <div style="width:80px;"></div>
     </div>
     <div class="event-overlay-body">
       <div class="edit-banner" id="edit-banner">
         <span>✎ Je past een evenement aan</span>
-        <span onclick="sluitEventOverlay()" style="cursor:pointer; color:#aaa;">✕ Annuleren</span>
+        <span onclick="sluitEventOverlay()" style="cursor:pointer; color:#6b7280;">✕ Annuleren</span>
       </div>
 
       <div class="section-label">Evenement</div>
@@ -682,8 +648,8 @@ document.addEventListener('DOMContentLoaded', function() {
   <!-- ── Mijn account overlay ── -->
   <div id="account-overlay" class="account-overlay">
     <div class="account-topbar">
-      <button class="nav-back" onclick="sluitAccountOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;">Mijn account</div>
+      <button class="nav-back" onclick="sluitAccountOverlay()" style="padding:6px 14px;border:1px solid #374151;border-radius:6px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-weight:700;font-size:16px;color:#fff;letter-spacing:1px;text-transform:uppercase;">Mijn account</div>
     </div>
     <div class="account-body" id="account-body"></div>
   </div>
@@ -708,7 +674,7 @@ function berekenLeeftijd(geboortedatum) {
 function formatGeboortedatum(geboortedatum) {
   if (!geboortedatum) return null;
   const gd = new Date(geboortedatum + 'T12:00:00');
-  return `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()} <span style="color:#999;font-size:12px;">(${berekenLeeftijd(geboortedatum)} jaar)</span>`;
+  return `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()} <span style="color:#9ca3af;font-size:12px;">(${berekenLeeftijd(geboortedatum)} jaar)</span>`;
 }
 
 // ── State ─────────────────────────────────────
@@ -885,7 +851,7 @@ function renderEvRow(ev, isPast) {
   const inCount = _inschrijvingen[ev.id] || 0;
   return `<div class="ev-row${isPast?' past':''}${isVandaag?' vandaag':''}${isEditing?' editing':''}${(!isPast && deadlinePassed)?' gesloten':''}">
     <div class="ev-date-block">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">${DAGEN[d.getDay()]}</div>
+      <div style="font-weight:700;font-size:10px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">${DAGEN[d.getDay()]}</div>
       <div class="ev-day">${d.getDate()}</div>
       <div class="ev-month">${MAANDEN[d.getMonth()]}</div>
     </div>
@@ -1918,7 +1884,7 @@ function updateStartnrFields(gridId, containerId, preValues) {
   container.style.display = '';
   list.innerHTML = selected.map(k => `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
-      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <span style="font-size:13px;color:#374151;flex:1;">${k}</span>
       <input class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" data-klasse="${k}" placeholder="#"
         value="${(preValues && preValues[k]) ? preValues[k] : ''}"
         style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
@@ -2302,7 +2268,7 @@ function _crewEditFormHTML(r) {
     return `<div class="recht-item${aan?' on':''}${dis?' disabled':''}" onclick="${dis ? '' : `toggleRecht(this,'${opt.id}')`}" data-recht="${opt.id}">
       <div class="recht-box"><span class="recht-vinkje">✓</span></div>
       <span class="recht-label">${opt.label}</span>
-      ${dis?'<span style="font-size:10px;color:#999;letter-spacing:1px;text-transform:uppercase;font-family:\'Barlow Condensed\',sans-serif;">Altijd aan</span>':''}
+      ${dis?'<span style="font-size:10px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;">Altijd aan</span>':''}
     </div>`;
   }).join('');
 
@@ -2427,7 +2393,7 @@ function _nieuwCrewlidFormHTML() {
     <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 8 tekens" oninput="_checkCrewPwMatch()" />
     <label class="field-label">Wachtwoord bevestigen</label>
     <input class="field-input" id="nc-ww2" type="password" placeholder="Herhaal wachtwoord" oninput="_checkCrewPwMatch()" />
-    <p id="nc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:1rem;font-family:'Barlow',sans-serif;color:#E02020;"></p>
+    <p id="nc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:1rem;color:#dc2626;"></p>
 
     <div class="section-label">Rol</div>
     <select class="field-select" id="nc-rol" onchange="_updateNieuwCrewRechten()" style="margin-bottom:1.25rem;">
@@ -2451,9 +2417,9 @@ function _checkCrewPwMatch() {
   const msg = document.getElementById('nc-pw-msg');
   if (!msg) return;
   if (!pw2)            { msg.textContent = ''; return; }
-  if (pw.length < 8)   { msg.style.color = '#E02020'; msg.textContent = 'Minimaal 8 tekens.'; return; }
-  if (pw !== pw2)      { msg.style.color = '#E02020'; msg.textContent = 'Wachtwoorden komen niet overeen.'; return; }
-  msg.style.color = '#4cff4c'; msg.textContent = '✓ Wachtwoorden komen overeen';
+  if (pw.length < 8)   { msg.style.color = '#dc2626'; msg.textContent = 'Minimaal 8 tekens.'; return; }
+  if (pw !== pw2)      { msg.style.color = '#dc2626'; msg.textContent = 'Wachtwoorden komen niet overeen.'; return; }
+  msg.style.color = '#16a34a'; msg.textContent = '✓ Wachtwoorden komen overeen';
 }
 
 function _updateNieuwCrewRechten() {
@@ -2669,9 +2635,9 @@ function toonRijderDetail(id) {
   const isEigen = r.kart_type !== 'huur';
 
   const rij = (label, waarde) => waarde
-    ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #666;">
-        <span style="font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">${label}</span>
-        <span style="font-size:14px;color:#ccc;text-align:right;max-width:60%;">${waarde}</span>
+    ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+        <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">${label}</span>
+        <span style="font-size:14px;color:#111827;text-align:right;max-width:60%;">${waarde}</span>
        </div>`
     : '';
 
@@ -2681,16 +2647,16 @@ function toonRijderDetail(id) {
 
   document.getElementById('rijder-overlay-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:2rem;">
-      <div style="width:56px;height:56px;border-radius:50%;background:#E02020;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
+      <div style="width:56px;height:56px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
         ${((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?'}
       </div>
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;letter-spacing:2px;">${naam}</div>
-        <div style="font-size:13px;color:#999;">${r.email||''}</div>
+        <div style="font-weight:700;font-size:22px;color:#111827;letter-spacing:0.5px;">${naam}</div>
+        <div style="font-size:13px;color:#6b7280;">${r.email||''}</div>
       </div>
     </div>
 
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:0.5rem;">Gegevens</div>
+    <div style="font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:0.5rem;">Gegevens</div>
     ${rij('Geboortedatum', formatGeboortedatum(r.geboortedatum))}
     ${rij('Telefoon', r.telefoon)}
     ${rij('Kart type', isEigen ? 'Eigen kart' : 'Huurkart')}
@@ -2702,11 +2668,11 @@ function toonRijderDetail(id) {
 
     <div style="margin-top:2rem;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="vereist-rijders-edit" onclick="editRijder('${r.id}')"
-        style="flex:1;padding:14px;background:#E02020;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        style="flex:1;padding:14px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;min-width:140px;">
         ✎ Aanpassen
       </button>
       <button onclick="cancelRijderEdit()"
-        style="flex:1;padding:14px;background:transparent;color:#999;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        style="flex:1;padding:14px;background:transparent;color:#6b7280;border:1px solid #e5e7eb;border-radius:8px;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;min-width:140px;">
         Sluiten
       </button>
     </div>
@@ -2797,7 +2763,7 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
         <div class="startnr-list">
           ${klassen.map(k=>`
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
-              <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+              <span style="font-size:13px;color:#374151;flex:1;">${k}</span>
               <input class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" data-klasse="${k}" placeholder="#"
                 value="${startnummers[k]||''}"
                 style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
@@ -2840,10 +2806,10 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
 
     <button class="add-btn" onclick="saveRijder('${r?.id}')" style="margin-top:1rem;">✓ Wijzigingen opslaan</button>
     <button class="reset-btn" onclick="${cancelFn}()">Annuleren</button>
-    <div style="border-top:1px solid #2a2a2a; margin-top:2rem; padding-top:1.5rem;">
-      <div style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.8rem;">Gevaarlijke zone</div>
-      <button class="reset-btn" onclick="deleteRijder('${r?.id}')" style="color:#ff5555;border-color:#3a1a1a;background:#1c1010;">✕ Rijder volledig verwijderen</button>
-      <p style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;margin-top:0.5rem;">Verwijdert het profiel én het account definitief. Niet ongedaan te maken.</p>
+    <div style="border-top:1px solid #e5e7eb; margin-top:2rem; padding-top:1.5rem;">
+      <div style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.8rem;">Gevaarlijke zone</div>
+      <button class="reset-btn" onclick="deleteRijder('${r?.id}')" style="color:#dc2626;border-color:#fecaca;background:#fff5f5;">✕ Rijder volledig verwijderen</button>
+      <p style="font-size:11px;color:#9ca3af;margin-top:0.5rem;">Verwijdert het profiel én het account definitief. Niet ongedaan te maken.</p>
     </div>`;
 }
 
@@ -2965,14 +2931,14 @@ async function toonInschrijvingen(eventId) {
   document.getElementById('inschr-count').textContent   = '';
   document.getElementById('inschr-filters').innerHTML   = '';
   document.getElementById('inschr-grid').innerHTML      =
-    '<div style="color:#999;text-align:center;padding:3rem;font-family:\'Barlow\',sans-serif;font-size:13px;">Laden...</div>';
+    '<div style="color:#9ca3af;text-align:center;padding:3rem;font-size:13px;">Laden...</div>';
 
   const inschrRes = await _supabase.from('inschrijvingen').select('*, profiles(*)').eq('event_id', eventId).order('bevestigd_op', { ascending: true });
   const { data, error } = inschrRes;
 
   if (error) {
     document.getElementById('inschr-grid').innerHTML =
-      `<div style="color:#E02020;padding:1rem;font-size:13px;">Fout: ${error.message}</div>`;
+      `<div style="color:#dc2626;padding:1rem;font-size:13px;">Fout: ${error.message}</div>`;
     return;
   }
 
@@ -3034,7 +3000,7 @@ function renderAiRijders(zoek) {
     .sort((a, b) => (a.naam||'').localeCompare(b.naam||''));
 
   if (!gefilterd.length) {
-    lijst.innerHTML = '<div class="ai-rijder-opt" style="color:#999;cursor:default;">Geen rijders gevonden</div>';
+    lijst.innerHTML = '<div class="ai-rijder-opt" style="color:#9ca3af;cursor:default;">Geen rijders gevonden</div>';
     return;
   }
 
@@ -3537,15 +3503,15 @@ function _crewAccountFormHTML(r) {
     </div>
 
     <div class="section-label" style="margin-top:1.25rem;">Wachtwoord wijzigen</div>
-    <label class="field-label">Nieuw wachtwoord <span style="color:#999;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
+    <label class="field-label">Nieuw wachtwoord <span style="color:#9ca3af;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
     <div style="position:relative;">
       <input class="field-input" id="r-ww" type="password" placeholder="Nieuw wachtwoord..." style="padding-right:48px;" />
-      <button onclick="var i=document.getElementById('r-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button>
+      <button onclick="var i=document.getElementById('r-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;">👁</button>
     </div>
     <label class="field-label">Wachtwoord bevestigen</label>
     <div style="position:relative;">
       <input class="field-input" id="r-ww2" type="password" placeholder="Herhaal wachtwoord..." style="padding-right:48px;" />
-      <button onclick="var i=document.getElementById('r-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button>
+      <button onclick="var i=document.getElementById('r-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;">👁</button>
     </div>
 
     <button class="add-btn" onclick="slaCrewAccountOp('${r.id}')" style="margin-top:1.5rem;">✓ Opslaan</button>
