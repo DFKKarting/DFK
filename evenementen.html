@@ -1077,14 +1077,27 @@ async function saveRijder() {
   const get = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const msgEl = document.getElementById('acc-save-msg');
   msgEl.textContent = '';
-  const isEigen   = document.getElementById('acc-eigen-sectie').style.display !== 'none';
+  const isEigen     = document.getElementById('acc-eigen-sectie').style.display !== 'none';
   const isNewRijder = !_editingRijder;
-  const rijderId  = _editingRijder?.id || crypto.randomUUID();
-  const voornaam  = get('acc-voornaam');
-  const naam      = get('acc-naam');
+  const voornaam    = get('acc-voornaam');
+  const naam        = get('acc-naam');
   if (!voornaam || !naam) {
     msgEl.style.color='#E02020'; msgEl.textContent='Vul voornaam en naam in.'; return;
   }
+
+  let rijderId = _editingRijder?.id || null;
+
+  // Nieuwe extra rijder: eerst aanmaken via RPC (bypast RLS)
+  if (isNewRijder) {
+    const { data: nieuwId, error: rpcErr } = await _supabase.rpc('maak_extra_rijder', {
+      p_voornaam:  voornaam,
+      p_naam:      naam,
+      p_kart_type: isEigen ? 'eigen' : 'huur',
+    });
+    if (rpcErr) { msgEl.style.color='#E02020'; msgEl.textContent='Opslaan mislukt: '+rpcErr.message; return; }
+    rijderId = nieuwId;
+  }
+
   const profiel = {
     id:            rijderId,
     account_id:    _currentUser.id,
@@ -1113,15 +1126,21 @@ async function saveRijder() {
       uitrusting:    [...document.querySelectorAll('#acc-uitrusting-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
     });
   }
-  const { error } = await _supabase.from('profiles').upsert(profiel);
+
+  // Eigen profiel: upsert. Sub-rijder: update (rij bestaat al na RPC of was al aanwezig)
+  const isEigenProfiel = rijderId === _currentUser.id;
+  const { error } = isEigenProfiel
+    ? await _supabase.from('profiles').upsert(profiel)
+    : await _supabase.from('profiles').update(profiel).eq('id', rijderId);
   if (error) { msgEl.style.color='#E02020'; msgEl.textContent='Opslaan mislukt: '+error.message; return; }
+
   if (isNewRijder) {
     _accountRijders.push(profiel);
   } else {
     const idx = _accountRijders.findIndex(r => r.id === rijderId);
     if (idx >= 0) _accountRijders[idx] = { ..._accountRijders[idx], ...profiel };
   }
-  if (rijderId === _currentUser.id) {
+  if (isEigenProfiel) {
     _currentProfile = { ..._currentProfile, ...profiel };
     updateNavbar();
   }
