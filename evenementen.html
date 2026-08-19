@@ -9,193 +9,188 @@
   <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Evenementen</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
-    body { background: #0a0a0a; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f3f4f6;min-height:100vh}
 
-    #dfk-root * { box-sizing: border-box; }
-    #dfk-root { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; font-family: 'Barlow', sans-serif; }
+    /* ── Nav ── */
+    .nav{background:#111827;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
+    .nav-logo{display:flex;align-items:center;gap:14px}
+    .nav-divider{width:1px;height:28px;background:#374151;margin:0 4px}
+    .nav-right{display:flex;align-items:center;gap:12px;position:relative}
+    .nav-user-btn{display:flex;align-items:center;gap:8px;background:#1f2937;border:1.5px solid #374151;border-radius:8px;padding:6px 12px;cursor:pointer;color:#d1d5db;font-size:13px;font-family:inherit}
+    .nav-user-btn:hover{border-color:#dc2626;color:#fff}
+    .nav-avatar{width:28px;height:28px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+    .nav-chevron{font-size:10px;color:#9ca3af}
 
-    #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
-    #dfk-root .nav-logo { display: flex; align-items: center; gap: 14px; }
-    #dfk-root .nav-divider { width: 1px; height: 28px; background: #2a2a2a; margin: 0 4px; }
-    #dfk-root .nav-right { display: flex; align-items: center; gap: 12px; position: relative; }
-    #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 4px; padding: 7px 14px; cursor: pointer; color: #ccc; font-size: 13px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .nav-user-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-    #dfk-root .nav-chevron { font-size: 10px; color: #999; }
+    /* ── Dropdown ── */
+    .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:12px;min-width:200px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .dropdown.open{display:block}
+    .dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#d1d5db;font-size:14px;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
+    .dropdown-item:last-child{border-bottom:none}
+    .dropdown-item:hover{background:#374151;color:#fff}
+    .dropdown-item.danger{color:#f87171}
+    .di-icon{font-size:15px;width:18px;text-align:center}
 
-    #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
-    #dfk-root .dropdown.open { display: block; }
-    #dfk-root .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; }
-    #dfk-root .dropdown-item:last-child { border-bottom: none; }
-    #dfk-root .dropdown-item:hover { background: #1c1c1c; color: #fff; }
-    #dfk-root .dropdown-item.danger { color: #ff5555; }
-    #dfk-root .dropdown-item.danger:hover { background: #1c1c1c; }
-    #dfk-root .di-icon { font-size: 15px; width: 18px; text-align: center; }
+    /* ── Tab bar ── */
+    .tab-bar{background:#111827;border-bottom:1px solid #374151;display:flex;position:sticky;top:54px;z-index:99}
+    .tab-btn{flex:1;padding:12px 8px;text-align:center;font-weight:600;font-size:13px;color:#9ca3af;border:none;border-bottom:2px solid transparent;background:transparent;cursor:pointer;margin-bottom:-1px;transition:color .15s;font-family:inherit}
+    .tab-btn.on{color:#fff;border-bottom-color:#dc2626}
+    .tab-panel{display:none}
+    .tab-panel.on{display:block}
 
-    #dfk-root .main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
-    #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-    #dfk-root .page-sub { font-size: 13px; color: #999; margin-bottom: 2rem; }
-    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
+    /* ── Main ── */
+    .main{flex:1;padding:24px 16px;max-width:1100px;width:100%;margin:0 auto}
+    .page-title{font-size:22px;font-weight:800;color:#111827;margin-bottom:4px}
+    .page-sub{font-size:13px;color:#6b7280;margin-bottom:20px}
+    .section-label{font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:16px;display:block}
 
-    #dfk-root .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    #dfk-root .event-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
-    #dfk-root .event-card.past { opacity: 0.65; }
-    #dfk-root .event-card-top { background: #E02020; padding: 12px 14px; display: flex; align-items: center; gap: 14px; }
-    #dfk-root .event-card-top.past { background: #2a2a2a; }
-    #dfk-root .event-card-top.bezig { background: #1a3a1a; }
-    #dfk-root .event-badge.bezig { background: rgba(76,255,76,0.15); color: #4cff4c; animation: bezig-pulse 2s ease-in-out infinite; }
-    @keyframes bezig-pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-    #dfk-root .evc-date { text-align: center; flex-shrink: 0; }
-    #dfk-root .evc-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 44px; line-height: 1; color: #fff; }
-    #dfk-root .evc-maand { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-top: 1px; }
-    #dfk-root .evc-jaar { font-family: 'Barlow', sans-serif; font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
-    #dfk-root .evc-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.2); flex-shrink: 0; }
-    #dfk-root .evc-mid { flex: 1; min-width: 0; }
-    #dfk-root .evc-dag { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 3px; }
-    #dfk-root .event-badge { flex-shrink: 0; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; align-self: flex-start; }
-    #dfk-root .event-body { padding: 16px; }
-    #dfk-root .event-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
-    #dfk-root .event-circuit { font-size: 13px; color: #aaa; margin-bottom: 12px; }
-    #dfk-root .event-deadline { font-size: 11px; color: #999; margin-bottom: 10px; }
-    #dfk-root .event-deadline.urgent { color: #E02020; }
-    #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.9); }
-    #dfk-root .countdown-top strong { color: #fff; font-size: 13px; }
-    #dfk-root .event-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    #dfk-root .class-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 3px 8px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
-    #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
-    #dfk-root .inschrijf-btn { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 8px 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
-    #dfk-root .inschrijf-btn:hover { background: #c01010; }
-    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #999; cursor: default; }
-    #dfk-root .inschrijf-btn.ingeschreven { background: #1a3a1a; border: 1px solid #2a6a2a; color: #4cff4c; cursor: default; }
-    #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
-    #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
-
-    #dfk-root .countdown-top.vandaag { color: #fff; font-size: 14px; }
-    #dfk-root .countdown-top.vandaag strong { font-size: 15px; }
-
-
-    /* ── Tabs ── */
-    #dfk-root .tab-bar { background: #111; border-bottom: 3px solid #1a1a1a; display: flex; position: sticky; top: 60px; z-index: 99; }
-    #dfk-root .tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; transition: color 0.15s; }
-    #dfk-root .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
-    #dfk-root .tab-panel { display: none; }
-    #dfk-root .tab-panel.on { display: block; }
+    /* ── Event cards ── */
+    .events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .event-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow:hidden}
+    .event-card.past{opacity:.7}
+    .event-card-top{background:#dc2626;padding:12px 14px;display:flex;align-items:center;gap:14px}
+    .event-card-top.past{background:#9ca3af}
+    .event-card-top.bezig{background:#065f46}
+    .event-badge.bezig{background:rgba(52,211,153,.15);color:#34d399;animation:bezig-pulse 2s ease-in-out infinite}
+    @keyframes bezig-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+    .evc-date{text-align:center;flex-shrink:0}
+    .evc-day{font-weight:900;font-size:44px;line-height:1;color:#fff}
+    .evc-maand{font-weight:700;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.75);text-transform:uppercase;margin-top:1px}
+    .evc-jaar{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px}
+    .evc-divider{width:1px;align-self:stretch;background:rgba(255,255,255,.2);flex-shrink:0}
+    .evc-mid{flex:1;min-width:0}
+    .evc-dag{font-weight:600;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:3px}
+    .event-badge{flex-shrink:0;background:rgba(0,0,0,.25);border-radius:6px;padding:3px 8px;font-weight:700;font-size:11px;color:#fff;align-self:flex-start}
+    .event-body{padding:16px}
+    .event-name{font-weight:700;font-size:17px;color:#111827;margin-bottom:4px}
+    .event-circuit{font-size:13px;color:#6b7280;margin-bottom:10px}
+    .event-deadline{font-size:12px;color:#6b7280;margin-bottom:8px}
+    .event-deadline.urgent{color:#dc2626}
+    .countdown-top{font-weight:600;font-size:12px;color:rgba(255,255,255,.9)}
+    .countdown-top strong{color:#fff;font-size:13px}
+    .countdown-top.vandaag{color:#fff;font-size:14px}
+    .countdown-top.vandaag strong{font-size:15px}
+    .event-classes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+    .class-tag{background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:#374151}
+    .event-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f3f4f6;padding-top:12px}
+    .inschrijf-btn{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+    .inschrijf-btn:hover{background:#b91c1c}
+    .inschrijf-btn.vol{background:#e5e7eb;color:#9ca3af;cursor:default}
+    .inschrijf-btn.ingeschreven{background:#d1fae5;border:1px solid #a7f3d0;color:#065f46;cursor:default}
+    .events-empty{text-align:center;padding:4rem 1rem;color:#9ca3af;font-size:13px;grid-column:1/-1}
+    .events-empty-icon{font-size:36px;margin-bottom:.6rem}
 
     /* ── Mijn Inschrijvingen ── */
-    #dfk-root .inschrijving-card { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-    #dfk-root .inschrijving-info { flex: 1; }
-    #dfk-root .inschrijving-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
-    #dfk-root .inschrijving-meta { font-size: 13px; color: #aaa; margin-bottom: 2px; }
-    #dfk-root .inschrijving-reg { font-size: 11px; color: #999; margin-top: 6px; }
-    #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #999; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-    #dfk-root .uitschrijf-btn:hover { border-color: #E02020; color: #E02020; }
-    #dfk-root .uitschrijf-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-    #dfk-root .uitschrijf-dl { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; text-align: right; line-height: 1.5; }
-    #dfk-root .uitschrijf-dl.urgent { color: #cc2020; }
-    #dfk-root .uitschrijf-dl strong { font-size: 12px; color: #ff4444; }
-    #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
-    #dfk-root .inschrijvingen-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
+    .inschrijving-card{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .inschrijving-info{flex:1}
+    .inschrijving-naam{font-weight:700;font-size:17px;color:#111827;margin-bottom:4px}
+    .inschrijving-meta{font-size:13px;color:#6b7280;margin-bottom:2px}
+    .inschrijving-reg{font-size:11px;color:#9ca3af;margin-top:6px}
+    .uitschrijf-btn{background:none;border:1.5px solid #e5e7eb;border-radius:8px;color:#6b7280;font-weight:700;font-size:12px;padding:6px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+    .uitschrijf-btn:hover{border-color:#dc2626;color:#dc2626}
+    .uitschrijf-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+    .uitschrijf-dl{font-size:11px;font-weight:600;color:#9ca3af;text-align:right;line-height:1.5}
+    .uitschrijf-dl.urgent{color:#dc2626}
+    .uitschrijf-dl strong{font-size:12px;color:#dc2626}
+    .inschrijvingen-empty{text-align:center;padding:4rem 1rem;color:#9ca3af;font-size:13px}
+    .inschrijvingen-empty-icon{font-size:36px;margin-bottom:.6rem}
 
-    /* ── Archief jaar/maand ── */
-    #dfk-root .archief-jaar { margin-bottom: 6px; }
-    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
-    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
-    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
-    #dfk-root .archief-pijl { font-size: 12px; color: #999; width: 12px; transition: color 0.15s; }
-    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
-    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
-    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
-    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
-    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
-    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
-    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    /* ── Archief ── */
+    .archief-jaar{margin-bottom:6px}
+    .archief-jaar-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;user-select:none}
+    .archief-jaar-header:hover{border-color:#d1d5db;background:#f9fafb}
+    .archief-jaar-label{font-weight:800;font-size:16px;color:#111827;flex:1}
+    .archief-pijl{font-size:12px;color:#9ca3af;width:12px}
+    .archief-tel{font-size:11px;color:#9ca3af}
+    .archief-jaar-body{padding-left:12px;margin-top:4px;display:flex;flex-direction:column;gap:4px}
+    .archief-maand-header{display:flex;align-items:center;gap:10px;padding:7px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;user-select:none}
+    .archief-maand-header:hover{border-color:#d1d5db}
+    .archief-maand-label{font-weight:700;font-size:12px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;flex:1}
+    .archief-maand-body{padding-left:10px;margin-top:4px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 
-    #dfk-root .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
-    #dfk-root .overlay.open { display: block; }
-    #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; height: 100dvh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow: hidden; }
-    #dfk-root .account-panel.open { right: 0; }
-    #dfk-root .panel-header { background: #111; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
-    #dfk-root .panel-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
-    #dfk-root .panel-close { background: none; border: none; color: #999; font-size: 22px; cursor: pointer; line-height: 1; }
-    #dfk-root .panel-close:hover { color: #fff; }
-    #dfk-root .panel-body { padding: 24px; flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-    #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
-    #dfk-root .section-title:first-child { margin-top: 0; }
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
-    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
-    #dfk-root .field-input:focus { border-color: #E02020; }
-    #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
-    #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
-    #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
-    #dfk-root .save-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 1.5rem; }
-    #dfk-root .save-btn:hover { background: #c01010; }
-    #dfk-root .edit-btn { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 6px 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
-    #dfk-root .edit-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
-    #dfk-root .cancel-btn:hover { color: #ccc; border-color: #444; }
-    #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
-    #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
-    #dfk-root .chk-item.on { border-color: #E02020; background: #2a1010; }
-    #dfk-root .chk-box { width: 16px; height: 16px; border: 1px solid #555; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
-    #dfk-root .chk-item.on .chk-box { background: #E02020; border-color: #E02020; }
-    #dfk-root .chk-mark { color: #fff; font-size: 11px; font-weight: 700; display: none; }
-    #dfk-root .chk-item.on .chk-mark { display: block; }
-    #dfk-root .chk-label { font-size: 13px; color: #ccc; }
-    #dfk-root .chk-item.on .chk-label { color: #fff; }
-    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
-    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
-    #dfk-root .toggle-group { display: flex; gap: 6px; }
-    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #aaa; }
-    #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
-    #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
-    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
-    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
-    #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+    /* ── Overlay & panels ── */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300}
+    .overlay.open{display:block}
+    .account-panel{position:fixed;top:0;right:-480px;width:460px;height:100vh;height:100dvh;background:#fff;border-left:1px solid #e5e7eb;z-index:400;display:flex;flex-direction:column;transition:right .25s ease;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,.1)}
+    .account-panel.open{right:0}
+    .panel-header{background:#f9fafb;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+    .panel-title{font-weight:800;font-size:18px;color:#111827}
+    .panel-close{background:none;border:none;color:#9ca3af;font-size:20px;cursor:pointer;line-height:1}
+    .panel-close:hover{color:#374151}
+    .panel-body{padding:20px;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+    .section-title{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;display:block}
+    .section-title:first-child{margin-top:0}
+    .field-label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px}
+    .field-input{display:block;width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:10px 12px;font-size:14px;border-radius:8px;margin-bottom:12px;outline:none;font-family:inherit}
+    .field-input:focus{border-color:#dc2626}
+    .field-select{display:block;width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:10px 12px;font-size:14px;border-radius:8px;margin-bottom:12px;outline:none;font-family:inherit;cursor:pointer}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .two-col .field-input,.two-col .field-select{margin-bottom:0}
+    .save-btn{display:block;width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;margin-top:16px;font-family:inherit}
+    .save-btn:hover{background:#b91c1c}
+    .edit-btn{background:#f3f4f6;border:1.5px solid #e5e7eb;color:#374151;border-radius:6px;padding:6px 14px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
+    .edit-btn:hover{border-color:#dc2626;color:#dc2626}
+    .cancel-btn{display:block;width:100%;padding:11px;background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;font-family:inherit}
+    .cancel-btn:hover{color:#374151;border-color:#d1d5db}
+    .chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+    .chk-item{display:flex;align-items:center;gap:8px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .12s}
+    .chk-item.on{border-color:#dc2626;background:#fef2f2}
+    .chk-box{width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+    .chk-item.on .chk-box{background:#dc2626;border-color:#dc2626}
+    .chk-mark{color:#fff;font-size:11px;font-weight:700;display:none}
+    .chk-item.on .chk-mark{display:block}
+    .chk-label{font-size:13px;color:#374151}
+    .chk-item.on .chk-label{color:#111827;font-weight:600}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+    .toggle-row span{font-size:13px;color:#374151}
+    .toggle-group{display:flex;gap:6px}
+    .tog-btn{padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#9ca3af;font-family:inherit}
+    .tog-btn.yes.on{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+    .tog-btn.no.on{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+    .benzine-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .benz-btn{padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;text-align:left;font-family:inherit}
+    .benz-btn.on{background:#fef2f2;color:#111827;border-color:#dc2626}
 
-    /* ── Inschrijven bevestigingspaneel ── */
-    #dfk-root .inschrijf-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; }
-    #dfk-root .inschrijf-overlay.open { display: block; }
-    #dfk-root .inschrijf-panel { position: fixed; top: 0; right: -520px; width: 500px; height: 100vh; height: 100dvh; background: #141414; border-left: 3px solid #E02020; z-index: 600; display: flex; flex-direction: column; transition: right 0.25s ease; overflow: hidden; }
-    #dfk-root .inschrijf-panel .panel-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2rem; }
-    #dfk-root .inschrijf-panel.open { right: 0; }
-    #dfk-root .ev-confirm-box { background: #1a0808; border: 1px solid #3a1010; border-left: 3px solid #E02020; border-radius: 3px; padding: 16px; margin-bottom: 1.4rem; }
-    #dfk-root .ev-confirm-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 1px; margin-bottom: 6px; }
-    #dfk-root .ev-confirm-meta { font-size: 13px; color: #aaa; }
-    #dfk-root .cf-field { margin-bottom: 0.85rem; }
-    #dfk-root .cf-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 3px; }
-    #dfk-root .cf-value { font-size: 14px; color: #ccc; }
-    #dfk-root .cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.85rem; }
-    #dfk-root .cf-two .cf-field { margin-bottom: 0; }
-    #dfk-root .confirm-vraag { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin: 1.8rem 0 0.4rem; }
-    #dfk-root .confirm-hint { font-size: 13px; color: #999; margin-bottom: 1.5rem; line-height: 1.5; }
-    #dfk-root .bevestig-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
-    #dfk-root .bevestig-btn:hover { background: #c01010; }
-    #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
-    #dfk-root .annuleer-btn:hover { color: #ccc; border-color: #444; }
-    #dfk-root .save-msg { font-size: 12px; text-align: center; margin-top: 8px; min-height: 18px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .rijder-kaart { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
-    #dfk-root .rijder-kaart:hover { border-color: #E02020; }
-    #dfk-root .rijder-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
-    #dfk-root .rijder-kaart-sub { font-size: 12px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .acc-add-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #aaa; border: 1px dashed #333; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; text-align: center; }
-    #dfk-root .acc-add-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .acc-back-btn { background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 0 8px 0 0; line-height: 1; }
-    #dfk-root .acc-back-btn:hover { color: #fff; }
-    #dfk-root .kart-type-keuze { display: flex; gap: 8px; margin-bottom: 1rem; }
-    #dfk-root .kart-type-keuze-btn { flex: 1; padding: 12px 8px; border: 1px solid #444; border-radius: 3px; background: #1c1c1c; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
-    #dfk-root .kart-type-keuze-btn.on { border-color: #E02020; background: #2a1010; color: #fff; }
-    @media (max-width: 768px) {
-      #dfk-root .inschrijf-panel { width: 100%; right: -100%; }
-      #dfk-root .account-panel { width: 100%; right: -100%; }
+    /* ── Inschrijven paneel ── */
+    .inschrijf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500}
+    .inschrijf-overlay.open{display:block}
+    .inschrijf-panel{position:fixed;top:0;right:-520px;width:500px;height:100vh;height:100dvh;background:#fff;border-left:1px solid #e5e7eb;z-index:600;display:flex;flex-direction:column;transition:right .25s ease;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,.1)}
+    .inschrijf-panel .panel-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:2rem}
+    .inschrijf-panel.open{right:0}
+    .ev-confirm-box{background:#fef2f2;border:1px solid #fecaca;border-left:3px solid #dc2626;border-radius:8px;padding:14px;margin-bottom:16px}
+    .ev-confirm-name{font-weight:800;font-size:18px;color:#111827;margin-bottom:6px}
+    .ev-confirm-meta{font-size:13px;color:#6b7280}
+    .cf-field{margin-bottom:10px}
+    .cf-label{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:3px}
+    .cf-value{font-size:14px;color:#374151;font-weight:500}
+    .cf-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+    .cf-two .cf-field{margin-bottom:0}
+    .confirm-vraag{font-weight:800;font-size:22px;color:#111827;margin:20px 0 4px}
+    .confirm-hint{font-size:13px;color:#6b7280;margin-bottom:16px;line-height:1.5}
+    .bevestig-btn{display:block;width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+    .bevestig-btn:hover{background:#b91c1c}
+    .annuleer-btn{display:block;width:100%;padding:11px;background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;font-family:inherit}
+    .annuleer-btn:hover{color:#374151;border-color:#d1d5db}
+    .save-msg{font-size:12px;text-align:center;margin-top:8px;min-height:18px}
+    .rijder-kaart{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+    .rijder-kaart:hover{border-color:#dc2626}
+    .rijder-kaart-naam{font-weight:700;font-size:15px;color:#111827}
+    .rijder-kaart-sub{font-size:12px;color:#9ca3af;margin-top:2px}
+    .acc-add-btn{display:block;width:100%;padding:12px;background:transparent;color:#9ca3af;border:1.5px dashed #d1d5db;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;text-align:center;font-family:inherit}
+    .acc-add-btn:hover{border-color:#dc2626;color:#dc2626}
+    .acc-back-btn{background:none;border:none;color:#9ca3af;font-size:22px;cursor:pointer;padding:0 8px 0 0;line-height:1}
+    .acc-back-btn:hover{color:#374151}
+    .kart-type-keuze{display:flex;gap:8px;margin-bottom:12px}
+    .kart-type-keuze-btn{flex:1;padding:12px 8px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+    .kart-type-keuze-btn.on{border-color:#dc2626;background:#fef2f2;color:#111827}
+    @media(max-width:768px){
+      .inschrijf-panel{width:100%;right:-100%}
+      .account-panel{width:100%;right:-100%}
     }
-    #dfk-root #inschrijf-panel input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
+    #inschrijf-panel input[type="date"]{width:100%!important;max-width:100%!important;box-sizing:border-box!important;-webkit-appearance:none;appearance:none}
   </style>
 </head>
 <body>
@@ -567,7 +562,7 @@ function renderEvents() {
       const namesHtml = evInschr.map(i => {
         const r    = _accountRijders.find(r => r.id === i.rijder_id);
         const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'Rijder';
-        return `<span style="display:block;font-size:12px;color:#4cff4c;font-family:'Barlow',sans-serif;">✓ ${naam}</span>`;
+        return `<span style="display:block;font-size:12px;color:#16a34a;">✓ ${naam}</span>`;
       }).join('');
       if (alleIn) {
         inschrijfBtn = `<div class="inschrijf-btn ingeschreven" style="text-align:left;line-height:1.8;">${namesHtml}</div>`;
@@ -778,11 +773,11 @@ function renderInschrijvingen() {
 
     let rechts;
     if (isVandaag) {
-      rechts = `<span style="font-size:11px;color:#4cff4c;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;animation:bezig-pulse 2s ease-in-out infinite;">Bezig</span>`;
+      rechts = `<span style="font-size:11px;color:#16a34a;letter-spacing:1px;text-transform:uppercase;font-weight:700;animation:bezig-pulse 2s ease-in-out infinite;">Bezig</span>`;
     } else if (isPast) {
-      rechts = `<span style="font-size:11px;color:#444;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`;
+      rechts = `<span style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;font-weight:700;">Afgelopen</span>`;
     } else if (dlPassed) {
-      rechts = `<span style="font-size:11px;color:#999;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
+      rechts = `<span style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;font-weight:700;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
     } else {
       // Knop + eventuele countdown
       let cdHtml = '';
@@ -810,12 +805,12 @@ function renderInschrijvingen() {
     }
 
     return `
-      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444;opacity:0.6;' : isVandaag ? 'border-left-color:#4cff4c;background:#0d1a0d;' : ''}">
+      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#d1d5db;opacity:0.6;' : isVandaag ? 'border-left-color:#16a34a;background:#f0fdf4;' : ''}">
         <div class="inschrijving-info">
           <div class="inschrijving-naam">${ev.naam}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
           <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
-          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta" style="color:#fff;">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })() : ''}
+          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })() : ''}
           ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
@@ -833,8 +828,8 @@ function renderInschrijvingen() {
 
   if (afgelopen.length > 0) {
     html += `<div style="margin:1.6rem 0 0.8rem;display:flex;align-items:center;gap:10px;">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#444;">Afgelopen events</span>
-      <div style="flex:1;height:1px;background:#2a2a2a;"></div>
+      <span style="font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;">Afgelopen events</span>
+      <div style="flex:1;height:1px;background:#e5e7eb;"></div>
     </div>`;
     html += afgelopen.map(renderKaart).join('');
   }
@@ -1267,13 +1262,13 @@ function _openInschrijvenForm() {
 
 
     <span class="section-title">Vraag of opmerking</span>
-    <textarea id="inschrijf-opmerking" placeholder="Optioneel — stel hier een vraag of voeg een opmerking toe aan je inschrijving." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;margin-bottom:1.2rem;outline:none;font-family:'Barlow',sans-serif;resize:vertical;min-height:90px;line-height:1.5;" onfocus="this.style.borderColor='#E02020'" onblur="this.style.borderColor='#333'"></textarea>
+    <textarea id="inschrijf-opmerking" placeholder="Optioneel — stel hier een vraag of voeg een opmerking toe aan je inschrijving." style="display:block;width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;color:#111827;padding:10px 12px;font-size:14px;border-radius:8px;margin-bottom:1.2rem;outline:none;font-family:inherit;resize:vertical;min-height:90px;line-height:1.5;" onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin:1.2rem 0 0.5rem;">
-      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
+      <div style="font-weight:800; font-size:20px; color:#111827;">Is alles correct?</div>
       <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
     </div>
-    <p style="font-size:13px; color:#999; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
+    <p style="font-size:13px; color:#6b7280; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
 
     <button class="bevestig-btn" onclick="_toonBevestiging()">Bevestigen →</button>
     <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
@@ -1301,7 +1296,7 @@ async function _toonBevestiging() {
   const opmerking   = (document.getElementById('inschrijf-opmerking')?.value || '').trim();
 
   const body = document.getElementById('inschrijf-body');
-  body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#aaa;">Bezig met inschrijven...</div>`;
+  body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#6b7280;">Bezig met inschrijven...</div>`;
 
   const { error } = await _supabase.from('inschrijvingen').insert({
     rijder_id:   _selectedRijder?.id || _currentUser.id,
@@ -1312,7 +1307,7 @@ async function _toonBevestiging() {
   });
 
   if (error && error.code !== '23505') {
-    body.innerHTML = `<div style="padding:2rem; color:#E02020; font-family:'Barlow',sans-serif;">
+    body.innerHTML = `<div style="padding:2rem; color:#dc2626;">
       Inschrijving mislukt:<br><strong>${error.message}</strong><br><br>
       <button class="annuleer-btn" onclick="sluitInschrijven()">Sluiten</button>
     </div>`;
@@ -1338,8 +1333,8 @@ async function _toonBevestiging() {
   body.innerHTML = `
     <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
       <div style="font-size:52px; margin-bottom:1rem;">✅</div>
-      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.4rem;">Inschrijving bevestigd!</div>
-      <p style="font-size:13px; color:#aaa; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
+      <div style="font-weight:800; font-size:24px; color:#111827; margin-bottom:0.4rem;">Inschrijving bevestigd!</div>
+      <p style="font-size:13px; color:#6b7280; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
     </div>
     <div class="ev-confirm-box" style="margin-bottom:2rem;">
       <div class="ev-confirm-name">${ev.naam}</div>
