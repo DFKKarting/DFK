@@ -1081,8 +1081,32 @@ async function saveRijder() {
   const isNewRijder = !_editingRijder;
   const voornaam    = get('acc-voornaam');
   const naam        = get('acc-naam');
+  const geboorte    = get('acc-geboorte');
+  const telefoon    = get('acc-tel');
   if (!voornaam || !naam) {
     msgEl.style.color='#E02020'; msgEl.textContent='Vul voornaam en naam in.'; return;
+  }
+  if (!geboorte) {
+    msgEl.style.color='#E02020'; msgEl.textContent='Vul de geboortedatum in.'; return;
+  }
+  if (!telefoon) {
+    msgEl.style.color='#E02020'; msgEl.textContent='Vul het telefoonnummer in.'; return;
+  }
+  if (isEigen) {
+    const klassen = [...document.querySelectorAll('#acc-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim());
+    if (klassen.length === 0) {
+      msgEl.style.color='#E02020'; msgEl.textContent='Kies minstens één klasse.'; return;
+    }
+  } else {
+    if (!get('acc-lengte') || !parseInt(get('acc-lengte'))) {
+      msgEl.style.color='#E02020'; msgEl.textContent='Vul de lengte in (cm).'; return;
+    }
+    if (!get('acc-gewicht') || !parseInt(get('acc-gewicht'))) {
+      msgEl.style.color='#E02020'; msgEl.textContent='Vul het gewicht in (kg).'; return;
+    }
+    if (!get('acc-huurkart')) {
+      msgEl.style.color='#E02020'; msgEl.textContent='Selecteer een type kart.'; return;
+    }
   }
 
   let rijderId = _editingRijder?.id || null;
@@ -1234,15 +1258,26 @@ function _kiesRijderEnSchrijfIn(rijderId) {
 }
 
 function _toonExtraRijderForm() {
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px;';
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="confirm-vraag">Extra rijder toevoegen</div>
     <p class="confirm-hint">Voeg een familielid of extra rijder toe aan je account.</p>
-    <p style="font-size:10px;color:#9ca3af;text-align:right;margin-bottom:4px;">v4</p>
-    <label class="field-label" style="display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px;">Voornaam</label>
-    <input class="field-input" id="er-voornaam" type="text" placeholder="Jan" />
-    <label class="field-label" style="display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px;">Naam</label>
-    <input class="field-input" id="er-naam" type="text" placeholder="Janssen" />
-    <label class="field-label" style="display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">Kart type</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <label class="field-label" style="${lbl}">Voornaam</label>
+        <input class="field-input" id="er-voornaam" type="text" placeholder="Jan" style="margin-bottom:0;" />
+      </div>
+      <div>
+        <label class="field-label" style="${lbl}">Naam</label>
+        <input class="field-input" id="er-naam" type="text" placeholder="Janssen" style="margin-bottom:0;" />
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <label class="field-label" style="${lbl}">Geboortedatum</label>
+    <input class="field-input" id="er-geboorte" type="date" />
+    <label class="field-label" style="${lbl}">Telefoonnummer</label>
+    <input class="field-input" id="er-tel" type="tel" placeholder="0471 12 34 56" />
+    <label class="field-label" style="${lbl}">Kart type</label>
     <div style="display:flex;gap:10px;margin-bottom:1rem;">
       <button class="kart-type-keuze-btn on" id="er-eigen" onclick="document.getElementById('er-eigen').classList.add('on');document.getElementById('er-huur').classList.remove('on')">🏎️ Eigen kart</button>
       <button class="kart-type-keuze-btn" id="er-huur"  onclick="document.getElementById('er-huur').classList.add('on');document.getElementById('er-eigen').classList.remove('on')">🔑 Huur kart</button>
@@ -1254,10 +1289,15 @@ function _toonExtraRijderForm() {
 }
 
 async function _slaExtraRijderOp(btn) {
-  const voornaam = (document.getElementById('er-voornaam')?.value || '').trim();
-  const naam     = (document.getElementById('er-naam')?.value     || '').trim();
-  const fout     = document.getElementById('er-fout');
-  if (!voornaam || !naam) { if (fout) fout.textContent = 'Vul voornaam en naam in.'; return; }
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const voornaam    = g('er-voornaam');
+  const naam        = g('er-naam');
+  const geboortedatum = g('er-geboorte');
+  const telefoon    = g('er-tel');
+  const fout        = document.getElementById('er-fout');
+  if (!voornaam || !naam)  { if (fout) fout.textContent = 'Vul voornaam en naam in.'; return; }
+  if (!geboortedatum)      { if (fout) fout.textContent = 'Vul de geboortedatum in.'; return; }
+  if (!telefoon)           { if (fout) fout.textContent = 'Vul het telefoonnummer in.'; return; }
 
   const isHuur = document.getElementById('er-huur')?.classList.contains('on');
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
@@ -1268,11 +1308,15 @@ async function _slaExtraRijderOp(btn) {
     p_kart_type: isHuur ? 'huur' : 'eigen',
   });
 
+  if (error) { if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; } if (fout) fout.textContent = 'Fout: ' + error.message; return; }
+
+  // Sla extra velden op via update (UPDATE policy staat toe omdat account_id = auth.uid())
+  await _supabase.from('profiles').update({ geboortedatum, telefoon }).eq('id', nieuwId);
+
   if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; }
-  if (error) { if (fout) fout.textContent = 'Fout [' + (error.code||'?') + ']: ' + error.message + (error.hint ? ' — ' + error.hint : ''); return; }
 
   const nieuwRijder = { id: nieuwId, account_id: _currentUser.id, voornaam, naam, rol: 'rijder',
-    kart_type: isHuur ? 'huur' : 'eigen', klassen: [], startnummers: {}, kampioenschappen: [], uitrusting: [] };
+    geboortedatum, telefoon, kart_type: isHuur ? 'huur' : 'eigen', klassen: [], startnummers: {}, kampioenschappen: [], uitrusting: [] };
   _accountRijders.push(nieuwRijder);
   _selectedRijder = nieuwRijder;
   _openInschrijvenForm();
