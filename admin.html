@@ -1639,6 +1639,9 @@ function openWeekendDetail(wid) {
     </div>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.8rem;align-items:flex-start;">
+      ${evs.some((e,_,a) => maandagVan(e.datum) !== maandagVan(a[0].datum))
+        ? `<button class="wd-dl-btn vereist-evenementen" style="background:#fef2f2;border-color:#fecaca;color:#dc2626;" onclick="splitWeekendOpWeek('${wid}')">✂ Split op week</button>`
+        : ''}
       <div class="wd-dl-wrapper" id="wd-dl-wrapper-${wid}" style="margin-bottom:0;">
         <button class="wd-dl-btn" onclick="toggleWdDl('${wid}')">⬇ Downloads ▾</button>
       <div class="wd-dl-menu" id="wd-dl-menu-${wid}">
@@ -2115,6 +2118,49 @@ async function autoWeekendKoppelen(datum, circuit) {
   if (error) { showToast('Weekend aanmaken mislukt: ' + error.message, 'red'); return null; }
   _allWeekenden.unshift(data);
   return data.id;
+}
+
+async function splitWeekendOpWeek(wid) {
+  const evs = _allEvents.filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  // Groepeer per kalenderweek
+  const weken = new Map();
+  for (const ev of evs) {
+    const key = maandagVan(ev.datum);
+    if (!weken.has(key)) weken.set(key, []);
+    weken.get(key).push(ev);
+  }
+
+  if (weken.size <= 1) { showToast('Alle evenementen zitten al in dezelfde week', 'yellow'); return; }
+
+  const weekKeys = [...weken.keys()].sort();
+
+  // Eerste week blijft in het bestaande weekend — naam bijwerken
+  const eersteWeekEvs = weken.get(weekKeys[0]);
+  const naamEerste = buildWeekendNaam(eersteWeekEvs[0].circuit, eersteWeekEvs.map(e => e.datum));
+  await _supabase.from('weekenden').update({ naam: naamEerste }).eq('id', wid);
+  const bestaand = _allWeekenden.find(w => w.id === wid);
+  if (bestaand) bestaand.naam = naamEerste;
+
+  // Overige weken krijgen elk een nieuw weekend
+  for (const key of weekKeys.slice(1)) {
+    const weekEvs = weken.get(key);
+    const naamNieuw = buildWeekendNaam(weekEvs[0].circuit, weekEvs.map(e => e.datum));
+    const { data: nieuwW, error } = await _supabase
+      .from('weekenden').insert({ naam: naamNieuw, datum: weekEvs[0].datum, zichtbaar: false }).select().single();
+    if (error) { showToast('Fout bij aanmaken weekend: ' + error.message, 'red'); return; }
+    _allWeekenden.unshift(nieuwW);
+    // Evenementen koppelen aan nieuw weekend
+    for (const ev of weekEvs) {
+      await _supabase.from('evenementen').update({ weekend_id: nieuwW.id }).eq('id', ev.id);
+      ev.weekend_id = nieuwW.id;
+    }
+  }
+
+  showToast(`Weekend gesplitst in ${weken.size} weekenden`, 'green');
+  sluitWeekendDetail();
+  await laadData();
 }
 
 // ── Circuit helpers ───────────────────────────
