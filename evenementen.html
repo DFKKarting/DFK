@@ -1181,11 +1181,6 @@ function _toonRijderKeuze() {
   const registeredIds = new Set(_myInschrijvingen.filter(i => i.event_id === ev.id).map(i => i.rijder_id));
   const beschikbaar   = _accountRijders.filter(r => !registeredIds.has(r.id));
 
-  if (beschikbaar.length === 1 && _accountRijders.length === 1) {
-    _selectedRijder = beschikbaar[0];
-    _openInschrijvenForm();
-    return;
-  }
 
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="ev-confirm-box">
