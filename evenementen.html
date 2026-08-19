@@ -1251,7 +1251,7 @@ async function _slaExtraRijderOp(btn) {
   });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; }
-  if (error) { if (fout) fout.textContent = 'Opslaan mislukt: ' + error.message; return; }
+  if (error) { if (fout) fout.textContent = 'Fout [' + (error.code||'?') + ']: ' + error.message + (error.hint ? ' — ' + error.hint : ''); return; }
 
   const nieuwRijder = { id: nieuwId, account_id: _currentUser.id, voornaam, naam, rol: 'rijder',
     kart_type: isHuur ? 'huur' : 'eigen', klassen: [], startnummers: {}, kampioenschappen: [], uitrusting: [] };
