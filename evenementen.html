@@ -1,13 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="logos/dfk-logo.png" />
+  <link rel="apple-touch-icon" href="logos/dfk-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Evenementen</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
     body { background: #0a0a0a; }
 
     #dfk-root * { box-sizing: border-box; }
@@ -20,7 +28,7 @@
     #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 4px; padding: 7px 14px; cursor: pointer; color: #ccc; font-size: 13px; font-family: 'Barlow', sans-serif; }
     #dfk-root .nav-user-btn:hover { border-color: #E02020; color: #fff; }
     #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-    #dfk-root .nav-chevron { font-size: 10px; color: #666; }
+    #dfk-root .nav-chevron { font-size: 10px; color: #999; }
 
     #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
     #dfk-root .dropdown.open { display: block; }
@@ -33,42 +41,94 @@
 
     #dfk-root .main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; width: 100%; margin: 0 auto; }
     #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-    #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 2rem; }
-    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size:40x; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
+    #dfk-root .page-sub { font-size: 13px; color: #999; margin-bottom: 2rem; }
+    #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
 
     #dfk-root .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     #dfk-root .event-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
-    #dfk-root .event-card-top { background: #E02020; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
-    #dfk-root .event-date { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-    #dfk-root .event-badge { background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+    #dfk-root .event-card.past { opacity: 0.65; }
+    #dfk-root .event-card-top { background: #E02020; padding: 12px 14px; display: flex; align-items: center; gap: 14px; }
+    #dfk-root .event-card-top.past { background: #2a2a2a; }
+    #dfk-root .event-card-top.bezig { background: #1a3a1a; }
+    #dfk-root .event-badge.bezig { background: rgba(76,255,76,0.15); color: #4cff4c; animation: bezig-pulse 2s ease-in-out infinite; }
+    @keyframes bezig-pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+    #dfk-root .evc-date { text-align: center; flex-shrink: 0; }
+    #dfk-root .evc-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 44px; line-height: 1; color: #fff; }
+    #dfk-root .evc-maand { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-top: 1px; }
+    #dfk-root .evc-jaar { font-family: 'Barlow', sans-serif; font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    #dfk-root .evc-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.2); flex-shrink: 0; }
+    #dfk-root .evc-mid { flex: 1; min-width: 0; }
+    #dfk-root .evc-dag { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 3px; }
+    #dfk-root .event-badge { flex-shrink: 0; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 3px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; align-self: flex-start; }
     #dfk-root .event-body { padding: 16px; }
     #dfk-root .event-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
-    #dfk-root .event-circuit { font-size: 13px; color: #888; margin-bottom: 12px; }
-    #dfk-root .event-deadline { font-size: 11px; color: #666; margin-bottom: 10px; }
+    #dfk-root .event-circuit { font-size: 13px; color: #aaa; margin-bottom: 12px; }
+    #dfk-root .event-deadline { font-size: 11px; color: #999; margin-bottom: 10px; }
     #dfk-root .event-deadline.urgent { color: #E02020; }
+    #dfk-root .countdown-top { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.9); }
+    #dfk-root .countdown-top strong { color: #fff; font-size: 13px; }
     #dfk-root .event-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     #dfk-root .class-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 3px 8px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
     #dfk-root .event-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #1e1e1e; padding-top: 12px; }
-    #dfk-root .event-days { font-size: 12px; color: #666; }
-    #dfk-root .event-days span { color: #E02020; font-weight: 600; }
     #dfk-root .inschrijf-btn { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 8px 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .inschrijf-btn:hover { background: #c01010; }
-    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #555; cursor: default; }
+    #dfk-root .inschrijf-btn.vol { background: #2a2a2a; color: #999; cursor: default; }
+    #dfk-root .inschrijf-btn.ingeschreven { background: #1a3a1a; border: 1px solid #2a6a2a; color: #4cff4c; cursor: default; }
     #dfk-root .events-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; grid-column: 1/-1; }
     #dfk-root .events-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
 
+    #dfk-root .countdown-top.vandaag { color: #fff; font-size: 14px; }
+    #dfk-root .countdown-top.vandaag strong { font-size: 15px; }
+
+
+    /* ── Tabs ── */
+    #dfk-root .tab-bar { background: #111; border-bottom: 3px solid #1a1a1a; display: flex; position: sticky; top: 60px; z-index: 99; }
+    #dfk-root .tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; transition: color 0.15s; }
+    #dfk-root .tab-btn.on { color: #fff; border-bottom-color: #E02020; }
+    #dfk-root .tab-panel { display: none; }
+    #dfk-root .tab-panel.on { display: block; }
+
+    /* ── Mijn Inschrijvingen ── */
+    #dfk-root .inschrijving-card { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    #dfk-root .inschrijving-info { flex: 1; }
+    #dfk-root .inschrijving-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+    #dfk-root .inschrijving-meta { font-size: 13px; color: #aaa; margin-bottom: 2px; }
+    #dfk-root .inschrijving-reg { font-size: 11px; color: #999; margin-top: 6px; }
+    #dfk-root .uitschrijf-btn { background: none; border: 1px solid #333; border-radius: 3px; color: #999; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    #dfk-root .uitschrijf-btn:hover { border-color: #E02020; color: #E02020; }
+    #dfk-root .uitschrijf-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    #dfk-root .uitschrijf-dl { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; text-align: right; line-height: 1.5; }
+    #dfk-root .uitschrijf-dl.urgent { color: #cc2020; }
+    #dfk-root .uitschrijf-dl strong { font-size: 12px; color: #ff4444; }
+    #dfk-root .inschrijvingen-empty { text-align: center; padding: 4rem 1rem; color: #444; font-size: 13px; }
+    #dfk-root .inschrijvingen-empty-icon { font-size: 36px; margin-bottom: 0.6rem; }
+
+    /* ── Archief jaar/maand ── */
+    #dfk-root .archief-jaar { margin-bottom: 6px; }
+    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
+    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
+    #dfk-root .archief-pijl { font-size: 12px; color: #999; width: 12px; transition: color 0.15s; }
+    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
+    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
+    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
+    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
     #dfk-root .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
     #dfk-root .overlay.open { display: block; }
-    #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow-y: auto; }
+    #dfk-root .account-panel { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; height: 100dvh; background: #141414; border-left: 3px solid #E02020; z-index: 400; display: flex; flex-direction: column; transition: right 0.25s ease; overflow: hidden; }
     #dfk-root .account-panel.open { right: 0; }
     #dfk-root .panel-header { background: #111; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
     #dfk-root .panel-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
-    #dfk-root .panel-close { background: none; border: none; color: #666; font-size: 22px; cursor: pointer; line-height: 1; }
+    #dfk-root .panel-close { background: none; border: none; color: #999; font-size: 22px; cursor: pointer; line-height: 1; }
     #dfk-root .panel-close:hover { color: #fff; }
-    #dfk-root .panel-body { padding: 24px; flex: 1; }
+    #dfk-root .panel-body { padding: 24px; flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
     #dfk-root .section-title:first-child { margin-top: 0; }
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
     #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
@@ -78,18 +138,8 @@
     #dfk-root .save-btn:hover { background: #c01010; }
     #dfk-root .edit-btn { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 6px 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .edit-btn:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #666; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .cancel-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
     #dfk-root .cancel-btn:hover { color: #ccc; border-color: #444; }
-    #dfk-root.locked .field-input { background: #111; border-color: #1e1e1e; color: #aaa; pointer-events: none; }
-    #dfk-root.locked .field-select { background: #111; border-color: #1e1e1e; color: #aaa; pointer-events: none; }
-    #dfk-root.locked .tog-btn { pointer-events: none; }
-    #dfk-root.locked .chk-item { pointer-events: none; }
-    #dfk-root.locked .benz-btn { pointer-events: none; }
-    #dfk-root.locked .save-btn { display: none; }
-    #dfk-root.locked .cancel-btn { display: none; }
-    #dfk-root:not(.locked) .save-btn { display: block; }
-    #dfk-root:not(.locked) .cancel-btn { display: block; }
-    #dfk-root:not(.locked) .edit-btn { display: none; }
     #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
     #dfk-root .chk-item { display: flex; align-items: center; gap: 8px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 9px 10px; cursor: pointer; }
     #dfk-root .chk-item.on { border-color: #E02020; background: #2a1010; }
@@ -102,15 +152,71 @@
     #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
     #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
     #dfk-root .toggle-group { display: flex; gap: 6px; }
-    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #888; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #aaa; }
     #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
     #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
     #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
     #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
     #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+
+    /* ── Inschrijven bevestigingspaneel ── */
+    #dfk-root .inschrijf-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; }
+    #dfk-root .inschrijf-overlay.open { display: block; }
+    #dfk-root .inschrijf-panel { position: fixed; top: 0; right: -520px; width: 500px; height: 100vh; height: 100dvh; background: #141414; border-left: 3px solid #E02020; z-index: 600; display: flex; flex-direction: column; transition: right 0.25s ease; overflow: hidden; }
+    #dfk-root .inschrijf-panel .panel-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2rem; }
+    #dfk-root .inschrijf-panel.open { right: 0; }
+    #dfk-root .ev-confirm-box { background: #1a0808; border: 1px solid #3a1010; border-left: 3px solid #E02020; border-radius: 3px; padding: 16px; margin-bottom: 1.4rem; }
+    #dfk-root .ev-confirm-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; color: #fff; letter-spacing: 1px; margin-bottom: 6px; }
+    #dfk-root .ev-confirm-meta { font-size: 13px; color: #aaa; }
+    #dfk-root .cf-field { margin-bottom: 0.85rem; }
+    #dfk-root .cf-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 3px; }
+    #dfk-root .cf-value { font-size: 14px; color: #ccc; }
+    #dfk-root .cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.85rem; }
+    #dfk-root .cf-two .cf-field { margin-bottom: 0; }
+    #dfk-root .confirm-vraag { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin: 1.8rem 0 0.4rem; }
+    #dfk-root .confirm-hint { font-size: 13px; color: #999; margin-bottom: 1.5rem; line-height: 1.5; }
+    #dfk-root .bevestig-btn { display: block; width: 100%; padding: 14px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .bevestig-btn:hover { background: #c01010; }
+    #dfk-root .annuleer-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #999; border: 1px solid #2a2a2a; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .annuleer-btn:hover { color: #ccc; border-color: #444; }
+    #dfk-root .save-msg { font-size: 12px; text-align: center; margin-top: 8px; min-height: 18px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .rijder-kaart { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .rijder-kaart:hover { border-color: #E02020; }
+    #dfk-root .rijder-kaart-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .rijder-kaart-sub { font-size: 12px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .acc-add-btn { display: block; width: 100%; padding: 12px; background: transparent; color: #aaa; border: 1px dashed #333; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; text-align: center; }
+    #dfk-root .acc-add-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .acc-back-btn { background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 0 8px 0 0; line-height: 1; }
+    #dfk-root .acc-back-btn:hover { color: #fff; }
+    #dfk-root .kart-type-keuze { display: flex; gap: 8px; margin-bottom: 1rem; }
+    #dfk-root .kart-type-keuze-btn { flex: 1; padding: 12px 8px; border: 1px solid #444; border-radius: 3px; background: #1c1c1c; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; }
+    #dfk-root .kart-type-keuze-btn.on { border-color: #E02020; background: #2a1010; color: #fff; }
+    @media (max-width: 768px) {
+      #dfk-root .inschrijf-panel { width: 100%; right: -100%; }
+      #dfk-root .account-panel { width: 100%; right: -100%; }
+    }
+    #dfk-root #inschrijf-panel input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
   </style>
 </head>
 <body>
+
+<script>
+document.documentElement.style.visibility = 'hidden';
+document.addEventListener('DOMContentLoaded', function() {
+  const isRefresh = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  const tab = isRefresh ? localStorage.getItem('dfk_ev_tab') : 'evenementen';
+  if (tab && tab !== 'evenementen') {
+    document.querySelectorAll('#dfk-root .tab-btn').forEach(function(b, i) {
+      b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1);
+    });
+    var evEl = document.getElementById('tab-evenementen');
+    var inEl = document.getElementById('tab-inschrijvingen');
+    if (evEl) evEl.classList.toggle('on', tab === 'evenementen');
+    if (inEl) inEl.classList.toggle('on', tab === 'inschrijvingen');
+  }
+  document.documentElement.style.visibility = '';
+});
+</script>
 
 <div id="dfk-root" class="locked">
 
@@ -121,143 +227,1375 @@
     </div>
     <div class="nav-right">
       <button class="nav-user-btn" onclick="toggleDropdown()">
-        <div class="nav-avatar">JJ</div>
-        Jan Janssen
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <span id="nav-naam">Laden...</span>
         <span class="nav-chevron">▼</span>
       </button>
       <div class="dropdown" id="user-dropdown">
         <div class="dropdown-item" onclick="openAccount()">
           <span class="di-icon">👤</span> Mijn account
         </div>
-        <div class="dropdown-item danger" onclick="window.location.href='index.html'">
+        <div class="dropdown-item" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">
+          <span class="di-icon">⚙</span> Admin
+        </div>
+        <div class="dropdown-item" id="werkplaats-link" style="display:none;" onclick="window.location.href='werkplaats.html'">
+          <span class="di-icon">🔧</span> Werkplaats
+        </div>
+        <div class="dropdown-item danger" onclick="uitloggen()">
           <span class="di-icon">↩</span> Uitloggen
         </div>
       </div>
     </div>
   </nav>
 
-  <div class="main">
-    <div class="page-title">Evenementen</div>
-    <p class="page-sub">Overzicht van alle komende races en activiteiten</p>
-    <div class="section-label">Komende evenementen</div>
-    <div class="events-grid" id="events-grid"></div>
+  <div class="tab-bar">
+    <button class="tab-btn on" onclick="switchTab('evenementen')">Evenementen</button>
+    <button class="tab-btn" onclick="switchTab('inschrijvingen')">Mijn Inschrijvingen</button>
+  </div>
+
+  <div id="tab-evenementen" class="tab-panel on">
+    <div class="main">
+      <div class="page-title">Evenementen</div>
+      <p class="page-sub">Overzicht van alle komende races en activiteiten</p>
+      <div class="section-label">Komende evenementen</div>
+      <div class="events-grid" id="events-grid">
+        <div class="events-empty"><div class="events-empty-icon">⏳</div>Evenementen laden...</div>
+      </div>
+      <div id="past-section" style="display:none; margin-top:2.5rem;">
+        <div class="section-label" style="color:#999; border-color:#1e1e1e;">Afgelopen evenementen</div>
+        <div id="past-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-inschrijvingen" class="tab-panel">
+    <div class="main">
+      <div class="page-title">Mijn Inschrijvingen</div>
+      <p class="page-sub">Overzicht van alle evenementen waarvoor je bent ingeschreven</p>
+      <div class="section-label">Inschrijvingen</div>
+      <div id="inschrijvingen-list"></div>
+    </div>
   </div>
 
   <div class="overlay" id="overlay" onclick="closeAccount()"></div>
 
+  <div class="inschrijf-overlay" id="inschrijf-overlay" onclick="sluitInschrijven()"></div>
+  <div class="inschrijf-panel" id="inschrijf-panel">
+    <div class="panel-header">
+      <span class="panel-title">Inschrijven</span>
+      <button class="panel-close" onclick="sluitInschrijven()">✕</button>
+    </div>
+    <div class="panel-body" id="inschrijf-body"></div>
+  </div>
+
+  <!-- Account paneel -->
   <div class="account-panel" id="account-panel">
     <div class="panel-header">
-      <span class="panel-title">Mijn Account</span>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button class="edit-btn" onclick="enableEdit()">✎ Aanpassen</button>
-        <button class="panel-close" onclick="closeAccount()">✕</button>
+      <div style="display:flex;align-items:center;">
+        <button id="acc-back-btn" class="acc-back-btn" onclick="_accTerugNaarLijst()" style="display:none;">←</button>
+        <span class="panel-title" id="acc-panel-title">Mijn Account</span>
       </div>
+      <button class="panel-close" onclick="closeAccount()">✕</button>
     </div>
-    <div class="panel-body">
-
-      <span class="section-title">Persoonlijke gegevens</span>
-      <div class="two-col">
-        <div><label class="field-label">Voornaam</label><input class="field-input" type="text" value="Jan" /></div>
-        <div><label class="field-label">Naam</label><input class="field-input" type="text" value="Janssen" /></div>
-      </div>
-      <label class="field-label">Geboortedatum rijder</label>
-      <input class="field-input" type="date" value="2010-03-15" />
-      <label class="field-label">E-mailadres</label>
-      <input class="field-input" type="email" value="jan@email.be" />
-      <label class="field-label">Telefoonnummer contactpersoon</label>
-      <input class="field-input" type="tel" value="+32 477 00 00 00" />
-      <label class="field-label">Wachtwoord wijzigen</label>
-      <input class="field-input" type="password" placeholder="Nieuw wachtwoord" />
-
-      <span class="section-title">Kart & Competitie</span>
-      <div class="two-col">
-        <div>
-          <label class="field-label">Klasse</label>
-          <select class="field-select">
-            <option>Iame Mini</option><option selected>KA100</option><option>X30 Junior</option>
-            <option>X30 Senior</option><option>Iame Super Shifter</option>
-            <option>Formula Honda Cadet</option><option>Formula Honda Junior</option>
-            <option>Formula Honda Senior</option><option>Rotax</option>
-          </select>
-        </div>
-        <div><label class="field-label">Startnummer</label><input class="field-input" type="number" value="42" style="margin-bottom:0" /></div>
-      </div>
-      <label class="field-label">Kampioenschap(pen)</label>
-      <div class="chk-grid">
-        <div class="chk-item on" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
-        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
-        <div class="chk-item on" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
-        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Club Venray</span></div>
-        <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Hobby</span></div>
-      </div>
-
-      <span class="section-title">Materiaal in werkplaats</span>
-      <div class="toggle-row"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes on" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
-      <div class="toggle-row"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no on" onclick="tog(this)">Nee</button></div></div>
-      <div class="toggle-row"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes on" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
-
-      <span class="section-title">Benzine</span>
-      <div class="benzine-opts">
-        <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Ik neem altijd zelf benzine mee</button>
-        <button class="benz-btn on" onclick="pickBenz(this)">⛽&nbsp; Ik pak altijd benzine bij DFK</button>
-        <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
-      </div>
-
-      <button class="save-btn" onclick="disableEdit()">Wijzigingen opslaan →</button>
-      <button class="cancel-btn" onclick="disableEdit()">Annuleren</button>
-    </div>
+    <div class="panel-body" id="acc-body"></div>
   </div>
 
 </div>
 
 <script>
-const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+// ── State ────────────────────────────────────
+const MAANDEN    = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 const DAGEN_KORT = ['zo','ma','di','wo','do','vr','za'];
+const DAGEN      = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bij DFK','Training: zelf — Wedstrijd: bij DFK'];
+const KAMPIOENSCHAPPEN = ['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'];
 
-function renderEvents() {
-  const grid = document.getElementById('events-grid');
-  let events = [];
-  try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) {}
-  events.sort((a,b) => new Date(a.datum) - new Date(b.datum));
-  if (events.length === 0) {
-    grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn nog geen evenementen gepland.</div>`;
+function berekenLeeftijd(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  const nu = new Date();
+  let leeftijd = nu.getFullYear() - gd.getFullYear();
+  if (nu.getMonth() < gd.getMonth() || (nu.getMonth() === gd.getMonth() && nu.getDate() < gd.getDate())) leeftijd--;
+  return leeftijd;
+}
+
+function formatGeboortedatum(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  return `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()} <span style="color:#999;font-size:12px;">(${berekenLeeftijd(geboortedatum)} jaar)</span>`;
+}
+const KLASSEN = ['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax'];
+
+let _currentUser      = null;
+let _currentProfile   = null;
+let _accountRijders   = [];   // alle rijders gekoppeld aan dit account
+let _selectedRijder   = null; // gekozen rijder bij inschrijven
+let _editingRijder    = null; // rijder die bewerkt wordt in account-paneel
+let _allEvents        = [];
+let _allWeekenden     = [];
+let _myEventIds       = new Set();
+let _myInschrijvingen = [];
+let _currentEvent     = null;
+let _selectedKlasse   = null;
+
+// ── Init ─────────────────────────────────────
+(async () => {
+  try {
+    const session = await requireAuth();
+    if (!session) return;
+    _currentUser = session.user;
+    const _initProfile = await getProfile(_currentUser.id);
+    if (_initProfile?.rol === 'office') { window.location.href = 'admin.html'; return; }
+    await loadAccountRijders();
+    updateNavbar();
+    await Promise.all([loadEvents(), loadMyInschrijvingen()]);
+    renderEvents();
+
+    // ── Realtime ──────────────────────────────
+    _supabase.channel('ev-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+        await loadEvents();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekenden' }, async () => {
+        await loadEvents();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inschrijvingen' }, async () => {
+        await loadMyInschrijvingen();
+        renderEvents();
+        if (document.getElementById('tab-inschrijvingen')?.classList.contains('on')) {
+          renderInschrijvingen();
+        }
+      })
+      .subscribe();
+
+  } catch(e) {
+    console.error('Init fout:', e);
+    document.getElementById('events-grid').innerHTML =
+      `<div class="events-empty"><div class="events-empty-icon">⚠️</div>Kon evenementen niet laden.</div>`;
+  }
+})();
+
+// ── Navbar ───────────────────────────────────
+function updateNavbar() {
+  const p   = _currentProfile;
+  const naam = p ? `${p.voornaam || ''} ${p.naam || ''}`.trim() || 'Rijder' : 'Rijder';
+  const ini  = naam.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0,2) || '?';
+  document.getElementById('nav-avatar').textContent = ini;
+  document.getElementById('nav-naam').textContent   = naam;
+  // Toon admin-link voor admin en office, werkplaats-link alleen voor admin
+  document.getElementById('admin-link').style.display      = (['admin','office'].includes(p?.rol)) ? '' : 'none';
+  document.getElementById('werkplaats-link').style.display = (p?.rol === 'admin') ? '' : 'none';
+}
+
+// ── Data laden ───────────────────────────────
+async function loadEvents() {
+  const [evRes, wRes] = await Promise.all([
+    _supabase.from('evenementen').select('*').order('datum', { ascending: true }),
+    _supabase.from('weekenden').select('id, zichtbaar')
+  ]);
+  if (!evRes.error && evRes.data) _allEvents    = evRes.data;
+  if (!wRes.error  && wRes.data)  _allWeekenden = wRes.data;
+}
+
+async function loadAccountRijders() {
+  const { data } = await _supabase
+    .from('profiles')
+    .select('*')
+    .eq('account_id', _currentUser.id);
+  if (data && data.length > 0) {
+    _accountRijders = data;
+  } else {
+    // Fallback voor bestaande accounts zonder account_id
+    const p = await getProfile(_currentUser.id);
+    _accountRijders = p ? [p] : [];
+  }
+  _currentProfile = _accountRijders.find(r => r.id === _currentUser.id) || _accountRijders[0] || null;
+}
+
+async function loadMyInschrijvingen() {
+  if (!_currentUser) return;
+  const ids = _accountRijders.map(r => r.id);
+  if (!ids.length) return;
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, evenementen(*)')
+    .in('rijder_id', ids);
+  if (!error && data) {
+    _myInschrijvingen = data;
+    _myEventIds = new Set(data.map(i => i.event_id));
+  }
+}
+
+// ── Wachtwoord bevestiging live-check ─────────
+function checkAccPwMatch() {
+  const pw  = document.getElementById('acc-pw')?.value  || '';
+  const pw2 = document.getElementById('acc-pw2')?.value || '';
+  const msg = document.getElementById('acc-pw-msg');
+  if (!msg) return;
+  if (!pw && !pw2) { msg.textContent = ''; return; }
+  if (!pw2) { msg.textContent = ''; return; }
+  if (pw === pw2) {
+    msg.style.color = '#4cff4c';
+    msg.textContent = '✓ Wachtwoorden komen overeen';
+  } else {
+    msg.style.color = '#E02020';
+    msg.textContent = 'Wachtwoorden komen niet overeen';
+  }
+}
+
+// ── Centrale terugknop-handler ────────────────
+window.addEventListener('popstate', () => {
+  if (document.getElementById('inschrijf-panel').classList.contains('open')) {
+    document.getElementById('inschrijf-overlay').classList.remove('open');
+    document.getElementById('inschrijf-panel').classList.remove('open');
+    document.body.style.overflow = '';
+    _currentEvent   = null;
+    _selectedKlasse = null;
     return;
   }
-  const today = new Date(); today.setHours(0,0,0,0);
-  grid.innerHTML = events.map(ev => {
-    const d = new Date(ev.datum);
-    const isPast = d < today;
-    const dagenOver = Math.round((d - today) / 86400000);
-    let deadlineHtml = '';
-    if (ev.deadline) {
-      const dl = new Date(ev.deadline);
-      const dagenTotDeadline = Math.round((dl - today) / 86400000);
-      const urgent = dagenTotDeadline >= 0 && dagenTotDeadline <= 7;
-      const uur = dl.getHours().toString().padStart(2,'0');
-      const min = dl.getMinutes().toString().padStart(2,'0');
-      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${uur}:${min}`;
-      deadlineHtml = dagenTotDeadline < 0
-        ? `<div class="event-deadline">⏱ Inschrijving gesloten</div>`
-        : `<div class="event-deadline${urgent ? ' urgent' : ''}">⏱ Deadline: ${tijdStr}${urgent ? ' — nog ' + dagenTotDeadline + ' dag(en)!' : ''}</div>`;
-    }
-    const klassenHtml = ev.klassen.length ? ev.klassen.map(k => `<span class="class-tag">${k}</span>`).join('') : '<span class="class-tag">Alle klassen</span>';
-    const topStyle = isPast ? 'style="background:#444;"' : '';
-    const footerDagen = isPast ? `<span class="event-days" style="color:#555;">Afgelopen</span>` : `<span class="event-days">Over <span>${dagenOver}</span> dag${dagenOver===1?'':'en'}</span>`;
-    const inschrijfBtn = isPast ? `<button class="inschrijf-btn vol">Gesloten</button>` : `<button class="inschrijf-btn">Inschrijven →</button>`;
-    return `<div class="event-card"><div class="event-card-top" ${topStyle}><span class="event-date">${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}</span><span class="event-badge">${isPast ? 'Afgelopen' : ev.type}</span></div><div class="event-body"><div class="event-name">${ev.naam}</div><div class="event-circuit">📍 ${ev.circuit}</div>${deadlineHtml}<div class="event-classes">${klassenHtml}</div><div class="event-footer">${footerDagen}${inschrijfBtn}</div></div></div>`;
-  }).join('');
-}
-renderEvents();
+  if (document.getElementById('account-panel').classList.contains('open')) {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('account-panel').classList.remove('open');
+    _editingRijder = null;
+  }
+});
 
-function enableEdit() { document.getElementById('dfk-root').classList.remove('locked'); }
-function disableEdit() { document.getElementById('dfk-root').classList.add('locked'); }
+// ── Uitloggen ────────────────────────────────
+async function uitloggen() {
+  await _supabase.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+// ── Evenementen renderen ─────────────────────
+function renderEvents() {
+  const grid     = document.getElementById('events-grid');
+  const pastGrid = document.getElementById('past-grid');
+  const pastSec  = document.getElementById('past-section');
+
+  if (_allEvents.length === 0) {
+    grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn nog geen evenementen gepland.</div>`;
+    pastSec.style.display = 'none';
+    return;
+  }
+  const now   = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Verberg events waarvan het weekend verborgen is
+  const verborgenWids = new Set(
+    _allWeekenden.filter(w => w.zichtbaar === false).map(w => w.id)
+  );
+  const zichtbare = _allEvents.filter(ev =>
+    !ev.weekend_id || !verborgenWids.has(ev.weekend_id)
+  );
+  const upcoming = zichtbare.filter(ev => new Date(ev.datum + 'T12:00:00') >= today);
+  const past     = zichtbare.filter(ev => new Date(ev.datum + 'T12:00:00') <  today).reverse(); // meest recent bovenaan
+
+  if (upcoming.length === 0) {
+    grid.innerHTML = `<div class="events-empty"><div class="events-empty-icon">📅</div>Er zijn geen komende evenementen gepland.</div>`;
+  }
+
+  const buildCard = ev => {
+    const d         = new Date(ev.datum + 'T12:00:00');
+    const dMidnight = new Date(ev.datum + 'T00:00:00');
+    const isPast    = d < today;
+    const dagenOver = Math.round((dMidnight - today) / 86400000);
+    const isVandaag = !isPast && dagenOver === 0;
+
+    // ── Deadline ──
+    let deadlineHtml = '';
+    let deadlinePassed = false;
+    if (ev.deadline && !isVandaag) {
+      const dl = new Date(ev.deadline);
+      deadlinePassed = dl < now;
+      const msLeft = dl - now;
+      const isWithin24h = msLeft > 0 && msLeft < 24 * 3600 * 1000;
+      const dlMidnight = new Date(dl); dlMidnight.setHours(0,0,0,0);
+      const dagenTotDeadline = Math.round((dlMidnight - today) / 86400000);
+      const urgent = dagenTotDeadline >= 0 && dagenTotDeadline <= 7;
+      const dlUur = dl.getHours().toString().padStart(2,'0');
+      const dlMin = dl.getMinutes().toString().padStart(2,'0');
+      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${dlUur}:${dlMin}`;
+      if (deadlinePassed) {
+        deadlineHtml = `<div class="event-deadline">⏱ Inschrijving gesloten</div>`;
+      } else if (isWithin24h) {
+        const totMin = Math.floor(msLeft / 60000);
+        const uren   = Math.floor(totMin / 60);
+        const rMin   = totMin % 60;
+        const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+        deadlineHtml = `<div class="event-deadline urgent deadline-countdown" data-deadline="${dl.toISOString()}">⏱ Inschrijving sluit over <strong>${txt}</strong></div>`;
+      } else {
+        deadlineHtml = `<div class="event-deadline${urgent ? ' urgent' : ''}">⏱ Deadline: ${tijdStr}${urgent ? ' — nog ' + dagenTotDeadline + ' dag(en)!' : ''}</div>`;
+      }
+    }
+
+    // ── Eventdatum aftelklok (bovenaan kaart) ──
+    let eventTopHtml = '';
+    if (isPast || isVandaag) {
+      eventTopHtml = '';
+    } else {
+      const msToEvent = dMidnight - now;
+      if (msToEvent > 0 && msToEvent < 24 * 3600 * 1000) {
+        eventTopHtml = `<div class="countdown-top vandaag">Morgen</div>`;
+      } else {
+        eventTopHtml = `<div class="countdown-top">Over <strong>${dagenOver} dag${dagenOver===1?'':'en'}</strong></div>`;
+      }
+    }
+
+    // ── Klassen ──
+    const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
+    const klassenHtml = klassen.length
+      ? klassen.map(k => `<span class="class-tag">${k}</span>`).join('')
+      : '<span class="class-tag">Alle klassen</span>';
+
+    // ── Inschrijf-knop ──
+    const isGesloten       = isPast || isVandaag || deadlinePassed;
+    const evInschr         = _myInschrijvingen.filter(i => i.event_id === ev.id);
+    const registeredIds    = new Set(evInschr.map(i => i.rijder_id));
+    const alleIn           = _accountRijders.length > 0 && _accountRijders.every(r => registeredIds.has(r.id));
+    const geenIn           = evInschr.length === 0;
+
+    let inschrijfBtn;
+    if (isGesloten) {
+      inschrijfBtn = `<button class="inschrijf-btn vol">${isVandaag ? 'Event bezig' : 'Inschrijving gesloten'}</button>`;
+    } else if (geenIn) {
+      inschrijfBtn = `<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')">Inschrijven →</button>`;
+    } else if (_accountRijders.length <= 1) {
+      inschrijfBtn = `<button class="inschrijf-btn ingeschreven">✓ Ingeschreven</button>`;
+    } else {
+      const namesHtml = evInschr.map(i => {
+        const r    = _accountRijders.find(r => r.id === i.rijder_id);
+        const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'Rijder';
+        return `<span style="display:block;font-size:12px;color:#4cff4c;font-family:'Barlow',sans-serif;">✓ ${naam}</span>`;
+      }).join('');
+      if (alleIn) {
+        inschrijfBtn = `<div class="inschrijf-btn ingeschreven" style="text-align:left;line-height:1.8;">${namesHtml}</div>`;
+      } else {
+        inschrijfBtn = `<div>${namesHtml}<button class="inschrijf-btn" onclick="openInschrijven('${ev.id}')" style="margin-top:6px;">Nog een rijder inschrijven →</button></div>`;
+      }
+    }
+
+    const topKlasse = isPast ? ' past' : isVandaag ? ' bezig' : '';
+    const badgeTxt  = isPast ? 'Afgelopen' : (ev.type || '');
+    const badgeKlas = isVandaag ? ' bezig' : '';
+
+    return `
+      <div class="event-card${isPast ? ' past' : ''}">
+        <div class="event-card-top${topKlasse}">
+          <div class="evc-date">
+            <div class="evc-day">${d.getDate()}</div>
+            <div class="evc-maand">${MAANDEN[d.getMonth()].toUpperCase()}</div>
+            <div class="evc-jaar">${d.getFullYear()}</div>
+          </div>
+          <div class="evc-divider"></div>
+          <div class="evc-mid">
+            <div class="evc-dag">${DAGEN[d.getDay()]}</div>
+            ${eventTopHtml}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+            ${badgeTxt ? `<span class="event-badge${badgeKlas}">${badgeTxt}</span>` : ''}
+            ${isVandaag ? `<span class="event-badge bezig">Bezig</span>` : ''}
+          </div>
+        </div>
+        <div class="event-body">
+          <div class="event-name">${ev.naam}</div>
+          <div class="event-circuit">📍 ${ev.circuit}</div>
+          ${deadlineHtml}
+          <div class="event-classes">${klassenHtml}</div>
+          <div class="event-footer">${inschrijfBtn}</div>
+        </div>
+      </div>`;
+  };
+
+  // Komende evenementen
+  if (upcoming.length > 0) {
+    grid.innerHTML = upcoming.map(buildCard).join('');
+  }
+
+  // Afgelopen evenementen
+  if (past.length > 0) {
+    pastSec.style.display = '';
+
+    // Groepeer per jaar → maand
+    const jaarMap = new Map();
+    for (const ev of past) {
+      const d    = new Date(ev.datum + 'T12:00:00');
+      const jaar = d.getFullYear();
+      const mnd  = d.getMonth();
+      if (!jaarMap.has(jaar)) jaarMap.set(jaar, new Map());
+      const mndMap = jaarMap.get(jaar);
+      if (!mndMap.has(mnd)) mndMap.set(mnd, []);
+      mndMap.get(mnd).push(ev);
+    }
+
+    const MNDNAMEN = ['Januari','Februari','Maart','April','Mei','Juni',
+                      'Juli','Augustus','September','Oktober','November','December'];
+    const jaren = [...jaarMap.keys()].sort((a, b) => b - a);
+
+    let html = '';
+    jaren.forEach((jaar, ji) => {
+      const mndMap  = jaarMap.get(jaar);
+      const maanden = [...mndMap.keys()].sort((a, b) => b - a);
+      const totaal  = maanden.reduce((s, m) => s + mndMap.get(m).length, 0);
+      html += `<div class="archief-jaar">
+        <div class="archief-jaar-header" onclick="toggleArchiefEv(this)">
+          <span class="archief-pijl">▸</span>
+          <span class="archief-jaar-label">${jaar}</span>
+          <span class="archief-tel">${totaal} evenement${totaal !== 1 ? 'en' : ''}</span>
+        </div>
+        <div class="archief-jaar-body" style="display:none;">`;
+
+      maanden.forEach((mnd, mi) => {
+        const mndEvs  = mndMap.get(mnd);
+        html += `<div class="archief-maand">
+          <div class="archief-maand-header" onclick="toggleArchiefEv(this)">
+            <span class="archief-pijl">▸</span>
+            <span class="archief-maand-label">${MNDNAMEN[mnd]}</span>
+            <span class="archief-tel">${mndEvs.length}</span>
+          </div>
+          <div class="archief-maand-body" style="display:none;">
+            ${mndEvs.map(ev => buildCard(ev)).join('')}
+          </div>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    pastGrid.innerHTML = html;
+  } else {
+    pastSec.style.display = 'none';
+  }
+
+  startCountdowns();
+}
+
+
+function toggleArchiefEv(header) {
+  const body = header.nextElementSibling;
+  const pijl = header.querySelector('.archief-pijl');
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  pijl.textContent   = open ? '▾' : '▸';
+}
+
+function startCountdowns() {
+  clearInterval(window._cdTimer);
+  const deadlineEls   = document.querySelectorAll('.deadline-countdown');
+  const eventEls      = document.querySelectorAll('.event-countdown');
+  const uitschrijfEls = document.querySelectorAll('.uitschrijf-dl[data-deadline]');
+  if (!deadlineEls.length && !eventEls.length && !uitschrijfEls.length) return;
+
+  window._cdTimer = setInterval(() => {
+    const now = new Date();
+    let expiredEv  = false;
+    let expiredUit = false;
+
+    deadlineEls.forEach(el => {
+      const dl = new Date(el.dataset.deadline);
+      const msLeft = dl - now;
+      if (msLeft <= 0) { expiredEv = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      el.innerHTML = `⏱ Inschrijving sluit over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
+    });
+
+    eventEls.forEach(el => {
+      const d = new Date(el.dataset.eventdate);
+      const msLeft = d - now;
+      if (msLeft <= 0) { expiredEv = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      el.innerHTML = `Over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
+    });
+
+    uitschrijfEls.forEach(el => {
+      const dl = new Date(el.dataset.deadline);
+      const msLeft = dl - now;
+      if (msLeft <= 0) { expiredUit = true; return; }
+      const totMin = Math.floor(msLeft / 60000);
+      const uren   = Math.floor(totMin / 60);
+      const rMin   = totMin % 60;
+      el.innerHTML = `⏱ Sluit over <strong>${uren > 0 ? uren+'u '+rMin+'min' : rMin+'min'}</strong>`;
+    });
+
+    if (expiredEv)  renderEvents();
+    if (expiredUit) renderInschrijvingen();
+  }, 10000);
+}
+
+// ── Dropdown / nav ───────────────────────────
 function toggleDropdown() { document.getElementById('user-dropdown').classList.toggle('open'); }
-document.addEventListener('click', e => { if (!e.target.closest('.nav-right')) document.getElementById('user-dropdown').classList.remove('open'); });
-function openAccount() { document.getElementById('user-dropdown').classList.remove('open'); document.getElementById('overlay').classList.add('open'); document.getElementById('account-panel').classList.add('open'); }
-function closeAccount() { document.getElementById('overlay').classList.remove('open'); document.getElementById('account-panel').classList.remove('open'); }
-function tog(btn) { const grp = btn.closest('.toggle-group'); grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
-function pickBenz(btn) { document.querySelectorAll('#dfk-root .benz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-right')) document.getElementById('user-dropdown').classList.remove('open');
+});
+
+// ── Tabs ─────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('#dfk-root .tab-btn').forEach((b, i) =>
+    b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1));
+  document.getElementById('tab-evenementen').classList.toggle('on', tab === 'evenementen');
+  document.getElementById('tab-inschrijvingen').classList.toggle('on', tab === 'inschrijvingen');
+  if (tab === 'inschrijvingen') {
+    renderInschrijvingen();
+    loadMyInschrijvingen().then(() => renderInschrijvingen());
+  }
+  localStorage.setItem('dfk_ev_tab', tab);
+}
+
+// ── Mijn Inschrijvingen ──────────────────────
+function renderInschrijvingen() {
+  const container = document.getElementById('inschrijvingen-list');
+  const now   = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const lijst = _myInschrijvingen.filter(i => i.evenementen);
+
+  if (lijst.length === 0) {
+    container.innerHTML = `<div class="inschrijvingen-empty"><div class="inschrijvingen-empty-icon">📋</div>Je hebt je nog niet ingeschreven voor een evenement.</div>`;
+    return;
+  }
+
+  const komend    = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') >= today)
+                         .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
+  const afgelopen = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') < today)
+                         .sort((a, b) => new Date(b.evenementen.datum) - new Date(a.evenementen.datum));
+
+  function renderKaart(r) {
+    const ev  = r.evenementen;
+    const d   = new Date(ev.datum + 'T12:00:00');
+    const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+    const reg    = new Date(r.bevestigd_op);
+    const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
+    const isPast    = d < today;
+    const isVandaag = !isPast && d.toDateString() === now.toDateString();
+
+    // ── Deadline-logica voor uitschrijven ──
+    const dl         = ev.deadline ? new Date(ev.deadline) : null;
+    const dlPassed   = dl && dl < now;
+
+    let rechts;
+    if (isVandaag) {
+      rechts = `<span style="font-size:11px;color:#4cff4c;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;animation:bezig-pulse 2s ease-in-out infinite;">Bezig</span>`;
+    } else if (isPast) {
+      rechts = `<span style="font-size:11px;color:#444;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Afgelopen</span>`;
+    } else if (dlPassed) {
+      rechts = `<span style="font-size:11px;color:#999;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
+    } else {
+      // Knop + eventuele countdown
+      let cdHtml = '';
+      if (dl) {
+        const msLeft = dl - now;
+        const dlUur  = dl.getHours().toString().padStart(2,'0');
+        const dlMin  = dl.getMinutes().toString().padStart(2,'0');
+        const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} ${dlUur}:${dlMin}`;
+        if (msLeft < 24 * 3600 * 1000) {
+          // Minder dan 24u: live afteller
+          const totMin = Math.floor(msLeft / 60000);
+          const uren   = Math.floor(totMin / 60);
+          const rMin   = totMin % 60;
+          const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
+          cdHtml = `<div class="uitschrijf-dl urgent" data-deadline="${dl.toISOString()}">⏱ Sluit over <strong>${txt}</strong></div>`;
+        } else {
+          // Meer dan 24u: vaste datum tonen
+          cdHtml = `<div class="uitschrijf-dl">Deadline<br>${tijdStr}</div>`;
+        }
+      }
+      rechts = `<div class="uitschrijf-side">
+        <button class="uitschrijf-btn" onclick="uitschrijven('${r.id}','${ev.id}')">Uitschrijven</button>
+        ${cdHtml}
+      </div>`;
+    }
+
+    return `
+      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#444;opacity:0.6;' : isVandaag ? 'border-left-color:#4cff4c;background:#0d1a0d;' : ''}">
+        <div class="inschrijving-info">
+          <div class="inschrijving-naam">${ev.naam}</div>
+          <div class="inschrijving-meta">📅 ${datumStr}</div>
+          <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
+          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta" style="color:#fff;">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })() : ''}
+          ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
+          <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
+        </div>
+        ${rechts}
+      </div>`;
+  }
+
+  let html = '';
+
+  if (komend.length > 0) {
+    html += komend.map(renderKaart).join('');
+  } else {
+    html += `<div class="inschrijvingen-empty" style="margin-bottom:1rem;"><div class="inschrijvingen-empty-icon">📋</div>Geen aankomende inschrijvingen.</div>`;
+  }
+
+  if (afgelopen.length > 0) {
+    html += `<div style="margin:1.6rem 0 0.8rem;display:flex;align-items:center;gap:10px;">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#444;">Afgelopen events</span>
+      <div style="flex:1;height:1px;background:#2a2a2a;"></div>
+    </div>`;
+    html += afgelopen.map(renderKaart).join('');
+  }
+
+  container.innerHTML = html;
+  startCountdowns();
+}
+
+async function uitschrijven(inschrijvingId, eventId) {
+  if (!confirm('Zeker dat je je wil uitschrijven?')) return;
+  const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
+  if (error) { alert('Uitschrijven mislukt: ' + error.message); return; }
+  _myInschrijvingen = _myInschrijvingen.filter(i => i.id !== inschrijvingId);
+  if (!_myInschrijvingen.some(i => i.event_id === eventId)) _myEventIds.delete(eventId);
+  renderInschrijvingen();
+  renderEvents();
+}
+
+// ── Account paneel ───────────────────────────
+function openAccount() {
+  document.getElementById('user-dropdown').classList.remove('open');
+  _editingRijder = null;
+  _renderAccLijst();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('account-panel').classList.add('open');
+  history.pushState({ view: 'account' }, '', '#account');
+}
+function closeAccount() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('account-panel').classList.remove('open');
+  _editingRijder = null;
+  if (location.hash === '#account') history.back();
+}
+
+function _renderAccLijst() {
+  document.getElementById('acc-panel-title').textContent = 'Mijn Account';
+  document.getElementById('acc-back-btn').style.display = 'none';
+  const email = _currentUser?.email || '';
+  document.getElementById('acc-body').innerHTML = `
+    <span class="section-title">Account</span>
+    <label class="field-label">E-mailadres</label>
+    <input class="field-input" type="email" value="${email}" disabled style="color:#999;" />
+    <label class="field-label">Wachtwoord wijzigen</label>
+    <input id="acc-pw" class="field-input" type="password" placeholder="Nieuw wachtwoord" oninput="checkAccPwMatch()" />
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <input id="acc-pw2" class="field-input" type="password" placeholder="Herhaal nieuw wachtwoord" oninput="checkAccPwMatch()" />
+    <p id="acc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:0.8rem;font-family:'Barlow',sans-serif;"></p>
+    <p id="acc-pw-save-msg" class="save-msg" style="text-align:left;margin-top:0;"></p>
+    <button class="save-btn" style="margin-top:0.5rem;margin-bottom:2rem;" onclick="saveAccountSettings()">Wachtwoord opslaan →</button>
+
+    <span class="section-title">Rijders</span>
+    ${_accountRijders.map(r => `
+      <div class="rijder-kaart" onclick="_editRijder('${r.id}')">
+        <div>
+          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
+        </div>
+        <span style="color:#999;font-size:20px;">›</span>
+      </div>
+    `).join('')}
+    <button class="acc-add-btn" onclick="_addRijder()">+ Extra rijder toevoegen</button>
+  `;
+}
+
+function _rijderFormHTML(r, isExtra) {
+  const isEigen = (r.kart_type || 'eigen') !== 'huur';
+  const klassenHtml = KLASSEN.map(k => `
+    <div class="chk-item" onclick="toggleKlasseChk(this,'acc-klassen-grid','acc-startnrs')">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+    </div>`).join('');
+  const kampHtml = KAMPIOENSCHAPPEN.map(k => `
+    <div class="chk-item" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+    </div>`).join('');
+  const benzHtml = BENZ_LABELS.map(txt =>
+    `<button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; ${txt}</button>`).join('');
+  const uitrHtml = ['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(u => `
+    <div class="chk-item" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${u}</span>
+    </div>`).join('');
+  const deleteHtml = isExtra ? `
+    <div style="border-top:1px solid #2a2a2a;margin-top:2rem;padding-top:1.5rem;">
+      <button class="cancel-btn" onclick="deleteExtraRijder('${r.id}')" style="color:#ff5555;border-color:#3a1a1a;">✕ Rijder verwijderen</button>
+    </div>` : '';
+  return `
+    <span class="section-title" style="margin-top:0;">Kart type</span>
+    <div class="kart-type-keuze">
+      <button id="acc-kies-eigen" class="kart-type-keuze-btn${isEigen?' on':''}" onclick="accKiesKartType('eigen')">🏎️ Eigen kart</button>
+      <button id="acc-kies-huur"  class="kart-type-keuze-btn${!isEigen?' on':''}" onclick="accKiesKartType('huur')">🔑 Huur kart</button>
+    </div>
+    <span class="section-title">Persoonlijke gegevens</span>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam rijder</label><input id="acc-voornaam" class="field-input" type="text" /></div>
+      <div><label class="field-label">Naam rijder</label><input id="acc-naam" class="field-input" type="text" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input id="acc-geboorte" class="field-input" type="date" />
+    <label class="field-label">Telefoonnummer contactpersoon</label>
+    <input id="acc-tel" class="field-input" type="tel" />
+
+    <div id="acc-eigen-sectie" style="display:${isEigen?'':'none'};">
+      <span class="section-title">Kart & Competitie</span>
+      <label class="field-label">Klasse(n)</label>
+      <p style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:-0.3rem;">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="acc-klassen-grid">${klassenHtml}</div>
+      <div id="acc-startnrs" style="display:none;margin-bottom:1rem;">
+        <label class="field-label">Startnummer per klasse</label>
+        <div class="startnr-list"></div>
+      </div>
+      <label class="field-label">Kampioenschap(pen)</label>
+      <div class="chk-grid" id="acc-kamp-grid">${kampHtml}</div>
+      <span class="section-title">Materiaal in werkplaats</span>
+      <div class="toggle-row" id="acc-tog-kart"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="acc-tog-banden"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="acc-tog-bak"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <span class="section-title">Benzine</span>
+      <div class="benzine-opts" id="acc-benz-opts">${benzHtml}</div>
+    </div>
+
+    <div id="acc-huur-sectie" style="display:${!isEigen?'':'none'};">
+      <span class="section-title">Rijder afmetingen</span>
+      <div class="two-col">
+        <div><label class="field-label">Lengte (cm)</label><input id="acc-lengte" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+        <div><label class="field-label">Gewicht (kg)</label><input id="acc-gewicht" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+      </div>
+      <span class="section-title">Kart huren</span>
+      <label class="field-label">Type kart</label>
+      <select id="acc-huurkart" class="field-select">
+        <option value="">Selecteer een kart...</option>
+        <option>Formula Honda Cadet</option>
+        <option>Formula Honda Junior</option>
+        <option>Formula Honda Senior</option>
+        <option>Rotax Max</option>
+      </select>
+      <span class="section-title">Benodigde uitrusting</span>
+      <div class="chk-grid" id="acc-uitrusting-grid">${uitrHtml}</div>
+    </div>
+
+    <p id="acc-save-msg" class="save-msg" style="text-align:left;"></p>
+    <button class="save-btn" onclick="saveRijder()">Opslaan →</button>
+    <button class="cancel-btn" onclick="_accTerugNaarLijst()">Annuleren</button>
+    ${deleteHtml}
+  `;
+}
+
+function _fillRijderForm(r) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('acc-voornaam', r.voornaam);
+  set('acc-naam', r.naam);
+  set('acc-geboorte', r.geboortedatum);
+  set('acc-tel', r.telefoon);
+  const isEigen = r.kart_type !== 'huur';
+  if (isEigen) {
+    const klass = new Set(r.klassen || []);
+    document.querySelectorAll('#acc-klassen-grid .chk-item').forEach(item => {
+      item.classList.toggle('on', klass.has(item.querySelector('.chk-label')?.textContent.trim()));
+    });
+    updateStartnrFields('acc-klassen-grid', 'acc-startnrs', r.startnummers || {});
+    const kamp = new Set(r.kampioenschappen || []);
+    document.querySelectorAll('#acc-kamp-grid .chk-item').forEach(item => {
+      item.classList.toggle('on', kamp.has(item.querySelector('.chk-label')?.textContent.trim()));
+    });
+    setToggle('acc-tog-kart',   !!r.kart_in_werkplaats);
+    setToggle('acc-tog-banden', !!r.banden_in_werkplaats);
+    setToggle('acc-tog-bak',    !!r.bak_in_werkplaats);
+    const benzIdx = BENZ_LABELS.findIndex(l => l === (r.benzine || ''));
+    document.querySelectorAll('#acc-benz-opts .benz-btn').forEach((btn, i) =>
+      btn.classList.toggle('on', i === benzIdx));
+  } else {
+    set('acc-lengte', r.lengte);
+    set('acc-gewicht', r.gewicht);
+    const sel = document.getElementById('acc-huurkart');
+    if (sel && r.huurkart_type) sel.value = r.huurkart_type;
+    const uitr = new Set(r.uitrusting || []);
+    document.querySelectorAll('#acc-uitrusting-grid .chk-item').forEach(item => {
+      item.classList.toggle('on', uitr.has(item.querySelector('.chk-label')?.textContent.trim()));
+    });
+  }
+}
+
+function _editRijder(rijderId) {
+  _editingRijder = _accountRijders.find(r => r.id === rijderId) || null;
+  if (!_editingRijder) return;
+  const isExtra = rijderId !== _currentUser.id;
+  const naam = `${_editingRijder.voornaam||''} ${_editingRijder.naam||''}`.trim();
+  document.getElementById('acc-panel-title').textContent = naam || 'Rijder';
+  document.getElementById('acc-back-btn').style.display = '';
+  document.getElementById('acc-body').innerHTML = _rijderFormHTML(_editingRijder, isExtra);
+  _fillRijderForm(_editingRijder);
+}
+
+function _addRijder() {
+  _editingRijder = null;
+  document.getElementById('acc-panel-title').textContent = 'Nieuwe rijder';
+  document.getElementById('acc-back-btn').style.display = '';
+  document.getElementById('acc-body').innerHTML = _rijderFormHTML({}, false);
+}
+
+function _accTerugNaarLijst() {
+  _editingRijder = null;
+  _renderAccLijst();
+}
+
+function accKiesKartType(type) {
+  document.getElementById('acc-eigen-sectie').style.display = type === 'eigen' ? '' : 'none';
+  document.getElementById('acc-huur-sectie').style.display  = type === 'huur'  ? '' : 'none';
+  document.querySelectorAll('.kart-type-keuze-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById(type === 'eigen' ? 'acc-kies-eigen' : 'acc-kies-huur').classList.add('on');
+}
+
+function setToggle(rowId, isJa) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  row.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  const btn = row.querySelector(isJa ? '.tog-btn.yes' : '.tog-btn.no');
+  if (btn) btn.classList.add('on');
+}
+
+async function saveAccountSettings() {
+  const msg = document.getElementById('acc-pw-save-msg');
+  msg.textContent = '';
+  const pw  = document.getElementById('acc-pw')?.value || '';
+  const pw2 = document.getElementById('acc-pw2')?.value || '';
+  if (!pw) { msg.style.color='#E02020'; msg.textContent='Vul een nieuw wachtwoord in.'; return; }
+  if (pw.length < 8) { msg.style.color='#E02020'; msg.textContent='Minimaal 8 tekens.'; return; }
+  if (pw !== pw2)    { msg.style.color='#E02020'; msg.textContent='Wachtwoorden komen niet overeen.'; return; }
+  const { error } = await _supabase.auth.updateUser({ password: pw });
+  if (error) { msg.style.color='#E02020'; msg.textContent='Fout: '+error.message; return; }
+  document.getElementById('acc-pw').value = '';
+  document.getElementById('acc-pw2').value = '';
+  msg.style.color='#4cff4c'; msg.textContent='✓ Wachtwoord gewijzigd';
+}
+
+async function saveRijder() {
+  const get = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const msgEl = document.getElementById('acc-save-msg');
+  msgEl.textContent = '';
+  const isEigen   = document.getElementById('acc-eigen-sectie').style.display !== 'none';
+  const isNewRijder = !_editingRijder;
+  const rijderId  = _editingRijder?.id || crypto.randomUUID();
+  const voornaam  = get('acc-voornaam');
+  const naam      = get('acc-naam');
+  if (!voornaam || !naam) {
+    msgEl.style.color='#E02020'; msgEl.textContent='Vul voornaam en naam in.'; return;
+  }
+  const profiel = {
+    id:            rijderId,
+    account_id:    _currentUser.id,
+    voornaam, naam,
+    geboortedatum: get('acc-geboorte') || null,
+    telefoon:      get('acc-tel'),
+    kart_type:     isEigen ? 'eigen' : 'huur',
+  };
+  if (isEigen) {
+    const togRows = ['acc-tog-kart','acc-tog-banden','acc-tog-bak'].map(id => document.getElementById(id));
+    const benzEl  = document.querySelector('#acc-benz-opts .benz-btn.on');
+    Object.assign(profiel, {
+      klassen:              [...document.querySelectorAll('#acc-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
+      startnummers:         getStartnummers('acc-startnrs'),
+      kampioenschappen:     [...document.querySelectorAll('#acc-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
+      kart_in_werkplaats:   !!(togRows[0]?.querySelector('.tog-btn.yes.on')),
+      banden_in_werkplaats: !!(togRows[1]?.querySelector('.tog-btn.yes.on')),
+      bak_in_werkplaats:    !!(togRows[2]?.querySelector('.tog-btn.yes.on')),
+      benzine:              benzEl ? benzEl.textContent.replace(/⛽\s*/,'').trim() : null,
+    });
+  } else {
+    Object.assign(profiel, {
+      lengte:        parseInt(get('acc-lengte'))  || null,
+      gewicht:       parseInt(get('acc-gewicht')) || null,
+      huurkart_type: get('acc-huurkart') || null,
+      uitrusting:    [...document.querySelectorAll('#acc-uitrusting-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()),
+    });
+  }
+  const { error } = await _supabase.from('profiles').upsert(profiel);
+  if (error) { msgEl.style.color='#E02020'; msgEl.textContent='Opslaan mislukt: '+error.message; return; }
+  if (isNewRijder) {
+    _accountRijders.push(profiel);
+  } else {
+    const idx = _accountRijders.findIndex(r => r.id === rijderId);
+    if (idx >= 0) _accountRijders[idx] = { ..._accountRijders[idx], ...profiel };
+  }
+  if (rijderId === _currentUser.id) {
+    _currentProfile = { ..._currentProfile, ...profiel };
+    updateNavbar();
+  }
+  _editingRijder = null;
+  _renderAccLijst();
+}
+
+async function deleteExtraRijder(id) {
+  const r = _accountRijders.find(x => x.id === id);
+  const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'deze rijder';
+  if (!confirm(`"${naam}" verwijderen uit dit account?`)) return;
+  const { error } = await _supabase.from('profiles').delete().eq('id', id);
+  if (error) { alert('Verwijderen mislukt: ' + error.message); return; }
+  _accountRijders = _accountRijders.filter(x => x.id !== id);
+  _editingRijder = null;
+  _renderAccLijst();
+}
+
+// ── Inschrijven paneel ───────────────────────
+function _getAccountData() {
+  const p = _selectedRijder || _currentProfile || {};
+  return {
+    voornaam:    p.voornaam    || '',
+    naam:        p.naam        || '',
+    geboorte:    p.geboortedatum || '',
+    email:       _currentUser?.email || '',
+    telefoon:    p.telefoon    || '',
+    klassen:      p.klassen      || [],
+    startnummers: p.startnummers || {},
+    kampioenen:  p.kampioenschappen || [],
+    kartWp:      !!p.kart_in_werkplaats,
+    bandenWp:    !!p.banden_in_werkplaats,
+    bakWp:       !!p.bak_in_werkplaats,
+    benzIdx:     BENZ_LABELS.findIndex(l => l === (p.benzine||'')),
+    kartType:    p.kart_type || 'eigen',
+    lengte:      p.lengte    || '',
+    gewicht:     p.gewicht   || '',
+    huurkartType: p.huurkart_type || '',
+    uitrusting:  p.uitrusting || [],
+  };
+}
+
+function openInschrijven(eventId) {
+  _currentEvent = _allEvents.find(e => e.id === eventId);
+  if (!_currentEvent) return;
+  document.getElementById('inschrijf-overlay').classList.add('open');
+  document.getElementById('inschrijf-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'inschrijven' }, '', '#inschrijven');
+  if (_accountRijders.length > 1) {
+    _toonRijderKeuze();
+  } else {
+    _selectedRijder = _accountRijders[0] || _currentProfile;
+    _openInschrijvenForm();
+  }
+}
+
+function _toonRijderKeuze() {
+  const ev = _currentEvent;
+  const d  = new Date(ev.datum + 'T12:00:00');
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const registeredIds  = new Set(_myInschrijvingen.filter(i => i.event_id === ev.id).map(i => i.rijder_id));
+  const beschikbaar    = _accountRijders.filter(r => !registeredIds.has(r.id));
+
+  if (beschikbaar.length === 1) {
+    _selectedRijder = beschikbaar[0];
+    _openInschrijvenForm();
+    return;
+  }
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+    <div class="confirm-vraag">Voor wie inschrijven?</div>
+    <p class="confirm-hint">Kies de rijder voor dit event.</p>
+    ${beschikbaar.map(r => `
+      <div class="rijder-kaart" onclick="_kiesRijderEnSchrijfIn('${r.id}')">
+        <div>
+          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
+        </div>
+        <span style="color:#999;font-size:20px;">›</span>
+      </div>`).join('')}
+    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+  `;
+}
+
+function _kiesRijderEnSchrijfIn(rijderId) {
+  _selectedRijder = _accountRijders.find(r => r.id === rijderId) || _currentProfile;
+  _openInschrijvenForm();
+}
+
+function _openInschrijvenForm() {
+  const ev  = _currentEvent;
+  const d   = new Date(ev.datum + 'T12:00:00');
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const acc = _getAccountData();
+
+  const gebStr = formatGeboortedatum(acc.geboorte);
+
+  let kartInfoHtml = '';
+  if (acc.kartType === 'huur') {
+    kartInfoHtml = `
+      <span class="section-title">Huur kart</span>
+      <div class="cf-two">
+        <div class="cf-field"><span class="cf-label">Lengte</span><span class="cf-value">${acc.lengte ? acc.lengte+' cm' : '—'}</span></div>
+        <div class="cf-field"><span class="cf-label">Gewicht</span><span class="cf-value">${acc.gewicht ? acc.gewicht+' kg' : '—'}</span></div>
+      </div>
+      <div class="cf-field"><span class="cf-label">Type huurkart</span><span class="cf-value">${acc.huurkartType || '—'}</span></div>
+      <div class="cf-field"><span class="cf-label">Uitrusting nodig</span><span class="cf-value">${acc.uitrusting.join(', ') || '—'}</span></div>`;
+  } else {
+    kartInfoHtml = `
+      <span class="section-title">Kart & Competitie</span>
+      ${acc.klassen.length ? acc.klassen.map(k => `
+      <div class="cf-two">
+        <div class="cf-field"><span class="cf-label">Klasse</span><span class="cf-value">${k}</span></div>
+        <div class="cf-field"><span class="cf-label">Startnummer</span><span class="cf-value">${acc.startnummers[k] ? '#'+acc.startnummers[k] : '—'}</span></div>
+      </div>`).join('') : `<div class="cf-field"><span class="cf-label">Klasse(n)</span><span class="cf-value">—</span></div>`}
+      <div class="cf-field"><span class="cf-label">Kampioenschappen</span><span class="cf-value">${acc.kampioenen.join(', ') || '—'}</span></div>
+      <span class="section-title">Materiaal & Benzine</span>
+      <div class="cf-field"><span class="cf-label">Kart in werkplaats</span><span class="cf-value">${acc.kartWp ? 'Ja' : 'Nee'}</span></div>
+      <div class="cf-field"><span class="cf-label">Banden in werkplaats</span><span class="cf-value">${acc.bandenWp ? 'Ja' : 'Nee'}</span></div>
+      <div class="cf-field"><span class="cf-label">Bak in werkplaats</span><span class="cf-value">${acc.bakWp ? 'Ja' : 'Nee'}</span></div>
+      <div class="cf-field"><span class="cf-label">Benzine</span><span class="cf-value">${acc.benzIdx >= 0 ? BENZ_LABELS[acc.benzIdx] : '—'}</span></div>`;
+  }
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+
+    <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
+    <div class="cf-two">
+      <div class="cf-field"><span class="cf-label">Voornaam</span><span class="cf-value">${acc.voornaam || '—'}</span></div>
+      <div class="cf-field"><span class="cf-label">Naam</span><span class="cf-value">${acc.naam || '—'}</span></div>
+    </div>
+    <div class="cf-field"><span class="cf-label">Geboortedatum</span><span class="cf-value">${gebStr || '—'}</span></div>
+    <div class="cf-field"><span class="cf-label">E-mailadres</span><span class="cf-value">${acc.email || '—'}</span></div>
+    <div class="cf-field"><span class="cf-label">Telefoonnummer</span><span class="cf-value">${acc.telefoon || '—'}</span></div>
+
+    ${kartInfoHtml}
+
+    <span class="section-title">Klasse voor dit event</span>
+    ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
+
+
+    <span class="section-title">Vraag of opmerking</span>
+    <textarea id="inschrijf-opmerking" placeholder="Optioneel — stel hier een vraag of voeg een opmerking toe aan je inschrijving." style="display:block;width:100%;background:#1c1c1c;border:1px solid #333;color:#fff;padding:11px 12px;font-size:14px;border-radius:3px;margin-bottom:1.2rem;outline:none;font-family:'Barlow',sans-serif;resize:vertical;min-height:90px;line-height:1.5;" onfocus="this.style.borderColor='#E02020'" onblur="this.style.borderColor='#333'"></textarea>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin:1.2rem 0 0.5rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:#fff; letter-spacing:2px; text-transform:uppercase;">Is alles correct?</div>
+      <button class="edit-btn" onclick="enableInschrijfEdit()">✎ Aanpassen</button>
+    </div>
+    <p style="font-size:13px; color:#999; margin-bottom:1.4rem; line-height:1.5;">Kloppen er gegevens niet? Klik op Aanpassen.</p>
+
+    <button class="bevestig-btn" onclick="_toonBevestiging()">Bevestigen →</button>
+    <button class="annuleer-btn" onclick="sluitInschrijven()">Annuleren</button>
+  `;
+}
+
+function sluitInschrijven() {
+  document.getElementById('inschrijf-overlay').classList.remove('open');
+  document.getElementById('inschrijf-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  _currentEvent    = null;
+  _selectedKlasse  = null;
+  if (location.hash === '#inschrijven') history.back();
+  _selectedRijder = null;
+}
+
+async function _toonBevestiging() {
+  const ev = _currentEvent;
+  if (!ev) return;
+
+  // Lees geselecteerde klasse en opmerking vóór innerHTML vervangen
+  const klasse      = _selectedKlasse;
+  const rijder      = _selectedRijder || _currentProfile;
+  const startnummer = klasse ? (rijder?.startnummers?.[klasse] ?? null) : null;
+  const opmerking   = (document.getElementById('inschrijf-opmerking')?.value || '').trim();
+
+  const body = document.getElementById('inschrijf-body');
+  body.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#aaa;">Bezig met inschrijven...</div>`;
+
+  const { error } = await _supabase.from('inschrijvingen').insert({
+    rijder_id:   _selectedRijder?.id || _currentUser.id,
+    event_id:    ev.id,
+    klasse:      klasse      || null,
+    startnummer: startnummer || null,
+    opmerking:   opmerking   || null,
+  });
+
+  if (error && error.code !== '23505') {
+    body.innerHTML = `<div style="padding:2rem; color:#E02020; font-family:'Barlow',sans-serif;">
+      Inschrijving mislukt:<br><strong>${error.message}</strong><br><br>
+      <button class="annuleer-btn" onclick="sluitInschrijven()">Sluiten</button>
+    </div>`;
+    return;
+  }
+
+  // Update lokale state
+  _myEventIds.add(ev.id);
+  _myInschrijvingen.push({
+    id: crypto.randomUUID(),
+    event_id: ev.id,
+    rijder_id: _selectedRijder?.id || _currentUser.id,
+    klasse:      klasse      || null,
+    startnummer: startnummer || null,
+    bevestigd_op: new Date().toISOString(),
+    evenementen: ev,
+  });
+  renderEvents();
+
+  const d = new Date(ev.datum + 'T12:00:00');
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+
+  body.innerHTML = `
+    <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
+      <div style="font-size:52px; margin-bottom:1rem;">✅</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:#fff; letter-spacing:2px; text-transform:uppercase; margin-bottom:0.4rem;">Inschrijving bevestigd!</div>
+      <p style="font-size:13px; color:#aaa; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
+    </div>
+    <div class="ev-confirm-box" style="margin-bottom:2rem;">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta" style="margin-top:6px;">📅 ${datumStr}</div>
+      <div class="ev-confirm-meta">📍 ${ev.circuit}</div>
+      ${klasse ? `<div class="ev-confirm-meta" style="margin-top:6px;">🏁 ${klasse}${startnummer ? ' — #'+startnummer : ''}</div>` : ''}
+    </div>
+    <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
+}
+
+// ── Aanpassen in inschrijf-paneel ────────────
+function enableInschrijfEdit() {
+  const ev  = _currentEvent;
+  if (!ev) return;
+  const d   = new Date(ev.datum + 'T12:00:00');
+  const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+  const acc = _getAccountData();
+
+  const isEigen = acc.kartType !== 'huur';
+  const selectedKamp  = new Set(acc.kampioenen);
+  const selectedKlass = new Set(acc.klassen);
+  const selectedUitr  = new Set(acc.uitrusting);
+
+  let kartEditHtml = '';
+  if (isEigen) {
+    const klassHtml = KLASSEN.map(k => `
+      <div class="chk-item klasse-chk${selectedKlass.has(k)?' on':''}" onclick="toggleKlasseChk(this,'inp-klassen-grid','inp-startnrs')">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+      </div>`).join('');
+    // Pre-build startnr fields for currently selected klassen
+    const initStartnrRows = acc.klassen.map(k => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+        <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+        <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+          value="${acc.startnummers[k] || ''}"
+          style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;color:#fff;" />
+      </div>`).join('');
+    const kampHtml = KAMPIOENSCHAPPEN.map(k => `
+      <div class="chk-item kamp-chk${selectedKamp.has(k)?' on':''}" onclick="toggleChk(this)">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+      </div>`).join('');
+    const benzHtml = BENZ_LABELS.map((txt, i) =>
+      `<button class="benz-btn${i===acc.benzIdx?' on':''}" onclick="pickBenzInschrijf(this)">⛽&nbsp; ${txt}</button>`
+    ).join('');
+    const togRow = (label, isJa) => `
+      <div class="toggle-row"><span>${label}</span>
+        <div class="toggle-group">
+          <button class="tog-btn yes${isJa?' on':''}" onclick="tog(this)">Ja</button>
+          <button class="tog-btn no${!isJa?' on':''}" onclick="tog(this)">Nee</button>
+        </div>
+      </div>`;
+    kartEditHtml = `
+      <span class="section-title">Kart & Competitie</span>
+      <label class="field-label">Klasse(n)</label>
+      <div class="chk-grid" id="inp-klassen-grid" style="margin-bottom:0.5rem;">${klassHtml}</div>
+      <div id="inp-startnrs" style="display:${acc.klassen.length?'':'none'};margin-bottom:1rem;">
+        <label class="field-label">Startnummer per klasse</label>
+        <div class="startnr-list">${initStartnrRows}</div>
+      </div>
+      <label class="field-label" style="margin-top:0.5rem;display:block;">Kampioenschappen</label>
+      <div class="chk-grid">${kampHtml}</div>
+      <span class="section-title">Materiaal in werkplaats</span>
+      ${togRow('Kart in onze werkplaats', acc.kartWp)}
+      ${togRow('Banden in onze werkplaats', acc.bandenWp)}
+      ${togRow('Bak met materiaal in werkplaats', acc.bakWp)}
+      <span class="section-title">Benzine</span>
+      <div class="benzine-opts">${benzHtml}</div>`;
+  } else {
+    const uitrHtml = ['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(u => `
+      <div class="chk-item${selectedUitr.has(u)?' on':''}" onclick="toggleChk(this)">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${u}</span>
+      </div>`).join('');
+    kartEditHtml = `
+      <span class="section-title">Rijder afmetingen</span>
+      <div class="two-col">
+        <div><label class="field-label">Lengte (cm)</label><input id="inp-lengte" class="field-input" type="number" value="${acc.lengte}" /></div>
+        <div><label class="field-label">Gewicht (kg)</label><input id="inp-gewicht" class="field-input" type="number" value="${acc.gewicht}" /></div>
+      </div>
+      <span class="section-title">Kart huren</span>
+      <label class="field-label">Type kart</label>
+      <select id="inp-huurkart" class="field-select">
+        <option value="">Selecteer...</option>
+        ${['Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax Max'].map(k =>
+          `<option${k===acc.huurkartType?' selected':''}>${k}</option>`).join('')}
+      </select>
+      <span class="section-title">Benodigde uitrusting</span>
+      <div class="chk-grid">${uitrHtml}</div>`;
+  }
+
+  document.getElementById('inschrijf-body').innerHTML = `
+    <div class="ev-confirm-box">
+      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+    </div>
+    <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${acc.voornaam}" /></div>
+      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${acc.naam}" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input id="inp-geboorte" class="field-input" type="date" value="${acc.geboorte}" />
+    <label class="field-label">E-mailadres</label>
+    <input id="inp-email" class="field-input" type="email" value="${acc.email}" />
+    <label class="field-label">Telefoonnummer</label>
+    <input id="inp-tel" class="field-input" type="tel" value="${acc.telefoon}" />
+    ${kartEditHtml}
+    <span class="section-title">Klasse voor dit event</span>
+    ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}
+    <button class="bevestig-btn" style="margin-top:0.8rem;" onclick="bevestigInschrijving()">Opslaan & bevestigen →</button>
+    <button class="annuleer-btn" onclick="openInschrijven(_currentEvent.id)">← Terug</button>
+  `;
+}
+
+// ── Klasse kiezen voor event ──────────────────
+function selectKlasseVoorEvent(item) {
+  item.closest('.klasse-keuze-grid').querySelectorAll('.chk-item').forEach(el => el.classList.remove('on'));
+  item.classList.add('on');
+  _selectedKlasse = item.dataset.klasse;
+}
+
+function buildKlasseKeuzeHtml(klassen, startnummers) {
+  if (!klassen || klassen.length === 0) {
+    return `<p style="font-size:13px;color:#999;padding:8px 0;font-family:'Barlow',sans-serif;">
+      Geen klasse ingesteld. Stel je klasse in via <em style="color:#E02020;font-style:normal;cursor:pointer;" onclick="sluitInschrijven();openAccount()">Mijn account</em>.
+    </p>`;
+  }
+  // Zorg dat een geldige klasse geselecteerd is
+  if (!_selectedKlasse || !klassen.includes(_selectedKlasse)) _selectedKlasse = klassen[0];
+  const enkelvoud = klassen.length === 1;
+  return `
+    <p style="font-size:11px;color:#999;margin-bottom:0.5rem;font-family:'Barlow',sans-serif;">
+      ${enkelvoud ? 'Jouw klasse voor dit event:' : 'Kies de klasse waarmee je deelneemt:'}
+    </p>
+    <div class="klasse-keuze-grid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;">
+      ${klassen.map(k => {
+        const nr  = startnummers?.[k];
+        const isOn = k === _selectedKlasse;
+        return `<div class="chk-item${isOn?' on':''}" data-klasse="${k}"
+                  onclick="selectKlasseVoorEvent(this)"
+                  style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="chk-box"><span class="chk-mark">✓</span></div>
+            <span class="chk-label">${k}</span>
+          </div>
+          ${nr ? `<span style="font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#fff;flex-shrink:0;margin-left:8px;">#${nr}</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function pickBenz(btn) {
+  document.querySelectorAll('#acc-benz-opts .benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function pickBenzInschrijf(btn) {
+  btn.closest('.benzine-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
 function toggleChk(item) { item.classList.toggle('on'); }
+
+// ── Startnummer per klasse helpers ────────────
+function updateStartnrFields(gridId, containerId, preValues) {
+  const grid      = document.getElementById(gridId);
+  const container = document.getElementById(containerId);
+  if (!grid || !container) return;
+  const selected = [...grid.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim());
+  const list     = container.querySelector('.startnr-list');
+  if (selected.length === 0) {
+    container.style.display = 'none';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  container.style.display = '';
+  list.innerHTML = selected.map(k => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+        value="${(preValues && preValues[k]) ? preValues[k] : ''}"
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;color:#fff;" />
+    </div>`).join('');
+}
+function toggleKlasseChk(item, gridId, containerId) {
+  const container = document.getElementById(containerId);
+  const prev = {};
+  if (container) container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) prev[inp.dataset.klasse] = inp.value; });
+  item.classList.toggle('on');
+  updateStartnrFields(gridId, containerId, prev);
+}
+function getStartnummers(containerId) {
+  const result = {};
+  const container = document.getElementById(containerId);
+  if (!container) return result;
+  container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) result[inp.dataset.klasse] = parseInt(inp.value); });
+  return result;
+}
+
+function tog(btn) {
+  btn.closest('.toggle-group').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+async function bevestigInschrijving() {
+  const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const isEigen = (_currentProfile?.kart_type !== 'huur');
+
+  // Lees geselecteerde klasse uit de kiezer in het formulier
+  const gekozenKlasse = document.querySelector('#inschrijf-panel .klasse-keuze-grid .chk-item.on')?.dataset.klasse;
+  if (gekozenKlasse) _selectedKlasse = gekozenKlasse;
+
+  // Update profiel in Supabase
+  const profiel = {
+    id:            _selectedRijder?.id || _currentUser.id,
+    voornaam:      get('inp-voornaam'),
+    naam:          get('inp-naam'),
+    geboortedatum: get('inp-geboorte') || null,
+    telefoon:      get('inp-tel'),
+  };
+
+  if (isEigen) {
+    const benzEl  = document.querySelector('#inschrijf-panel .benz-btn.on');
+    const allBenz = [...document.querySelectorAll('#inschrijf-panel .benz-btn')];
+    Object.assign(profiel, {
+      klassen:              [...document.querySelectorAll('#inschrijf-panel .klasse-chk.on .chk-label')].map(el => el.textContent.trim()),
+      startnummers:         getStartnummers('inp-startnrs'),
+      kampioenschappen:     [...document.querySelectorAll('#inschrijf-panel .kamp-chk.on .chk-label')].map(el => el.textContent.trim()),
+      kart_in_werkplaats:   !!(document.querySelectorAll('#inschrijf-panel .toggle-group')[0]?.querySelector('.tog-btn.yes.on')),
+      banden_in_werkplaats: !!(document.querySelectorAll('#inschrijf-panel .toggle-group')[1]?.querySelector('.tog-btn.yes.on')),
+      bak_in_werkplaats:    !!(document.querySelectorAll('#inschrijf-panel .toggle-group')[2]?.querySelector('.tog-btn.yes.on')),
+      benzine:              benzEl ? BENZ_LABELS[allBenz.indexOf(benzEl)] || null : null,
+    });
+  } else {
+    Object.assign(profiel, {
+      lengte:        parseInt(get('inp-lengte'))   || null,
+      gewicht:       parseInt(get('inp-gewicht'))  || null,
+      huurkart_type: get('inp-huurkart') || null,
+      uitrusting:    [...document.querySelectorAll('#inschrijf-panel .chk-item.on .chk-label')].map(el => el.textContent.trim()),
+    });
+  }
+
+  const { error: pErr } = await _supabase.from('profiles').upsert(profiel);
+  if (!pErr) _currentProfile = { ..._currentProfile, ...profiel };
+
+  await _toonBevestiging();
+}
+</script>
+<script>
+(function() {
+  var meta = document.querySelector('meta[name="viewport"]');
+  document.addEventListener('touchend', function() {
+    meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
+    setTimeout(function() {
+      meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes';
+    }, 300);
+  });
+})();
 </script>
 </body>
 </html>
+

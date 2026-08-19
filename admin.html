@@ -1,13 +1,23 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="logos/dfk-logo.png" />
+  <link rel="apple-touch-icon" href="logos/dfk-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
     body { background: #0a0a0a; }
 
     #dfk-root * { box-sizing: border-box; }
@@ -15,24 +25,75 @@
 
     #dfk-root .nav { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
     #dfk-root .nav-badge { background: #E02020; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; margin-left: 10px; }
-    #dfk-root .nav-back { font-size: 12px; color: #666; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; }
+    #dfk-root .nav-back { font-size: 12px; color: #999; cursor: pointer; font-family: 'Barlow', sans-serif; text-decoration: none; background: none; border: none; }
     #dfk-root .nav-back:hover { color: #ccc; }
 
-    #dfk-root .layout { display: grid; grid-template-columns: 1fr 420px; gap: 0; flex: 1; }
-    #dfk-root .left-col { padding: 2rem; border-right: 1px solid #1e1e1e; overflow-y: auto; }
-    #dfk-root .right-col { padding: 2rem; background: #0d0d0d; overflow-y: auto; }
+    #dfk-root .nav-right { position: relative; }
+    #dfk-root .nav-user-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
+    #dfk-root .nav-user-btn:hover { background: #1a1a1a; }
+    #dfk-root .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E02020; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+    #dfk-root .nav-naam { font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; }
+    #dfk-root .nav-chevron { font-size: 10px; color: #999; }
+    #dfk-root .dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #141414; border: 1px solid #2a2a2a; border-top: 2px solid #E02020; border-radius: 4px; min-width: 200px; z-index: 200; }
+    #dfk-root .dropdown.open { display: block; }
+    #dfk-root .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #ccc; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1e1e1e; font-family: 'Barlow', sans-serif; }
+    #dfk-root .dropdown-item:last-child { border-bottom: none; }
+    #dfk-root .dropdown-item:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .dropdown-item.danger { color: #ff5555; }
+    #dfk-root .dropdown-item.danger:hover { background: #1c1c1c; }
+    #dfk-root .di-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    #dfk-root .layout { display: grid; grid-template-columns: 1fr; gap: 0; flex: 1; }
+    #dfk-root .layout.show-right { grid-template-columns: 1fr 420px; }
+    #dfk-root .left-col { padding: 2rem; overflow-y: auto; }
+    #dfk-root .layout.show-right .left-col { border-right: 1px solid #1e1e1e; }
+    #dfk-root .right-col { display: none; padding: 2rem; background: #0d0d0d; overflow-y: auto; overflow-x: hidden; }
+    #dfk-root .layout.show-right .right-col { display: block; }
+    #dfk-root .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
+    #dfk-root .col-header .page-title { margin-bottom: 0; }
+    #dfk-root .open-form-btn { padding: 8px 16px; background: #E02020; color: #fff; border: none; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+    #dfk-root .open-form-btn:hover { background: #c01010; }
+    #dfk-root .close-panel-btn { display: block; width: 100%; padding: 9px; background: transparent; color: #444; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 1.5rem; text-align: center; }
+    #dfk-root .close-panel-btn:hover { color: #aaa; border-color: #333; }
+
+    #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
+    #dfk-root .toggle-row span { font-size: 13px; color: #ccc; }
+    #dfk-root .toggle-group { display: flex; gap: 6px; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444; background: transparent; color: #aaa; }
+    #dfk-root .tog-btn.yes.on { background: #1a5c1a; color: #4cff4c; border-color: #2a8a2a; }
+    #dfk-root .tog-btn.no.on { background: #5c1a1a; color: #ff6666; border-color: #8a2a2a; }
+    #dfk-root .benzine-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+    #dfk-root .benz-btn { padding: 10px 12px; border-radius: 3px; font-size: 13px; cursor: pointer; border: 1px solid #444; background: #1c1c1c; color: #aaa; text-align: left; }
+    #dfk-root .benz-btn.on { background: #2a1010; color: #fff; border-color: #E02020; }
+    #dfk-root .r-kart-keuze { display: flex; gap: 10px; margin-bottom: 1.2rem; }
+    #dfk-root .r-kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c; border: 1px solid #444; border-radius: 3px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
+    #dfk-root .r-kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
+
+    #dfk-root .mobile-tab-bar { display: none; background: #111; border-bottom: 3px solid #1a1a1a; position: sticky; top: 60px; z-index: 99; }
+    #dfk-root .mobile-tab { flex: 1; padding: 13px 8px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; border: none; border-bottom: 3px solid transparent; background: transparent; cursor: pointer; margin-bottom: -3px; }
+    #dfk-root .mobile-tab.on { color: #fff; border-bottom-color: #E02020; }
+
+    @media (max-width: 768px) {
+      #dfk-root .nav-tabs { display: none !important; }
+      #dfk-root .nav-back { font-size: 11px; }
+      #dfk-root .mobile-tab-bar { display: flex; }
+      #dfk-root .layout.show-right { grid-template-columns: 1fr; }
+      #dfk-root .layout.show-right .left-col { display: none; }
+      #dfk-root .layout.show-right .right-col { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200; overflow-y: auto; padding: 1.5rem; }
+    }
 
     #dfk-root .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-    #dfk-root .page-sub { font-size: 13px; color: #666; margin-bottom: 1.8rem; }
+    #dfk-root .page-sub { font-size: 13px; color: #999; margin-bottom: 1.8rem; }
     #dfk-root .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1.2rem; }
 
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
     #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020; }
+    #dfk-root input[type="date"], #dfk-root input[type="datetime-local"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
-    #dfk-root .hint { font-size: 11px; color: #555; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+    #dfk-root .hint { font-size: 11px; color: #aaa; margin-bottom: 0.6rem; margin-top: -0.4rem; }
 
     #dfk-root .edit-banner { background: #1a1a00; border: 1px solid #555500; border-radius: 4px; padding: 10px 14px; margin-bottom: 1.2rem; font-size: 13px; color: #cccc00; display: none; }
     #dfk-root .edit-banner.show { display: flex; align-items: center; justify-content: space-between; }
@@ -51,24 +112,30 @@
     #dfk-root .add-btn:hover { background: #c01010; }
     #dfk-root .add-btn.edit-mode { background: #c08000; }
     #dfk-root .add-btn.edit-mode:hover { background: #a06000; }
-    #dfk-root .reset-btn { display: block; width: 100%; padding: 11px; background: transparent; color: #555; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
-    #dfk-root .reset-btn:hover { color: #888; border-color: #333; }
+    #dfk-root .reset-btn { display: block; width: 100%; padding: 11px; background: transparent; color: #999; border: 1px solid #222; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+    #dfk-root .reset-btn:hover { color: #aaa; border-color: #333; }
 
-    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    #dfk-root .circuit-add-row { display: flex; gap: 8px; margin-bottom: 0.6rem; }
     #dfk-root .circuit-add-row .field-input { margin-bottom: 0; flex: 1; }
     #dfk-root .circuit-add-btn { flex-shrink: 0; padding: 0 16px; background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
     #dfk-root .circuit-add-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .sel-del-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem; }
+    #dfk-root .sel-del-row .field-select { margin-bottom: 0; flex: 1; }
+    #dfk-root .sel-del-btn { flex-shrink: 0; padding: 0 12px; height: 38px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #999; border-radius: 3px; font-size: 18px; line-height: 1; cursor: pointer; }
+    #dfk-root .sel-del-btn:hover { border-color: #E02020; color: #E02020; }
 
     #dfk-root .dl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -0.5rem; margin-bottom: 1rem; }
-    #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #888; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
+    #dfk-root .dl-chip { padding: 5px 10px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; font-size: 11px; color: #aaa; cursor: pointer; font-family: 'Barlow', sans-serif; display: flex; align-items: center; gap: 6px; }
     #dfk-root .dl-chip:hover { border-color: #E02020; color: #fff; }
-    #dfk-root .dl-chip-del { color: #555; font-size: 12px; line-height: 1; }
+    #dfk-root .dl-chip-del { color: #999; font-size: 12px; line-height: 1; }
     #dfk-root .dl-chip-del:hover { color: #ff5555; }
-    #dfk-root .dl-chips-label { font-size: 11px; color: #555; width: 100%; margin-bottom: 2px; }
+    #dfk-root .dl-chips-label { font-size: 11px; color: #999; width: 100%; margin-bottom: 2px; }
 
     #dfk-root .event-list { display: flex; flex-direction: column; gap: 10px; }
-    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    #dfk-root .ev-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #2a8a2a; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     #dfk-root .ev-row.past { border-left-color: #333; opacity: 0.5; }
+    #dfk-root .ev-row.vandaag { border-left-color: #4cff4c; background: #0d1a0d; }
+    #dfk-root .ev-row.gesloten { border-left-color: #E02020; }
     #dfk-root .ev-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
     #dfk-root .ev-date-block { text-align: center; min-width: 48px; flex-shrink: 0; }
     #dfk-root .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 26px; color: #fff; line-height: 1; }
@@ -76,67 +143,482 @@
     #dfk-root .ev-divider { width: 1px; height: 40px; background: #2a2a2a; flex-shrink: 0; }
     #dfk-root .ev-info { flex: 1; min-width: 0; }
     #dfk-root .ev-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #dfk-root .ev-meta { font-size: 12px; color: #666; margin-top: 2px; }
-    #dfk-root .ev-deadline { font-size: 11px; color: #888; margin-top: 3px; }
+    #dfk-root .ev-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    #dfk-root .ev-klassen { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+    #dfk-root .ev-klasse-tag { background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 2px 7px; font-size: 11px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
+    #dfk-root .ev-deadline { font-size: 11px; color: #aaa; margin-top: 3px; }
+    #dfk-root .ev-deadline.closed { color: #E02020; font-weight: 600; }
+    #dfk-root .ev-inschrijvingen { font-size: 11px; color: #E02020; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; }
+    #dfk-root .ev-btn.riders { color: #aaccff; border-color: #4477dd; background: #0d1a33; }
+    #dfk-root .ev-btn.riders:hover { background: #1a2a4a; border-color: #88aaff; color: #fff; }
+    #dfk-root .inschrijving-rider-row { display: flex; align-items: center; gap: 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px; }
+    #dfk-root .inschrijving-rider-info { flex: 1; min-width: 0; }
+    #dfk-root .inschrijving-rider-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .inschrijving-rider-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    #dfk-root .inschrijving-rider-reg { font-size: 11px; color: #444; margin-top: 3px; }
     #dfk-root .ev-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #888; }
-    #dfk-root .ev-btn:hover { color: #fff; border-color: #555; }
-    #dfk-root .ev-btn.edit { color: #cccc00; border-color: #555500; background: #1a1a00; }
-    #dfk-root .ev-btn.edit:hover { background: #2a2a00; border-color: #888800; }
-    #dfk-root .ev-btn.del { color: #ff5555; border-color: #3a1a1a; background: #1c1010; }
+    #dfk-root .ev-btn { padding: 6px 12px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #aaa; }
+    #dfk-root .ev-btn:hover { color: #fff; border-color: #999; }
+    #dfk-root .ev-btn.edit { color: #fff; border-color: #aaaa00; background: #666600; }
+    #dfk-root .ev-btn.edit:hover { background: #888800; border-color: #dddd00; }
+    #dfk-root .ev-btn.del { color: #fff; border-color: #aa2222; background: #881111; }
+    @media (max-width: 600px) {
+      #dfk-root .ev-row { padding: 12px; gap: 10px; align-items: flex-start; }
+      #dfk-root .ev-row.ev-row-weekend { align-items: center; }
+      #dfk-root .ev-divider { display: none; }
+      #dfk-root .ev-info { flex: 1; min-width: 0; }
+      #dfk-root .ev-name { white-space: normal; font-size: 15px; }
+      #dfk-root .ev-row:not(.ev-row-weekend) .ev-actions { width: 100%; border-top: 1px solid #222; padding-top: 8px; margin-top: 2px; justify-content: flex-end; }
+      #dfk-root .ev-row:not(.ev-row-weekend) .ev-btn { flex: 1; text-align: center; padding: 8px 6px; font-size: 12px; }
+    }
     #dfk-root .ev-btn.del:hover { background: #2a1010; border-color: #ff5555; }
+    /* ── Weekend zichtbaarheidsschakelaar ── */
+    #dfk-root .wk-switch { width: 42px; height: 24px; border-radius: 12px; background: #2a2a2a; border: 1px solid #383838; cursor: pointer; position: relative; transition: background 0.2s, border-color 0.2s; flex-shrink: 0; }
+    #dfk-root .wk-switch.on { background: #163016; border-color: #2a5a2a; }
+    #dfk-root .wk-switch-knop { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #444; top: 2px; left: 2px; transition: transform 0.2s, background 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    #dfk-root .wk-switch.on .wk-switch-knop { transform: translateX(18px); background: #4cff4c; }
+    #dfk-root .ev-row.verborgen { opacity: 0.4; border-left-color: #333; }
+    #dfk-root .wk-vis-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-top: 2px; text-align: center; }
+
+    #dfk-root .weekend-groep { margin-bottom: 4px; }
+    #dfk-root .weekend-groep-header {
+      display: flex; align-items: center; gap: 12px;
+      background: #181818; border: 1px solid #2a2a2a; border-left: 3px solid #E02020;
+      border-radius: 4px; padding: 11px 14px; cursor: pointer; transition: background 0.15s;
+    }
+    #dfk-root .weekend-groep-header:hover { background: #1e1e1e; }
+    #dfk-root .weekend-groep-header.past { border-left-color: #333; opacity: 0.55; }
+    #dfk-root .wg-chevron { font-size: 9px; color: #999; transition: transform 0.18s; flex-shrink: 0; }
+    #dfk-root .weekend-groep-header.open .wg-chevron { transform: rotate(90deg); color: #E02020; }
+    #dfk-root .wg-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .wg-meta { font-size: 11px; color: #999; margin-top: 2px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .wg-badge { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; color: #999; flex-shrink: 0; }
+    #dfk-root .weekend-groep-events { display: none; padding-left: 14px; padding-top: 4px; }
+    #dfk-root .weekend-groep-events.open { display: flex; flex-direction: column; gap: 6px; }
+    #dfk-root .weekend-groep-events .ev-row { border-left-width: 2px; }
+    #dfk-root .wg-pdf-balk { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 4px; border-top: 1px solid #1e1e1e; margin-top: 4px; }
+    #dfk-root .wg-pdf-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: #141414; border: 1px solid #2a2a2a; border-radius: 3px; color: #aaa; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    #dfk-root .wg-pdf-btn:hover { border-color: #E02020; color: #fff; background: #1c1010; }
+    #dfk-root .wg-pdf-icon { font-size: 13px; }
+
+    /* ── Weekend detailpagina ── */
+    #dfk-root .wd-back { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #999; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 1.4rem; }
+    #dfk-root .wd-back:hover { color: #ccc; }
+    #dfk-root .wd-header { margin-bottom: 1.6rem; }
+    #dfk-root .wd-titel-rij { display: flex; align-items: center; gap: 10px; }
+    #dfk-root .wd-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 30px; color: #fff; letter-spacing: 2px; text-transform: uppercase; line-height: 1.1; }
+    #dfk-root .wd-edit-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1; flex-shrink: 0; transition: color 0.15s; }
+    #dfk-root .wd-edit-btn:hover { color: #E02020; }
+    #dfk-root .wd-naam-input { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: #fff; letter-spacing: 2px; text-transform: uppercase; background: #1a1a1a; border: 1px solid #E02020; border-radius: 3px; padding: 2px 10px; flex: 1; outline: none; }
+    #dfk-root .wd-naam-opslaan { background: #E02020; color: #fff; border: none; border-radius: 3px; padding: 4px 12px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; flex-shrink: 0; }
+    #dfk-root .wd-naam-opslaan:hover { background: #c01010; }
+    #dfk-root .wd-naam-annuleer { background: none; border: 1px solid #333; color: #999; border-radius: 3px; padding: 4px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+    #dfk-root .wd-naam-annuleer:hover { color: #aaa; border-color: #999; }
+    #dfk-root .wd-datum { font-size: 13px; color: #999; margin-top: 4px; }
+    #dfk-root .wd-stats { display: flex; gap: 16px; margin-top: 10px; }
+    #dfk-root .wd-stat { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; color: #999; }
+    #dfk-root .wd-stat span { color: #fff; font-size: 16px; }
+    #dfk-root .wd-section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 1rem; margin-top: 1.8rem; }
+    #dfk-root .wd-dl-wrapper { position: relative; display: inline-block; margin-bottom: 1.8rem; }
+    #dfk-root .wd-dl-btn { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #1c1c1c; border: 1px solid #333; border-radius: 4px; color: #ccc; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    #dfk-root .wd-dl-btn:hover { border-color: #E02020; color: #fff; }
+    #dfk-root .wd-dl-btn.open { border-color: #E02020; color: #fff; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    #dfk-root .wd-dl-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 260px; background: #1c1c1c; border: 1px solid #E02020; border-top: none; border-radius: 0 4px 4px 4px; z-index: 50; overflow: hidden; }
+    #dfk-root .wd-dl-menu.open { display: block; }
+    #dfk-root .wd-dl-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ccc; font-family: 'Barlow', sans-serif; font-size: 13px; cursor: pointer; border-bottom: 1px solid #2a2a2a; transition: background 0.1s; }
+    #dfk-root .wd-dl-item:last-child { border-bottom: none; }
+    #dfk-root .wd-dl-item:hover { background: #2a1010; color: #fff; }
+    #dfk-root .wd-dl-item-icon { font-size: 16px; flex-shrink: 0; }
 
     #dfk-root .empty { text-align: center; padding: 2rem 1rem; color: #444; font-size: 13px; }
     #dfk-root .empty-icon { font-size: 28px; margin-bottom: 0.4rem; }
 
-    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease; pointer-events: none; }
+    /* ── Archief jaar/maand ── */
+    #dfk-root .archief-jaar { margin-bottom: 6px; }
+    #dfk-root .archief-jaar-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border: 1px solid #222; border-radius: 4px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-jaar-header:hover { border-color: #333; background: #161616; }
+    #dfk-root .archief-jaar-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; flex: 1; }
+    #dfk-root .archief-pijl { font-size: 12px; color: #999; width: 12px; transition: color 0.15s; }
+    #dfk-root .archief-jaar-header:hover .archief-pijl { color: #aaa; }
+    #dfk-root .archief-tel { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: #444; letter-spacing: 1px; }
+    #dfk-root .archief-jaar-body { padding-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .archief-maand-header { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 3px; cursor: pointer; user-select: none; }
+    #dfk-root .archief-maand-header:hover { border-color: #2a2a2a; }
+    #dfk-root .archief-maand-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+    #dfk-root .archief-maand-body { padding-left: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+
+
+
+
+    #dfk-root .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(200px); opacity: 0; border-radius: 4px; padding: 12px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; z-index: 999; transition: transform 0.3s ease, opacity 0.3s ease; pointer-events: none; max-width: 90vw; text-align: center; word-break: break-word; }
     #dfk-root .toast.green { background: #1a5c1a; color: #4cff4c; border: 1px solid #2a8a2a; }
     #dfk-root .toast.yellow { background: #3a3a00; color: #ffff44; border: 1px solid #888800; }
-    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); }
+    #dfk-root .toast.red { background: #3a0000; color: #ff6666; border: 1px solid #880000; }
+    #dfk-root .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    #dfk-root .tab-nav { display: flex; background: #111; border-bottom: 1px solid #222; padding: 0 2rem; }
-    #dfk-root .tab-nav-btn { padding: 14px 22px; background: transparent; border: none; border-bottom: 3px solid transparent; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555; cursor: pointer; margin-bottom: -1px; transition: color 0.2s; }
-    #dfk-root .tab-nav-btn:hover { color: #ccc; }
-    #dfk-root .tab-nav-btn.on { color: #fff; border-bottom-color: #E02020; }
-    #dfk-root .tab-panel { display: none; flex: 1; flex-direction: column; }
-    #dfk-root .tab-panel.on { display: flex; }
-    #dfk-root .account-col { max-width: 520px; width: 100%; margin: 2rem auto; padding: 0 2rem; }
-    #dfk-root .kart-keuze-row { display: flex; gap: 12px; margin-bottom: 1.5rem; }
-    #dfk-root .kart-type-btn { flex: 1; padding: 18px 12px; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; color: #888; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-    #dfk-root .kart-type-btn:hover { border-color: #555; color: #ccc; }
-    #dfk-root .kart-type-btn.on { background: #2a1010; border-color: #E02020; color: #fff; }
+    #dfk-root .nav-tabs { display: flex; height: 100%; margin-left: 1.5rem; }
+    #dfk-root .nav-tab { display: flex; align-items: center; padding: 0 20px; height: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #999; cursor: pointer; border: none; border-bottom: 3px solid transparent; background: transparent; transition: color 0.15s; margin-bottom: -3px; }
+    #dfk-root .nav-tab:hover { color: #ccc; }
+    #dfk-root .nav-tab.on { color: #fff; border-bottom-color: #E02020; }
+
+    #dfk-root .admin-panel { display: none; flex: 1; flex-direction: column; }
+    #dfk-root .admin-panel.on { display: flex; }
+
+    #dfk-root .rider-list { display: flex; flex-direction: column; gap: 10px; }
+    #dfk-root .rider-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .rider-row:hover { border-color: #444; }
+    #dfk-root .rider-row.editing { border-color: #888800; border-left-color: #cccc00; background: #1a1a00; }
+    #dfk-root .rider-avatar { width: 40px; height: 40px; background: #E02020; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 16px; color: #fff; flex-shrink: 0; }
+    #dfk-root .rider-info { flex: 1; min-width: 0; }
+    #dfk-root .rider-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: 1px; }
+    #dfk-root .rider-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    #dfk-root .rider-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
+    #dfk-root .rider-badge.eigen { background: #1a3a1a; color: #4ccc4c; }
+    #dfk-root .rider-badge.huur { background: #1a2a3a; color: #4caaf0; }
+    #dfk-root .rider-badge.admin { background: #3a1a00; color: #ffaa44; }
+    #dfk-root .rider-badge.werkplaats { background: #1a1a3a; color: #aa88ff; }
+    #dfk-root .rider-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    /* Compacte rijderlijst */
+    #dfk-root .rider-row { padding: 7px 12px; gap: 10px; }
+    #dfk-root .rider-avatar { width: 30px; height: 30px; font-size: 11px; flex-shrink: 0; }
+    #dfk-root .rider-name { font-size: 13px; }
+    #dfk-root .rider-meta { font-size: 11px; margin-top: 1px; }
+    /* Zoek / sort / filter toolbar */
+    #dfk-root .rijder-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    #dfk-root .rijder-zoek { flex: 1; min-width: 150px; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 8px 12px; font-size: 13px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .rijder-zoek::placeholder { color: #444; }
+    #dfk-root .rijder-zoek:focus { border-color: #E02020; }
+    #dfk-root .rijder-sel { background: #1c1c1c; border: 1px solid #333; color: #aaa; padding: 8px 10px; font-size: 12px; border-radius: 3px; outline: none; font-family: 'Barlow', sans-serif; cursor: pointer; }
+    #dfk-root .rijder-sel:focus { border-color: #E02020; }
+    #dfk-root .rijder-count { font-size: 11px; color: #444; font-family: 'Barlow', sans-serif; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+    #dfk-root .rol-select { background: #1c1c1c; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 5px 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
+
+    /* ── Inschrijvingen full-screen overlay ────── */
+    #dfk-root .inschr-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
+    #dfk-root .inschr-overlay.open { display: flex; }
+    #dfk-root .inschr-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+    #dfk-root .inschr-ev-info { flex: 1; min-width: 0; overflow: hidden; }
+    #dfk-root .inschr-ev-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; color: #fff; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #dfk-root .inschr-ev-sub { font-size: 12px; color: #999; margin-top: 1px; }
+    #dfk-root .inschr-body { flex: 1; overflow-y: auto; padding: 2rem; }
+    #dfk-root .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; align-items: center; }
+    #dfk-root .filter-chip { padding: 7px 16px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #999; transition: border-color 0.1s, color 0.1s; }
+    #dfk-root .filter-chip.on { background: #2a1010; border-color: #E02020; color: #fff; }
+    #dfk-root .filter-chip:hover:not(.on) { border-color: #999; color: #ccc; }
+    #dfk-root .inschr-sort { margin-left: auto; background: #1c1c1c; border: 1px solid #333; color: #ccc; padding: 7px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
+    #dfk-root .inschr-grid { display: flex; flex-direction: column; gap: 6px; }
+    /* Compacte rij */
+    #dfk-root .inschr-row { background: #141414; border: 1px solid #2a2a2a; border-left: 3px solid #E02020; border-radius: 4px; padding: 10px 14px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .inschr-row:hover { border-color: #444; }
+    #dfk-root .inschr-row.open { background: #161616; border-color: #333; }
+    #dfk-root .inschr-row.huur { border-left-color: #4caaf0; background: #0e141a; }
+    #dfk-root .inschr-row.huur:hover { border-color: #2a4a6a; }
+    #dfk-root .inschr-row.huur.open { background: #101820; }
+    #dfk-root .inschr-sectie-label.huur-label { color: #4caaf0; }
+    #dfk-root .inschr-row-top { display: flex; align-items: center; gap: 10px; }
+    #dfk-root .inschr-row-meta { flex: 1; min-width: 0; }
+    #dfk-root .inschr-naam { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #dfk-root .inschr-reg { font-size: 11px; color: #999; margin-top: 2px; }
+    #dfk-root .inschr-row-rechts { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    #dfk-root .inschr-klasse-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 15px; color: #fff; letter-spacing: 1px; text-align: right; }
+    #dfk-root .inschr-nr { color: #E02020; }
+    #dfk-root .inschr-row-arrow { font-size: 10px; color: #444; transition: transform 0.2s; flex-shrink: 0; }
+    #dfk-root .inschr-row.open .inschr-row-arrow { transform: rotate(180deg); color: #aaa; }
+    /* Uitklapbaar detail */
+    #dfk-root .inschr-expand { display: none; margin-top: 10px; padding-top: 12px; border-top: 1px solid #1e1e1e; padding-left: 40px; flex-direction: column; gap: 10px; }
+    #dfk-root .inschr-row.open .inschr-expand { display: flex; }
+    #dfk-root .inschr-sectie { display: flex; flex-direction: column; gap: 4px; }
+    #dfk-root .inschr-sectie-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E02020; }
+    #dfk-root .inschr-sectie-value { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
+    #dfk-root .inschr-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    #dfk-root .inschr-chip { padding: 4px 9px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px; font-size: 11px; color: #aaa; font-family: 'Barlow', sans-serif; }
+    #dfk-root .inschr-chip.ok { border-color: #1a4000; color: #66cc44; background: #0a1a00; }
+    #dfk-root .inschr-chip.benzine { border-color: #3a2200; color: #ffaa33; background: #180f00; }
+    #dfk-root .inschr-uitschr-btn { margin-top: 10px; padding: 6px 14px; background: #1c1010; border: 1px solid #3a1a1a; color: #ff5555; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+    #dfk-root .inschr-uitschr-btn:hover { background: #2a1010; border-color: #ff5555; }
+    @media (max-width: 768px) {
+      #dfk-root .inschr-topbar { padding: 0.6rem 1rem; height: auto; flex-wrap: wrap; gap: 0.5rem; }
+      #dfk-root .inschr-ev-info { order: -1; width: 100%; }
+      #dfk-root .inschr-ev-naam { font-size: 15px; white-space: normal; }
+      #dfk-root .inschr-ev-sub { font-size: 11px; }
+      #dfk-root .inschr-body { padding: 1rem; }
+      #dfk-root .inschr-expand { padding-left: 10px; }
+    }
+
+    /* ── Admin inschrijf modal ── */
+    #dfk-root .ai-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 400; align-items: center; justify-content: center; }
+    #dfk-root .ai-backdrop.open { display: flex; }
+    #dfk-root .ai-modal { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 6px; padding: 1.5rem; width: min(420px, 95vw); }
+    #dfk-root .ai-titel { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.2rem; }
+    #dfk-root .ai-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 4px; margin-top: 1rem; display: block; }
+    #dfk-root .ai-label:first-of-type { margin-top: 0; }
+    #dfk-root .ai-input { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
+    #dfk-root .ai-input:focus { border-color: #E02020; }
+    #dfk-root .ai-select { width: 100%; background: #1c1c1c; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 3px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; cursor: pointer; }
+    #dfk-root .ai-select:focus { border-color: #E02020; }
+    #dfk-root .ai-rijder-lijst { max-height: 200px; overflow-y: auto; border: 1px solid #2a2a2a; border-radius: 3px; background: #111; margin-top: 2px; display: none; }
+    #dfk-root .ai-rijder-lijst.open { display: block; }
+    #dfk-root .ai-rijder-opt { padding: 9px 12px; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 13px; color: #ccc; border-bottom: 1px solid #1e1e1e; }
+    #dfk-root .ai-rijder-opt:last-child { border-bottom: none; }
+    #dfk-root .ai-rijder-opt:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .ai-rijder-opt.selected { background: #1c1010; color: #fff; }
+    #dfk-root .ai-rijder-sub { font-size: 11px; color: #999; margin-top: 2px; }
+    #dfk-root .ai-rijder-item:hover { background: #1c1c1c; color: #fff; }
+    #dfk-root .ai-footer { display: flex; gap: 8px; margin-top: 1.4rem; justify-content: flex-end; }
+    #dfk-root .ai-btn { padding: 9px 20px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid #333; background: #1c1c1c; color: #aaa; }
+    #dfk-root .ai-btn.primary { background: #E02020; border-color: #E02020; color: #fff; }
+    #dfk-root .ai-btn.primary:hover { background: #c01818; }
+    #dfk-root .ai-btn:hover:not(.primary) { border-color: #999; color: #ccc; }
+
+    /* ── Rechtensysteem ── */
+    #dfk-root .rider-badge.office { background: #1a3a1a; color: #4ccc4c; }
+    body:not(.kan-evenementen) .vereist-evenementen { display: none !important; }
+    body:not(.kan-zichtbaarheid) .vereist-zichtbaarheid { display: none !important; }
+    body:not(.kan-inschrijvingen) .vereist-inschrijvingen { display: none !important; }
+    body:not(.kan-rijders) .vereist-rijders { display: none !important; }
+    body:not(.kan-werkplaats) .vereist-werkplaats { display: none !important; }
+    body:not(.kan-crew) .vereist-crew { display: none !important; }
+    body.niet-admin #nav-rol-badge { background: #1a3a1a; color: #4cff4c; border: 1px solid #2a6a2a; }
+    body:not(.kan-rijders) .vereist-rijders-edit { display: none !important; }
+    /* Rechten checkboxes in crew-edit */
+    #dfk-root .rechten-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+    #dfk-root .recht-item { display: flex; align-items: center; gap: 10px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 3px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
+    #dfk-root .recht-item.on { background: #0d1a0d; border-color: #2a6a2a; }
+    #dfk-root .recht-item.disabled { opacity: 0.4; cursor: default; }
+    #dfk-root .recht-box { width: 18px; height: 18px; border: 1px solid #444; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #111; }
+    #dfk-root .recht-item.on .recht-box { background: #2a6a2a; border-color: #4cff4c; }
+    #dfk-root .recht-vinkje { color: #4cff4c; font-size: 11px; font-weight: 700; display: none; }
+    #dfk-root .recht-item.on .recht-vinkje { display: block; }
+    #dfk-root .recht-label { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; flex: 1; }
+    #dfk-root .recht-item.on .recht-label { color: #fff; }
+
+    /* ── Mijn account overlay ── */
+    #dfk-root .account-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow: hidden; }
+    #dfk-root .account-overlay.open { display: flex; }
+    #dfk-root .account-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
+    #dfk-root .account-body { flex: 1; overflow-y: auto; padding: 2rem; max-width: 600px; width: 100%; margin: 0 auto; }
+
+    /* ── Rijder bewerken overlay ── */
+    #dfk-root .rijder-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
+    #dfk-root .rijder-overlay.open { display: flex; }
+    #dfk-root .rijder-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+    #dfk-root .rijder-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
+
+    /* ── Event formulier overlay ── */
+    #dfk-root .event-overlay { display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 300; flex-direction: column; overflow-y: auto; }
+    #dfk-root .event-overlay.open { display: flex; }
+    #dfk-root .event-overlay-topbar { background: #111; border-bottom: 3px solid #E02020; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+    #dfk-root .event-overlay-body { flex: 1; padding: 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
   </style>
 </head>
 <body>
 
+<script>
+document.documentElement.style.visibility = 'hidden';
+document.addEventListener('DOMContentLoaded', function() {
+  const isRefresh = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  const tab = isRefresh ? localStorage.getItem('dfk_admin_tab') : 'evenementen';
+  if (tab && tab !== 'evenementen') {
+    ['evenementen','rijders','crew'].forEach(function(t) {
+      const el = document.getElementById('panel-' + t);
+      if (el) el.classList.toggle('on', t === tab);
+    });
+    document.querySelectorAll('[data-tab]').forEach(function(b) {
+      b.classList.toggle('on', b.dataset.tab === tab);
+    });
+  }
+  document.documentElement.style.visibility = '';
+});
+</script>
+
 <div id="dfk-root">
 
   <nav class="nav">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
-      <span class="nav-badge">Admin</span>
+    <div style="display:flex; align-items:center; height:100%;">
+      <div style="display:flex; align-items:center; gap:12px; padding-right:1rem; border-right:1px solid #222;">
+        <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
+        <span class="nav-badge" id="nav-rol-badge">Admin</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab on" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+        <button class="nav-tab" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+        <button class="nav-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
+      </div>
     </div>
-    <a class="nav-back" href="evenementen.html">← Terug naar evenementen</a>
+    <div class="nav-right">
+      <button class="nav-user-btn" onclick="toggleAdminDropdown()">
+        <div class="nav-avatar" id="admin-avatar">?</div>
+        <span class="nav-naam" id="admin-naam">Laden...</span>
+        <span class="nav-chevron">▼</span>
+      </button>
+      <div class="dropdown" id="admin-dropdown">
+        <div class="dropdown-item" onclick="openAccountOverlay()">
+          <span class="di-icon">👤</span> Mijn account
+        </div>
+        <div class="dropdown-item niet-admin" style="display:none;" onclick="window.location.href='evenementen.html'">
+          <span class="di-icon">🏁</span> Naar de site
+        </div>
+        <div class="dropdown-item vereist-werkplaats" onclick="window.location.href='werkplaats.html'">
+          <span class="di-icon">🔧</span> Werkplaats
+        </div>
+        <div class="dropdown-item danger" onclick="uitloggen()">
+          <span class="di-icon">↩</span> Uitloggen
+        </div>
+      </div>
+    </div>
   </nav>
 
+  <div class="mobile-tab-bar">
+    <button class="mobile-tab on" data-tab="evenementen" onclick="switchAdminTab('evenementen')">Evenementen</button>
+    <button class="mobile-tab" data-tab="rijders" onclick="switchAdminTab('rijders')">Rijders</button>
+    <button class="mobile-tab vereist-crew" data-tab="crew" onclick="switchAdminTab('crew')">Crew</button>
+  </div>
+
+  <!-- PANEL: EVENEMENTEN -->
+  <div id="panel-evenementen" class="admin-panel on">
   <div class="layout">
 
     <div class="left-col">
-      <div class="page-title">Evenementen</div>
-      <p class="page-sub">Overzicht van alle ingevoerde evenementen</p>
-      <div class="section-label">Komende evenementen</div>
-      <div class="event-list" id="upcoming-list"><div class="empty"><div class="empty-icon">📅</div>Nog geen evenementen toegevoegd</div></div>
-      <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
-      <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
+
+      <!-- Overzicht evenementen -->
+      <div id="events-overzicht">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Evenementen</div>
+            <p class="page-sub" style="margin-bottom:0;">Overzicht van alle ingevoerde evenementen</p>
+          </div>
+          <button class="open-form-btn vereist-evenementen" onclick="toggleEventForm()">＋ Toevoegen</button>
+        </div>
+        <div class="section-label">Volgend evenement</div>
+        <div class="event-list" id="next-list"><div class="empty"><div class="empty-icon">⏳</div>Laden...</div></div>
+        <div class="section-label" id="upcoming-label" style="margin-top:2rem;">Komende evenementen</div>
+        <div class="event-list" id="upcoming-list"></div>
+        <div class="section-label" style="margin-top:2rem;">Afgelopen evenementen</div>
+        <div class="event-list" id="past-list"><div class="empty"><div class="empty-icon">🏁</div>Geen afgelopen evenementen</div></div>
+      </div>
+
+      <!-- Weekend detailpagina -->
+      <div id="weekend-detail-view" style="display:none;">
+        <div id="wd-content"></div>
+      </div>
     </div>
 
-    <div class="right-col">
-      <div class="page-title" id="form-title">Toevoegen</div>
-      <p class="page-sub" id="form-sub">Vul het formulier in om een nieuw evenement aan te maken</p>
+  </div>
+  </div>
 
+  <!-- PANEL: RIJDERS -->
+  <div id="panel-rijders" class="admin-panel">
+    <div class="layout">
+      <div class="left-col">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Rijders</div>
+            <p class="page-sub" style="margin-bottom:0;">Alle geregistreerde accounts</p>
+          </div>
+        </div>
+        <div class="section-label">Alle rijders</div>
+        <div class="rijder-toolbar">
+          <input type="text" id="rijder-zoek" class="rijder-zoek" placeholder="Zoek op naam..." oninput="renderRijders()">
+          <select id="rijder-sort" class="rijder-sel" onchange="renderRijders()">
+            <option value="naam">Naam A → Z</option>
+            <option value="naam_z">Naam Z → A</option>
+            <option value="klasse">Klasse</option>
+            <option value="kart">Kart type</option>
+          </select>
+          <select id="rijder-filter" class="rijder-sel" onchange="renderRijders()">
+            <option value="">Alle rijders</option>
+            <option value="eigen">Eigen kart</option>
+            <option value="huur">Huurkart</option>
+          </select>
+        </div>
+        <div id="rijder-count" class="rijder-count"></div>
+        <div class="rider-list" id="rider-list">
+          <div class="empty"><div class="empty-icon">⏳</div>Laden...</div>
+        </div>
+      </div>
+      <div class="right-col" id="rider-detail"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: CREW -->
+  <div id="panel-crew" class="admin-panel">
+    <div class="layout">
+      <div class="left-col">
+        <div class="col-header">
+          <div>
+            <div class="page-title">Crew</div>
+            <p class="page-sub" style="margin-bottom:0;">Admins en werkplaatsmedewerkers</p>
+          </div>
+          <button class="open-form-btn vereist-crew" onclick="nieuwCrewlid()" style="flex-shrink:0;">+ Nieuw crewlid</button>
+        </div>
+        <div class="section-label">Crewleden</div>
+        <div class="rider-list" id="crew-list">
+          <div class="empty"><div class="empty-icon">⏳</div>Laden...</div>
+        </div>
+      </div>
+      <div class="right-col" id="crew-detail"></div>
+    </div>
+  </div>
+
+  <!-- ── Inschrijvingen full-screen overlay ── -->
+  <div id="inschr-overlay" class="inschr-overlay">
+    <div class="inschr-topbar">
+      <button class="nav-back" onclick="sluitInschrijvingenPanel()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div class="inschr-ev-info">
+        <div class="inschr-ev-naam" id="inschr-ev-naam"></div>
+        <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
+      </div>
+      <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;padding:7px 12px;">⬇ PDF</button>
+      <button class="open-form-btn" onclick="openAdminInschrijfModal()" style="flex-shrink:0;background:#1a2a1a;border-color:#3aaa3a;color:#6de86d;padding:7px 12px;">+ Inschrijven</button>
+    </div>
+    <div class="inschr-body">
+      <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
+      <div class="filter-bar" id="inschr-filters"></div>
+      <div class="inschr-grid" id="inschr-grid"></div>
+    </div>
+  </div>
+
+
+  <!-- ── Admin inschrijf modal ── -->
+  <div id="ai-backdrop" class="ai-backdrop" onclick="sluitAdminInschrijfModal(event)">
+    <div class="ai-modal" onclick="event.stopPropagation()">
+      <div class="ai-titel">Rijder inschrijven</div>
+
+      <label class="ai-label">Rijder zoeken</label>
+      <input class="ai-input" id="ai-zoek" type="text" placeholder="Naam zoeken..." oninput="filterAiRijders()" onfocus="document.getElementById('ai-lijst').classList.add('open')" autocomplete="off" />
+      <div class="ai-rijder-lijst" id="ai-lijst"></div>
+      <input type="hidden" id="ai-rijder-id" />
+
+      <!-- Preview na selectie -->
+      <div id="ai-preview" style="display:none; margin-top:1rem; background:#1a1a1a; border:1px solid #2a2a2a; border-left:3px solid #E02020; border-radius:3px; padding:12px 14px;">
+        <div id="ai-preview-naam" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:#fff;letter-spacing:1px;"></div>
+        <div id="ai-preview-info" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
+        <!-- Klasse keuze alleen als rijder meerdere klassen heeft die matchen -->
+        <div id="ai-klasse-wrap" style="display:none;margin-top:10px;">
+          <label class="ai-label" style="margin-top:0;">Klasse</label>
+          <select class="ai-select" id="ai-klasse" onchange="aiKlasseGewijzigd()"></select>
+        </div>
+      </div>
+
+      <div class="ai-footer">
+        <button class="ai-btn" onclick="sluitAdminInschrijfModal()">Annuleren</button>
+        <button class="ai-btn primary" id="ai-inschr-btn" onclick="bevestigAdminInschrijving()" disabled style="opacity:0.4;">Inschrijven</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Event formulier overlay ── -->
+  <div id="event-overlay" class="event-overlay">
+    <div class="event-overlay-topbar">
+      <button class="nav-back" onclick="sluitEventOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;" id="event-overlay-titel">Evenement toevoegen</div>
+      <div style="width:80px;"></div>
+    </div>
+    <div class="event-overlay-body">
       <div class="edit-banner" id="edit-banner">
         <span>✎ Je past een evenement aan</span>
-        <span onclick="cancelEdit()" style="cursor:pointer; color:#888;">✕ Annuleren</span>
+        <span onclick="sluitEventOverlay()" style="cursor:pointer; color:#aaa;">✕ Annuleren</span>
       </div>
 
       <div class="section-label">Evenement</div>
@@ -153,13 +635,16 @@
           <label class="field-label">Type</label>
           <select class="field-select" id="f-type" style="margin-bottom:0;">
             <option value="">Selecteer...</option>
-            <option>Wedstrijd</option><option>Nationaal</option><option>Club</option><option>Training</option><option>Andere</option>
+            <option>Wedstrijd</option><option>Training</option><option>Clubrace</option><option>Experience</option>
           </select>
         </div>
       </div>
 
       <label class="field-label" style="margin-top:1rem;">Circuit / Locatie</label>
-      <select class="field-select" id="f-circuit"><option value="">Selecteer circuit...</option></select>
+      <div class="sel-del-row">
+        <select class="field-select" id="f-circuit" onchange="onCircuitChange()"><option value="">Selecteer circuit...</option></select>
+        <button class="sel-del-btn" id="circuit-del-btn" onclick="verwijderCircuit()" title="Verwijder dit circuit uit de lijst" style="display:none;">×</button>
+      </div>
       <div class="circuit-add-row">
         <input class="field-input" id="f-circuit-nieuw" type="text" placeholder="Nieuw circuit toevoegen..." />
         <button class="circuit-add-btn" onclick="addCircuit()">+ Toevoegen</button>
@@ -185,169 +670,2958 @@
       </div>
 
       <button class="add-btn" id="submit-btn" onclick="submitForm()">+ Evenement toevoegen</button>
-      <button class="reset-btn" onclick="cancelEdit()">Annuleren / leegmaken</button>
+      <button class="reset-btn" onclick="sluitEventOverlay()">Annuleren</button>
     </div>
+  </div>
+
+  <!-- ── Rijder bewerken overlay ── -->
+  <div id="rijder-overlay" class="rijder-overlay">
+    <div class="rijder-overlay-body" id="rijder-overlay-body"></div>
+  </div>
+
+  <!-- ── Mijn account overlay ── -->
+  <div id="account-overlay" class="account-overlay">
+    <div class="account-topbar">
+      <button class="nav-back" onclick="sluitAccountOverlay()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;letter-spacing:2px;text-transform:uppercase;">Mijn account</div>
+    </div>
+    <div class="account-body" id="account-body"></div>
   </div>
 
   <div class="toast green" id="toast"></div>
 </div>
 
 <script>
-  const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-  const DAGEN = ['zo','ma','di','wo','do','vr','za'];
-  let events = [], circuits = [], deadlineHistory = [];
-  let editIndex = -1;
+const MAANDEN    = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const DAGEN      = ['zo','ma','di','wo','do','vr','za'];
+const BENZ_LABELS = ['Ik neem altijd zelf benzine mee','Ik pak altijd benzine bij DFK','Training: zelf — Wedstrijd: bij DFK'];
 
-  function load() {
-    try { events = JSON.parse(localStorage.getItem('dfk_events') || '[]'); } catch(e) { events = []; }
-    try { circuits = JSON.parse(localStorage.getItem('dfk_circuits') || '[]'); } catch(e) { circuits = []; }
-    try { deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]'); } catch(e) { deadlineHistory = []; }
-    renderCircuitSelect();
+function berekenLeeftijd(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  const nu = new Date();
+  let leeftijd = nu.getFullYear() - gd.getFullYear();
+  if (nu.getMonth() < gd.getMonth() || (nu.getMonth() === gd.getMonth() && nu.getDate() < gd.getDate())) leeftijd--;
+  return leeftijd;
+}
+
+function formatGeboortedatum(geboortedatum) {
+  if (!geboortedatum) return null;
+  const gd = new Date(geboortedatum + 'T12:00:00');
+  return `${gd.getDate()} ${MAANDEN[gd.getMonth()]} ${gd.getFullYear()} <span style="color:#999;font-size:12px;">(${berekenLeeftijd(geboortedatum)} jaar)</span>`;
+}
+
+// ── State ─────────────────────────────────────
+let _adminProfile   = null;
+let _allEvents      = [];
+let _inschrijvingen = {}; // eventId → count
+let _allRijders     = [];
+let circuits        = [];
+let deadlineHistory = [];
+let editEventId     = null; // UUID of event being edited
+let _openWeekenden  = new Set(); // weekenden die uitgeklapt zijn in de lijst
+let editRijderId    = null; // UUID of rider being edited
+let _inschrData     = [];   // inschrijvingen voor huidig geopend event
+let _inschrEvent    = null;
+let _inschrFilter   = null; // actieve klasse-filter (null = alle)
+let _inschrSort     = 'klasse';
+
+// ── Init ─────────────────────────────────────
+(async () => {
+  try {
+    const result = await requireAdmin();
+    if (!result) return;
+    _adminProfile = result.profile;
+    _pasRechtenToe(_adminProfile);
+    _updateAdminNav(_adminProfile);
+    deadlineHistory = JSON.parse(localStorage.getItem('dfk_deadlines') || '[]');
     renderDeadlineChips();
-    renderEvents();
+    await Promise.all([loadCircuits(), loadEvents(), loadWeekenden()]);
+    const opgeslagenTab = localStorage.getItem('dfk_admin_tab');
+    if (opgeslagenTab === 'rijders') loadRijders();
+    if (opgeslagenTab === 'crew')    loadCrew();
+
+    // ── Realtime ──────────────────────────────
+    _supabase.channel('admin-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'evenementen' }, async () => {
+        await loadEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'weekenden' }, async () => {
+        await loadWeekenden();
+        renderEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inschrijvingen' }, async () => {
+        await loadEvents();
+        if (_inschrEvent) toonInschrijvingen(_inschrEvent.id);
+      })
+      .subscribe();
+
+  } catch(e) {
+    console.error('Admin init fout:', e);
+    showToast('Laad fout: ' + e.message, 'red');
+  }
+})();
+
+
+// ── Rechtensysteem ───────────────────────────
+const RECHTEN_OPTIES = [
+  { id: 'evenementen',    label: 'Evenementen aanmaken & bewerken' },
+  { id: 'zichtbaarheid',  label: 'Weekend zichtbaarheid instellen' },
+  { id: 'inschrijvingen', label: 'Inschrijvingen & PDFs beheren' },
+  { id: 'rijders',        label: 'Rijders bekijken & aanpassen' },
+  { id: 'werkplaats',     label: 'Werkplaats toegang' },
+  { id: 'crew',           label: 'Crew & rollen beheren' },
+];
+
+function _pasRechtenToe(profile) {
+  const isAdmin = profile.rol === 'admin';
+  const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []);
+  actief.forEach(r => document.body.classList.add('kan-' + r));
+
+  if (isAdmin) {
+    document.querySelector('.dropdown-item.niet-admin').style.display = '';
+  } else {
+    document.body.classList.add('niet-admin');
+    document.getElementById('nav-rol-badge').textContent = 'Office';
+    document.title = 'DFK – Office';
+  }
+}
+
+function toggleAdminDropdown() {
+  document.getElementById('admin-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-right')) {
+    document.getElementById('admin-dropdown').classList.remove('open');
+  }
+});
+
+function _updateAdminNav(profile) {
+  if (!profile) return;
+  const ini = ((profile.voornaam?.[0] || '') + (profile.naam?.[0] || '')).toUpperCase() || '?';
+  document.getElementById('admin-avatar').textContent = ini;
+  document.getElementById('admin-naam').textContent = `${profile.voornaam || ''} ${profile.naam || ''}`.trim() || 'Admin';
+}
+
+async function uitloggen() {
+  await _supabase.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+// ── Evenementen laden ─────────────────────────
+async function loadEvents() {
+  const { data, error } = await _supabase
+    .from('evenementen')
+    .select('*')
+    .order('datum', { ascending: true });
+  if (error) { showToast('Fout bij laden: ' + error.message, 'red'); return; }
+  _allEvents = data || [];
+
+  // Laad inschrijvingen-tellingen
+  const { data: inData } = await _supabase
+    .from('inschrijvingen')
+    .select('event_id');
+  _inschrijvingen = {};
+  (inData || []).forEach(r => {
+    _inschrijvingen[r.event_id] = (_inschrijvingen[r.event_id] || 0) + 1;
+  });
+
+  renderEvents();
+}
+
+// ── Evenementen renderen ──────────────────────
+function renderEvents() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = _allEvents.filter(e => new Date(e.datum + 'T12:00:00') >= today);
+  const past     = _allEvents.filter(e => new Date(e.datum + 'T12:00:00') <  today);
+
+  const nextEl     = document.getElementById('next-list');
+  const upcomingEl = document.getElementById('upcoming-list');
+  const labelEl    = document.getElementById('upcoming-label');
+
+  if (upcoming.length === 0) {
+    nextEl.innerHTML     = `<div class="empty"><div class="empty-icon">📅</div>Nog geen evenementen toegevoegd</div>`;
+    upcomingEl.innerHTML = '';
+    labelEl.style.display = 'none';
+  } else {
+    const items    = buildDisplayItems(upcoming, false);
+    const volgende = items[0];
+    const rest     = items.slice(1);
+
+    nextEl.innerHTML = volgende.type === 'weekend'
+      ? renderWeekendGroep(volgende.wid, volgende.evs, false)
+      : renderEvRow(volgende.ev, false);
+
+    if (rest.length > 0) {
+      labelEl.style.display = '';
+      upcomingEl.innerHTML  = rest.map(item =>
+        item.type === 'weekend'
+          ? renderWeekendGroep(item.wid, item.evs, false)
+          : renderEvRow(item.ev, false)
+      ).join('');
+    } else {
+      labelEl.style.display = 'none';
+      upcomingEl.innerHTML  = '';
+    }
   }
 
-  function save() { localStorage.setItem('dfk_events', JSON.stringify(events)); }
-  function saveCircuits() { localStorage.setItem('dfk_circuits', JSON.stringify(circuits)); }
-  function saveDeadlines() { localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory)); }
+  renderList('past-list', past, '🏁', 'Geen afgelopen evenementen', true);
 
-  function renderCircuitSelect(selected) {
-    const sel = document.getElementById('f-circuit');
-    const current = selected || sel.value;
-    sel.innerHTML = '<option value="">Selecteer circuit...</option>' + circuits.map(c => `<option value="${c}"${c===current?' selected':''}>${c}</option>`).join('');
+}
+
+function renderEvRow(ev, isPast) {
+  const d = new Date(ev.datum + 'T12:00:00');
+  const isEditing = ev.id === editEventId;
+  const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isVandaag = !isPast && d.toDateString() === now.toDateString();
+  const deadlinePassed = ev.deadline && new Date(ev.deadline) < now;
+  const deadlineTxt = ev.deadline
+    ? deadlinePassed
+      ? `⏱ Inschrijving gesloten`
+      : `⏱ Inschrijving open tot ${formatDate(ev.deadline)}`
+    : '';
+  const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
+  const inCount = _inschrijvingen[ev.id] || 0;
+  return `<div class="ev-row${isPast?' past':''}${isVandaag?' vandaag':''}${isEditing?' editing':''}${(!isPast && deadlinePassed)?' gesloten':''}">
+    <div class="ev-date-block">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">${DAGEN[d.getDay()]}</div>
+      <div class="ev-day">${d.getDate()}</div>
+      <div class="ev-month">${MAANDEN[d.getMonth()]}</div>
+    </div>
+    <div class="ev-divider"></div>
+    <div class="ev-info">
+      <div class="ev-name">${ev.naam}</div>
+      <div class="ev-meta">${ev.circuit}${ev.type ? ' · ' + ev.type : ''}</div>
+      ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
+      ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
+      ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#4cff4c;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
+    </div>
+    <div class="ev-actions">
+      <button class="ev-btn riders vereist-inschrijvingen" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>
+      <button class="ev-btn edit vereist-evenementen" onclick="editEvent('${ev.id}')">✎</button>
+      <button class="ev-btn del vereist-evenementen"  onclick="deleteEvent('${ev.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
+function renderWeekendGroep(wid, evs, isPast) {
+  const gesorteerd = evs.slice().sort((a, b) => a.datum.localeCompare(b.datum));
+  const eersteD = new Date(gesorteerd[0].datum + 'T12:00:00');
+  const laasteD = new Date(gesorteerd[gesorteerd.length - 1].datum + 'T12:00:00');
+
+  // Datumbereik label
+  const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+  const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+  let datumStr;
+  if (eersteD.getTime() === laasteD.getTime()) {
+    datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+  } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
+    datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+  } else {
+    datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
   }
 
-  function addCircuit() {
-    const input = document.getElementById('f-circuit-nieuw');
-    const naam = input.value.trim();
-    if (!naam) return;
-    if (circuits.includes(naam)) { alert('Dit circuit staat al in de lijst.'); return; }
-    circuits.push(naam); circuits.sort();
-    saveCircuits(); renderCircuitSelect(naam);
-    document.getElementById('f-circuit').value = naam;
-    input.value = '';
-    showToast('Circuit toegevoegd!', 'green');
+  const weekend   = _allWeekenden.find(w => w.id === wid);
+  const naam      = weekend?.naam || 'Weekend';
+  const zichtbaar = weekend?.zichtbaar !== false;
+  const totInschr = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
+
+  // Datum-blok: bereik als meerdere dagen, anders gewone dag
+  const meerdere = eersteD.getTime() !== laasteD.getTime();
+  const dagTekst = meerdere
+    ? `${eersteD.getDate()} – ${laasteD.getDate()}`
+    : `${eersteD.getDate()}`;
+  const maand = MAANDEN[eersteD.getMonth()].toUpperCase();
+
+  return `<div class="ev-row ev-row-weekend${isPast ? ' past' : ''}${!zichtbaar ? ' verborgen' : ''}" >
+    <div class="ev-date-block" style="min-width:${meerdere ? '62px' : '48px'}; cursor:pointer;" onclick="openWeekendDetail('${wid}')">
+      <div class="ev-day" style="${meerdere ? 'font-size:20px;' : ''}">${dagTekst}</div>
+      <div class="ev-month">${maand}</div>
+    </div>
+    <div class="ev-info" style="flex:1; cursor:pointer;" onclick="openWeekendDetail('${wid}')">
+      <div class="ev-name">${naam}</div>
+      <div class="ev-meta">${datumStr} · ${evs.length} dag${evs.length !== 1 ? 'en' : ''}</div>
+      ${totInschr > 0 ? `<div class="ev-inschrijvingen">👥 ${totInschr} inschrijvingen</div>` : ''}
+    </div>
+    <div class="ev-actions" style="flex-direction:column; align-items:center; gap:3px;">
+      <div class="wk-switch${zichtbaar ? ' on' : ''}" onclick="toggleWeekendZichtbaar('${wid}')" title="${zichtbaar ? 'Zichtbaar voor klanten — klik om te verbergen' : 'Verborgen voor klanten — klik om zichtbaar te maken'}">
+        <div class="wk-switch-knop"></div>
+      </div>
+      <div class="wk-vis-label">${zichtbaar ? 'zichtbaar' : 'verborgen'}</div>
+    </div>
+  </div>`;
+}
+
+async function downloadWeekendPdf(wid, nr) {
+  if (nr !== 1) return; // andere PDF's komen later
+
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  // Haal inschrijvingen op voor alle events in één query
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id))
+    .order('bevestigd_op', { ascending: true });
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Groepeer per event
+  const perEvent = new Map(evs.map(e => [e.id, []]));
+  for (const r of (data || [])) {
+    if (perEvent.has(r.event_id)) perEvent.get(r.event_id).push(r);
   }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.activeElement.id === 'f-circuit-nieuw') addCircuit(); });
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
 
-  function renderDeadlineChips() {
-    const container = document.getElementById('dl-chips');
-    if (deadlineHistory.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = '<span class="dl-chips-label">Eerder gebruikt:</span>' +
-      deadlineHistory.map((dl, i) => `<span class="dl-chip" onclick="pickDeadline('${dl}')">⏱ ${formatDate(dl)}<span class="dl-chip-del" onclick="removeDeadline(event,${i})">✕</span></span>`).join('');
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+
+  const baseStyles = {
+    font: 'helvetica', fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17], lineColor: [220, 220, 220], lineWidth: 0.2,
+  };
+
+  // Paginaheader tekenen voor één event
+  function tekenDagHeader(ev) {
+    const d = new Date(ev.datum + 'T12:00:00');
+    const datumStr = `${DAGEN_LANG[d.getDay()]} ${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
+    const lijst = perEvent.get(ev.id) || [];
+
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+
+    if (logoBase64) {
+      const logoH = 12;
+      const logoW = logoH * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+    }
+
+    const evNaam = ev.naam.toUpperCase();
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(evNaam, 10, 13);
+    const naamBreedte = doc.getTextWidth(evNaam); // breedte meten zolang font nog 13pt bold is
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('  ·  ' + datumStr, 10 + naamBreedte, 13);
+
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+
+    doc.setFillColor(30, 30, 30);
+    doc.rect(0, 21.5, W, 8, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`${ev.circuit || ''}  ·  ${lijst.length} rijder${lijst.length !== 1 ? 's' : ''}`, 10, 27);
   }
 
-  function pickDeadline(val) { document.getElementById('f-deadline').value = val; }
-  function removeDeadline(e, idx) { e.stopPropagation(); deadlineHistory.splice(idx, 1); saveDeadlines(); renderDeadlineChips(); }
-  function saveDeadlineToHistory(val) { if (!val) return; deadlineHistory = [val, ...deadlineHistory.filter(d => d !== val)].slice(0, 8); saveDeadlines(); renderDeadlineChips(); }
-
-  function toggleChk(item) { item.classList.toggle('on'); }
-
-  function resetForm() {
-    document.getElementById('f-naam').value = '';
-    document.getElementById('f-datum').value = '';
-    document.getElementById('f-type').value = '';
-    document.getElementById('f-circuit').value = '';
-    document.getElementById('f-circuit-nieuw').value = '';
-    document.getElementById('f-deadline').value = '';
-    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
+  // Paginavoet
+  function tekenFooter() {
+    const nu = new Date();
+    const pnr = doc.internal.getCurrentPageInfo().pageNumber;
+    const ptot = doc.internal.getNumberOfPages();
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`DFK · ${weekend.naam}`, 10, 292);
+    doc.text(`${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}  ·  ${pnr}/${ptot}`, W - 10, 292, { align: 'right' });
   }
 
-  function cancelEdit() {
-    editIndex = -1; resetForm();
-    document.getElementById('form-title').textContent = 'Toevoegen';
-    document.getElementById('form-sub').textContent = 'Vul het formulier in om een nieuw evenement aan te maken';
-    document.getElementById('edit-banner').classList.remove('show');
-    const btn = document.getElementById('submit-btn');
-    btn.textContent = '+ Evenement toevoegen'; btn.classList.remove('edit-mode');
-    renderEvents();
+  // Render elke dag op een aparte pagina
+  for (let i = 0; i < evs.length; i++) {
+    const ev = evs[i];
+    if (i > 0) doc.addPage();
+
+    tekenDagHeader(ev);
+
+    const alleRijders = perEvent.get(ev.id) || [];
+
+    const eigenLijst = alleRijders
+      .filter(r => (r.profiles||{}).kart_type !== 'huur')
+      .sort((a, b) => {
+        const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
+        const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
+        return (a.klasse||'￿').localeCompare(b.klasse||'￿') || nA.localeCompare(nB);
+      });
+
+    const huurLijst = alleRijders
+      .filter(r => (r.profiles||{}).kart_type === 'huur')
+      .sort((a, b) => {
+        const nA = `${a.profiles?.naam||''} ${a.profiles?.voornaam||''}`.trim();
+        const nB = `${b.profiles?.naam||''} ${b.profiles?.voornaam||''}`.trim();
+        return ((a.profiles?.huurkart_type)||'￿').localeCompare((b.profiles?.huurkart_type)||'￿') || nA.localeCompare(nB);
+      });
+
+    // Eigen kart tabel
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(204, 26, 26);
+    doc.text(`EIGEN KART  (${eigenLijst.length})`, 10, 33);
+
+    doc.autoTable({
+      startY: 35,
+      head: [['#', 'Naam', 'Klasse']],
+      body: eigenLijst.map(r => {
+        const p = r.profiles || {};
+        return [r.startnummer != null ? String(r.startnummer) : '', `${p.voornaam||''} ${p.naam||''}`.trim(), r.klasse || ''];
+      }),
+      styles: baseStyles,
+      headStyles: { fillColor: [204, 26, 26], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+      alternateRowStyles: { fillColor: [247, 247, 247] },
+      columnStyles: { 0: { halign: 'center', cellWidth: 15, fontStyle: 'bold', fontSize: 9 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 50 } },
+      margin: { left: 10, right: 10 },
+      didDrawPage: tekenFooter,
+    });
+
+    // Huurkart tabel
+    if (huurLijst.length > 0) {
+      const afterEigen = doc.lastAutoTable.finalY + 10;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(21, 101, 192);
+      doc.text(`HUURKART  (${huurLijst.length})`, 10, afterEigen - 3);
+
+      doc.autoTable({
+        startY: afterEigen,
+        head: [['Naam', 'Klasse']],
+        body: huurLijst.map(r => {
+          const p = r.profiles || {};
+          return [`${p.voornaam||''} ${p.naam||''}`.trim(), p.huurkart_type || '—'];
+        }),
+        styles: baseStyles,
+        headStyles: { fillColor: [21, 101, 192], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+        alternateRowStyles: { fillColor: [240, 245, 255] },
+        columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 50 } },
+        margin: { left: 10, right: 10 },
+        didDrawPage: tekenFooter,
+      });
+    }
   }
 
-  function editEvent(idx) {
-    editIndex = idx;
-    const ev = events[idx];
-    document.getElementById('f-naam').value = ev.naam;
-    document.getElementById('f-datum').value = ev.datum;
-    document.getElementById('f-type').value = ev.type;
-    renderCircuitSelect(ev.circuit);
-    document.getElementById('f-deadline').value = ev.deadline || '';
-    document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.toggle('on', ev.klassen.includes(i.dataset.klasse)));
-    document.getElementById('form-title').textContent = 'Aanpassen';
-    document.getElementById('form-sub').textContent = 'Pas de gegevens aan en sla op';
-    document.getElementById('edit-banner').classList.add('show');
-    const btn = document.getElementById('submit-btn');
-    btn.textContent = '✓ Wijzigingen opslaan'; btn.classList.add('edit-mode');
-    renderEvents();
-    document.querySelector('.right-col').scrollTop = 0;
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_inschrijvingen.pdf`);
+}
+
+async function downloadWeekendPdf4(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id));
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Dedupliceer rijders — één pagina per rijder, klassen samenvoegen
+  const rijderMap = new Map();
+  for (const r of (data || [])) {
+    const p = r.profiles;
+    if (!p) continue;
+    const id = r.rijder_id;
+    if (!rijderMap.has(id)) {
+      rijderMap.set(id, { profiel: p, klassen: [], startnummers: {} });
+    }
+    const entry = rijderMap.get(id);
+    if (r.klasse && !entry.klassen.includes(r.klasse)) {
+      entry.klassen.push(r.klasse);
+    }
+    if (r.klasse && r.startnummer != null) {
+      entry.startnummers[r.klasse] = r.startnummer;
+    }
   }
 
-  function deleteEvent(idx) {
-    if (editIndex === idx) cancelEdit();
-    events.splice(idx, 1); save(); renderEvents();
-    showToast('Evenement verwijderd', 'yellow');
+  // Sorteer op achternaam
+  const rijders = [...rijderMap.values()].sort((a, b) => {
+    const nA = `${a.profiel.naam||''} ${a.profiel.voornaam||''}`.trim();
+    const nB = `${b.profiel.naam||''} ${b.profiel.voornaam||''}`.trim();
+    return nA.localeCompare(nB);
+  });
+
+  if (!rijders.length) { showToast('Geen inschrijvingen gevonden', 'yellow'); return; }
+
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210; const H = 297;
+  const ML = 14; const MR = 14; const CW = W - ML - MR;
+
+  const BENZ_KORT = {
+    'Ik neem altijd zelf benzine mee':          'Zelf',
+    'Ik pak altijd benzine bij DFK':             'Bij DFK',
+    'Training: zelf — Wedstrijd: bij DFK':       'Training: zelf / Wedstrijd: bij DFK',
+  };
+
+  rijders.forEach((entry, idx) => {
+    const p = entry.profiel;
+    if (idx > 0) doc.addPage();
+
+    const naam     = `${p.voornaam||''} ${p.naam||''}`.trim();
+    const isHuur   = p.kart_type === 'huur';
+    const kartTxt  = isHuur ? 'Huurkart' : 'Eigen kart';
+    const benzTxt  = BENZ_KORT[p.benzine] || p.benzine || '—';
+    const nu       = new Date();
+
+    // ── Header (zwart vlak) ──
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+    if (logoBase64) {
+      const lh = 12, lw = lh * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - lw - 8, 4, lw, lh);
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text(weekend.naam.toUpperCase(), ML, 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(160, 160, 160);
+    doc.text(`Shop bon · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+
+    // Rode streep
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+
+    // ── Rijdernaam ──
+    let y = 38;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.setTextColor(10, 10, 10);
+    doc.text(naam, ML, y);
+    y += 3;
+
+    // Dunne scheidingslijn onder naam
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.4);
+    doc.line(ML, y, W - MR, y);
+    y += 6;
+
+    // ── Info blok: 2 kolommen ──
+    const col1X = ML, col2X = ML + CW / 2;
+    const infos = [];
+
+    // Klasse(n) + startnummer(s)
+    if (entry.klassen.length) {
+      entry.klassen.forEach(k => {
+        const nr = entry.startnummers[k] ?? p.startnummers?.[k];
+        infos.push({ label: 'Klasse', waarde: k + (nr != null ? `  ·  #${nr}` : '') });
+      });
+    }
+    infos.push({ label: 'Kart', waarde: kartTxt });
+    if (p.benzine) infos.push({ label: 'Benzine', waarde: benzTxt });
+
+    // Teken info in grid
+    infos.forEach((info, i) => {
+      const x  = i % 2 === 0 ? col1X : col2X;
+      const iy = y + Math.floor(i / 2) * 10;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(180, 180, 180);
+      doc.text(info.label.toUpperCase(), x, iy);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(20, 20, 20);
+      doc.text(info.waarde, x, iy + 5);
+    });
+
+    y += (Math.ceil(infos.length / 2)) * 10 + 6;
+
+    // Scheidingslijn
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(ML, y, W - MR, y);
+    y += 7;
+
+    // Kolomhoofden
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(130, 130, 130);
+    const aantalKolW = 18;                        // breedte van de aantal-kolom
+    const aantalKolX = ML;                        // aantal-kolom links
+    const artikelKolX = ML + aantalKolW + 4;      // omschrijving-kolom rechts daarvan
+    const scheidX = ML + aantalKolW + 2;          // verticale lijn
+
+    doc.text('Aantal', aantalKolX, y);
+    doc.text('Artikel / omschrijving', artikelKolX, y);
+    y += 2;
+
+    // Kolom-scheidingslijn
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, W - MR, y);
+    y += 1;
+
+    // ── Schrijflijnen ──
+    const regelHoogte  = 7;
+    const maxY         = H - 28;
+    const aantalRegels = Math.floor((maxY - y) / regelHoogte) - 2;
+
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.25);
+
+    for (let i = 0; i < aantalRegels; i++) {
+      const ly = y + (i + 1) * regelHoogte;
+      // Schrijflijn aantal
+      doc.line(aantalKolX, ly, scheidX - 2, ly);
+      // Schrijflijn omschrijving
+      doc.line(artikelKolX, ly, W - MR, ly);
+      // Verticale scheidingslijn (subtiel)
+      if (i === 0) {
+        doc.setDrawColor(225, 225, 225);
+        doc.setLineWidth(0.2);
+        doc.line(scheidX, y, scheidX, y + aantalRegels * regelHoogte + regelHoogte);
+        doc.setDrawColor(210, 210, 210);
+        doc.setLineWidth(0.25);
+      }
+    }
+
+    // ── Totaal lijn ──
+    const totaalY = y + (aantalRegels + 1) * regelHoogte;
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.5);
+    doc.line(ML, totaalY, W - MR, totaalY);
+
+    // ── Footer ──
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`DFK · ${weekend.naam} · ${naam}`, ML, H - 8);
+    doc.text(`${idx + 1} / ${rijders.length}`, W - MR, H - 8, { align: 'right' });
+  });
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_shopbon.pdf`);
+}
+
+async function downloadOpmerkingPdf(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(voornaam, naam)')
+    .in('event_id', evs.map(e => e.id))
+    .not('opmerking', 'is', null)
+    .neq('opmerking', '');
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  const rijen = (data || []).map(r => {
+    const ev   = evs.find(e => e.id === r.event_id);
+    const p    = r.profiles;
+    const naam = p ? `${p.voornaam || ''} ${p.naam || ''}`.trim() : '—';
+    const d    = ev ? new Date(ev.datum + 'T12:00:00') : null;
+    const datumStr = d
+      ? `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`
+      : '—';
+    const nr = r.startnummer != null ? `#${r.startnummer}` : '—';
+    return { datumStr, naam, klasse: r.klasse || '—', nr, opmerking: r.opmerking };
+  });
+
+  if (!rijen.length) { showToast('Geen opmerkingen gevonden voor dit weekend', 'yellow'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210; const H = 297; const ML = 14; const MR = 14;
+
+  const nu = new Date();
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+
+  // Header
+  doc.setFillColor(17, 17, 17);
+  doc.rect(0, 0, W, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text(weekend.naam.toUpperCase(), ML, 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 160);
+  doc.text(`Opmerkingen · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+  doc.setFillColor(224, 32, 32);
+  doc.rect(0, 20, W, 1.5, 'F');
+
+  // Tabel
+  doc.autoTable({
+    startY: 26,
+    head: [['Datum', 'Rijder', 'Klasse', 'Nr', 'Opmerking']],
+    body: rijen.map(r => [r.datumStr, r.naam, r.klasse, r.nr, r.opmerking]),
+    styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [20, 20, 20], font: 'helvetica' },
+    headStyles: { fillColor: [224, 32, 32], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 32 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 12, halign: 'center' },
+      4: { cellWidth: 'auto' },
+    },
+    didDrawPage: (d) => {
+      // Footer
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(180, 180, 180);
+      doc.text(`DFK · ${weekend.naam} · Opmerkingen`, ML, H - 8);
+      doc.text(`${d.pageNumber}`, W - MR, H - 8, { align: 'right' });
+      // Herhaal header op nieuwe pagina's
+      if (d.pageNumber > 1) {
+        doc.setFillColor(17, 17, 17);
+        doc.rect(0, 0, W, 20, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        doc.text(weekend.naam.toUpperCase(), ML, 12);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(160, 160, 160);
+        doc.text(`Opmerkingen · ${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}`, ML, 17);
+        doc.setFillColor(224, 32, 32);
+        doc.rect(0, 20, W, 1.5, 'F');
+      }
+    },
+  });
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_opmerkingen.pdf`);
+}
+
+async function downloadRijderslijstPdf(wid) {
+  const weekend = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents
+    .filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!evs.length) { showToast('Geen evenementen in dit weekend', 'yellow'); return; }
+
+  showToast('PDF wordt aangemaakt...', 'green');
+
+  const { data, error } = await _supabase
+    .from('inschrijvingen')
+    .select('*, profiles(*)')
+    .in('event_id', evs.map(e => e.id));
+
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+
+  // Dedupliceer: één rij per rijder
+  const rijderMap = new Map();
+  for (const r of (data || [])) {
+    const p = r.profiles;
+    if (!p) continue;
+    if (!rijderMap.has(r.rijder_id)) {
+      rijderMap.set(r.rijder_id, { profiel: p, klassen: [], startnummers: {} });
+    }
+    const entry = rijderMap.get(r.rijder_id);
+    if (r.klasse && !entry.klassen.includes(r.klasse)) entry.klassen.push(r.klasse);
+    if (r.klasse && r.startnummer != null) entry.startnummers[r.klasse] = r.startnummer;
   }
 
-  function submitForm() {
-    const naam = document.getElementById('f-naam').value.trim();
-    const datum = document.getElementById('f-datum').value;
-    const type = document.getElementById('f-type').value;
-    const circuit = document.getElementById('f-circuit').value;
-    const deadline = document.getElementById('f-deadline').value;
-    const klassen = [...document.querySelectorAll('#klassen-grid .chk-item.on')].map(i => i.dataset.klasse);
-    if (!naam || !datum || !circuit || !type) { alert('Vul minstens naam, datum, type en circuit in.'); return; }
-    saveDeadlineToHistory(deadline);
-    const ev = { naam, datum, type, circuit, deadline, klassen };
-    if (editIndex >= 0) { events[editIndex] = ev; showToast('Evenement aangepast!', 'yellow'); }
-    else { events.push(ev); showToast('Evenement toegevoegd!', 'green'); }
-    events.sort((a, b) => new Date(a.datum) - new Date(b.datum));
-    save(); cancelEdit();
+  if (!rijderMap.size) { showToast('Geen inschrijvingen gevonden', 'yellow'); return; }
+
+  const rijders    = [...rijderMap.values()];
+  const eigenRijders = rijders.filter(e => e.profiel.kart_type !== 'huur');
+  const huurRijders  = rijders.filter(e => e.profiel.kart_type === 'huur');
+
+  // Sorteer eigen kart op klasse dan naam, huurkart op kart type dan naam
+  eigenRijders.sort((a, b) => {
+    const kA = a.klassen[0] || ''; const kB = b.klassen[0] || '';
+    if (kA !== kB) return kA.localeCompare(kB);
+    return (a.profiel.naam||'').localeCompare(b.profiel.naam||'');
+  });
+  huurRijders.sort((a, b) => {
+    const tA = a.profiel.huurkart_type || ''; const tB = b.profiel.huurkart_type || '';
+    if (tA !== tB) return tA.localeCompare(tB);
+    return (a.profiel.naam||'').localeCompare(b.profiel.naam||'');
+  });
+
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  // Logo laden
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const nu = new Date();
+
+  const baseStyles = {
+    font: 'helvetica', fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17], lineColor: [220, 220, 220], lineWidth: 0.2,
+  };
+
+  function tekenPaginaHeader() {
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, W, 20, 'F');
+
+    if (logoBase64) {
+      const logoH = 12, logoW = logoH * (logoBase64.w / logoBase64.h);
+      doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+    }
+
+    const titel = weekend.naam.toUpperCase();
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(titel, 10, 13);
+    const titelBreedte = doc.getTextWidth(titel);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('  ·  Rijderslijst', 10 + titelBreedte, 13);
+
+    doc.setFillColor(224, 32, 32);
+    doc.rect(0, 20, W, 1.5, 'F');
+
+    doc.setFillColor(30, 30, 30);
+    doc.rect(0, 21.5, W, 8, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const totaal = rijders.length;
+    doc.text(`${eigenRijders.length} eigen kart  ·  ${huurRijders.length} huurkart  ·  ${totaal} rijder${totaal !== 1 ? 's' : ''} totaal`, 10, 27);
   }
 
-  function renderEvents() {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) >= today);
-    const past = events.map((e,i) => ({...e, _idx: i})).filter(e => new Date(e.datum) < today);
-    renderList('upcoming-list', upcoming, '📅', 'Nog geen evenementen toegevoegd', false);
-    renderList('past-list', past, '🏁', 'Geen afgelopen evenementen', true);
+  function tekenFooter() {
+    const pnr  = doc.internal.getCurrentPageInfo().pageNumber;
+    const ptot = doc.internal.getNumberOfPages();
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`DFK · ${weekend.naam}`, 10, 292);
+    doc.text(`${nu.getDate()} ${MAANDEN_LANG[nu.getMonth()]} ${nu.getFullYear()}  ·  ${pnr}/${ptot}`, W - 10, 292, { align: 'right' });
   }
 
-  function renderList(containerId, list, icon, emptyMsg, isPast) {
-    const container = document.getElementById(containerId);
-    if (list.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`; return; }
-    container.innerHTML = list.map(ev => {
-      const d = new Date(ev.datum);
-      const isEditing = ev._idx === editIndex;
-      const deadlineTxt = ev.deadline ? `⏱ ${formatDate(ev.deadline)}` : '';
-      return `<div class="ev-row${isPast?' past':''}${isEditing?' editing':''}">
-        <div class="ev-date-block"><div class="ev-day">${d.getDate()}</div><div class="ev-month">${MAANDEN[d.getMonth()]}</div></div>
-        <div class="ev-divider"></div>
-        <div class="ev-info">
-          <div class="ev-name">${ev.naam}</div>
-          <div class="ev-meta">${DAGEN[d.getDay()]} · ${ev.circuit} · ${ev.type}</div>
-          ${ev.klassen.length ? `<div class="ev-meta">${ev.klassen.join(' · ')}</div>` : ''}
-          ${deadlineTxt ? `<div class="ev-deadline">${deadlineTxt}</div>` : ''}
+  tekenPaginaHeader();
+
+  // ── Eigen kart ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(204, 26, 26);
+  doc.text(`EIGEN KART  (${eigenRijders.length})`, 10, 33);
+
+  doc.autoTable({
+    startY: 35,
+    head: [['#', 'Naam', 'Klasse']],
+    body: eigenRijders.map(e => {
+      const p    = e.profiel;
+      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+      const klassen = e.klassen.join(' / ') || '';
+      const nrs = e.klassen.map(k => e.startnummers[k] != null ? String(e.startnummers[k]) : '').join(' / ') || '';
+      return [nrs, naam, klassen];
+    }),
+    styles: baseStyles,
+    headStyles: { fillColor: [204, 26, 26], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+    alternateRowStyles: { fillColor: [247, 247, 247] },
+    columnStyles: { 0: { halign: 'center', cellWidth: 15, fontStyle: 'bold', fontSize: 9 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 50 } },
+    margin: { left: 10, right: 10 },
+    didDrawPage: () => { tekenFooter(); if (doc.internal.getCurrentPageInfo().pageNumber > 1) tekenPaginaHeader(); },
+  });
+
+  // ── Huurkart ──
+  if (huurRijders.length > 0) {
+    const afterEigen = doc.lastAutoTable.finalY + 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(21, 101, 192);
+    doc.text(`HUURKART  (${huurRijders.length})`, 10, afterEigen - 3);
+
+    doc.autoTable({
+      startY: afterEigen,
+      head: [['Naam', 'Kart type', 'Lengte', 'Gewicht', 'Uitrusting']],
+      body: huurRijders.map(e => {
+        const p    = e.profiel;
+        const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+        const lengte  = p.lengte  ? `${p.lengte} cm`  : '—';
+        const gewicht = p.gewicht ? `${p.gewicht} kg` : '—';
+        const uitr = (p.uitrusting || []).join(', ') || '—';
+        return [naam, p.huurkart_type || '—', lengte, gewicht, uitr];
+      }),
+      styles: baseStyles,
+      headStyles: { fillColor: [21, 101, 192], textColor: [255,255,255], fontStyle: 'bold', fontSize: 7, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+      alternateRowStyles: { fillColor: [240, 245, 255] },
+      columnStyles: {
+        0: { cellWidth: 42 },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 16, halign: 'center' },
+        3: { cellWidth: 16, halign: 'center' },
+        4: { cellWidth: 'auto' },
+      },
+      margin: { left: 10, right: 10 },
+      didDrawPage: () => { tekenFooter(); if (doc.internal.getCurrentPageInfo().pageNumber > 1) tekenPaginaHeader(); },
+    });
+  }
+
+  tekenFooter();
+
+  const slug = weekend.naam.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+  doc.save(`${slug}_rijderslijst.pdf`);
+}
+
+function openWeekendDetail(wid) {
+  const weekend  = _allWeekenden.find(w => w.id === wid);
+  if (!weekend) return;
+
+  const evs = _allEvents.filter(e => e.weekend_id === wid)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  // Datumbereik berekenen
+  const eersteD = evs.length ? new Date(evs[0].datum + 'T12:00:00') : null;
+  const laasteD = evs.length ? new Date(evs[evs.length - 1].datum + 'T12:00:00') : null;
+  let datumStr = '';
+  if (eersteD && laasteD) {
+    const e = `${DAGEN[eersteD.getDay()]} ${eersteD.getDate()}`;
+    const l = `${DAGEN[laasteD.getDay()]} ${laasteD.getDate()}`;
+    if (eersteD.getTime() === laasteD.getTime()) {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} ${eersteD.getFullYear()}`;
+    } else if (eersteD.getMonth() === laasteD.getMonth() && eersteD.getFullYear() === laasteD.getFullYear()) {
+      datumStr = `${e} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    } else {
+      datumStr = `${e} ${MAANDEN[eersteD.getMonth()]} – ${l} ${MAANDEN[laasteD.getMonth()]} ${laasteD.getFullYear()}`;
+    }
+  }
+
+  const totInschr = evs.reduce((s, ev) => s + (_inschrijvingen[ev.id] || 0), 0);
+  const isPast    = laasteD ? laasteD < new Date() : false;
+
+  document.getElementById('wd-content').innerHTML = `
+    <button class="wd-back" onclick="sluitWeekendDetail()">← Terug naar evenementen</button>
+    <div class="wd-header">
+      <div class="wd-titel-rij">
+        <div class="wd-titel" id="wd-naam-display">${weekend.naam}</div>
+        <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
+      </div>
+      <div class="wd-datum">${datumStr}</div>
+      <div class="wd-stats">
+        <div class="wd-stat"><span>${evs.length}</span> dag${evs.length !== 1 ? 'en' : ''}</div>
+        <div class="wd-stat"><span>${totInschr}</span> ingeschreven</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.8rem;align-items:flex-start;">
+      <div class="wd-dl-wrapper" id="wd-dl-wrapper-${wid}" style="margin-bottom:0;">
+        <button class="wd-dl-btn" onclick="toggleWdDl('${wid}')">⬇ Downloads ▾</button>
+      <div class="wd-dl-menu" id="wd-dl-menu-${wid}">
+        <div class="wd-dl-item" onclick="downloadWeekendPdf('${wid}',1);sluitWdDl('${wid}')"><span class="wd-dl-item-icon">📄</span> Inschrijvingen per dag</div>
+        <div class="wd-dl-item" onclick="downloadOpmerkingPdf('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">💬</span> Opmerkingen</div>
+        <div class="wd-dl-item" onclick="downloadRijderslijstPdf('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">🏎️</span> Rijderslijst weekend</div>
+        <div class="wd-dl-item" onclick="downloadWeekendPdf4('${wid}');sluitWdDl('${wid}')"><span class="wd-dl-item-icon">🛒</span> Shop bon per rijder</div>
+      </div>
+      </div>
+    </div>
+
+    <div class="wd-section-label">Evenementen</div>
+    <div class="event-list">
+      ${evs.length
+        ? evs.map(ev => renderEvRow(ev, isPast)).join('')
+        : '<div class="empty"><div class="empty-icon">📋</div>Geen evenementen gekoppeld</div>'}
+    </div>
+  `;
+
+  document.getElementById('events-overzicht').style.display    = 'none';
+  document.getElementById('weekend-detail-view').style.display = '';
+  document.querySelector('.left-col').scrollTop = 0;
+  history.pushState({ view: 'weekend', wid }, '', '#weekend');
+
+}
+
+function sluitWeekendDetail() {
+  document.getElementById('weekend-detail-view').style.display = 'none';
+  document.getElementById('events-overzicht').style.display    = '';
+  if (location.hash === '#weekend') history.back();
+}
+
+function bewerkWeekendNaam(wid) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
+  const rij = document.querySelector('.wd-titel-rij');
+  const w   = _allWeekenden.find(w => w.id === wid);
+  if (!rij || !w) return;
+  rij.innerHTML = `
+    <input class="wd-naam-input" id="wd-naam-input" value="${w.naam}" maxlength="120" />
+    <button class="wd-naam-opslaan" onclick="slaWeekendNaamOp('${wid}')">✓ Opslaan</button>
+    <button class="wd-naam-annuleer" onclick="annuleerWeekendNaam('${wid}')">✕</button>`;
+  const inp = document.getElementById('wd-naam-input');
+  inp.focus();
+  inp.select();
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  slaWeekendNaamOp(wid);
+    if (e.key === 'Escape') annuleerWeekendNaam(wid);
+  });
+}
+
+async function slaWeekendNaamOp(wid) {
+  const inp = document.getElementById('wd-naam-input');
+  let naam  = inp ? inp.value.trim() : '';
+  if (!naam) {
+    // Genereer automatische naam op basis van circuit + datums
+    const evs     = _allEvents.filter(e => e.weekend_id === wid);
+    const datums  = evs.map(e => e.datum);
+    const circuit = evs[0]?.circuit || '';
+    naam = datums.length ? buildWeekendNaam(circuit, datums) : 'Weekend';
+    if (inp) inp.value = naam;
+  }
+  const { error } = await _supabase.from('weekenden').update({ naam }).eq('id', wid);
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+  const w = _allWeekenden.find(w => w.id === wid);
+  if (w) w.naam = naam;
+  // Herstel de titel-rij
+  const rij = document.querySelector('.wd-titel-rij');
+  if (rij) rij.innerHTML = `
+    <div class="wd-titel" id="wd-naam-display">${naam}</div>
+    <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
+  renderEvents();
+}
+
+function annuleerWeekendNaam(wid) {
+  const w = _allWeekenden.find(w => w.id === wid);
+  const rij = document.querySelector('.wd-titel-rij');
+  if (!rij || !w) return;
+  rij.innerHTML = `
+    <div class="wd-titel" id="wd-naam-display">${w.naam}</div>
+    <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
+}
+
+// ── Centrale terugknop-handler ─────────────────
+window.addEventListener('popstate', (e) => {
+  const state = e.state?.view;
+
+  if (document.getElementById('account-overlay').classList.contains('open')) {
+    document.getElementById('account-overlay').classList.remove('open');
+    return;
+  }
+  if (document.getElementById('event-overlay').classList.contains('open')) {
+    document.getElementById('event-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    cancelEdit();
+    return;
+  }
+  if (document.getElementById('rijder-overlay').classList.contains('open')) {
+    document.getElementById('rijder-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    editRijderId = null;
+    renderRijders();
+    return;
+  }
+  if (document.getElementById('ai-backdrop').classList.contains('open')) {
+    document.getElementById('ai-backdrop').classList.remove('open');
+    document.getElementById('ai-lijst').classList.remove('open');
+    return;
+  }
+  if (document.getElementById('inschr-overlay').classList.contains('open')) {
+    document.getElementById('inschr-overlay').classList.remove('open');
+    _inschrData  = [];
+    _inschrEvent = null;
+    // Als we terugkeren naar het weekend, detail open laten
+    if (state === 'weekend') return;
+    return;
+  }
+  // Sluit weekenddetail enkel als we teruggaan naar de basisstaat
+  if (state !== 'weekend' && document.getElementById('weekend-detail-view').style.display !== 'none') {
+    document.getElementById('weekend-detail-view').style.display = 'none';
+    document.getElementById('events-overzicht').style.display    = '';
+  }
+});
+
+function buildDisplayItems(list, isPast) {
+  const weekendMap = new Map();
+  const standalone = [];
+  for (const ev of list) {
+    if (ev.weekend_id && _allWeekenden.find(w => w.id === ev.weekend_id)) {
+      if (!weekendMap.has(ev.weekend_id)) weekendMap.set(ev.weekend_id, []);
+      weekendMap.get(ev.weekend_id).push(ev);
+    } else {
+      standalone.push(ev);
+    }
+  }
+  const items = [];
+  for (const [wid, evs] of weekendMap) {
+    const vroegst = evs.reduce((a, b) => a.datum < b.datum ? a : b).datum;
+    items.push({ type: 'weekend', sortDatum: vroegst, wid, evs });
+  }
+  for (const ev of standalone) {
+    items.push({ type: 'event', sortDatum: ev.datum, ev });
+  }
+  items.sort((a, b) => isPast
+    ? b.sortDatum.localeCompare(a.sortDatum)
+    : a.sortDatum.localeCompare(b.sortDatum));
+  return items;
+}
+
+function renderList(containerId, list, icon, emptyMsg, isPast) {
+  const container = document.getElementById(containerId);
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">${icon}</div>${emptyMsg}</div>`;
+    return;
+  }
+
+  const items = buildDisplayItems(list, isPast);
+
+  if (!isPast) {
+    container.innerHTML = items.map(item =>
+      item.type === 'weekend'
+        ? renderWeekendGroep(item.wid, item.evs, false)
+        : renderEvRow(item.ev, false)
+    ).join('');
+    return;
+  }
+
+  // ── Afgelopen: groepeer per jaar → maand ──
+  const jaarMap = new Map();
+  for (const item of items) {
+    const d    = new Date(item.sortDatum + 'T12:00:00');
+    const jaar = d.getFullYear();
+    const mnd  = d.getMonth();
+    if (!jaarMap.has(jaar)) jaarMap.set(jaar, new Map());
+    const mndMap = jaarMap.get(jaar);
+    if (!mndMap.has(mnd)) mndMap.set(mnd, []);
+    mndMap.get(mnd).push(item);
+  }
+
+  const jaren = [...jaarMap.keys()].sort((a, b) => b - a);
+  const MNDNAMEN = ['Januari','Februari','Maart','April','Mei','Juni',
+                    'Juli','Augustus','September','Oktober','November','December'];
+
+  let html = '';
+  jaren.forEach((jaar, ji) => {
+    const mndMap  = jaarMap.get(jaar);
+    const maanden = [...mndMap.keys()].sort((a, b) => b - a);
+    const totaal  = maanden.reduce((s, m) => s + mndMap.get(m).length, 0);
+    html += `<div class="archief-jaar">
+      <div class="archief-jaar-header" onclick="toggleArchief(this)">
+        <span class="archief-pijl">▸</span>
+        <span class="archief-jaar-label">${jaar}</span>
+        <span class="archief-tel">${totaal} weekend${totaal !== 1 ? 'en' : ''}</span>
+      </div>
+      <div class="archief-jaar-body" style="display:none;">`;
+
+    maanden.forEach((mnd, mi) => {
+      const mndItems = mndMap.get(mnd);
+      html += `<div class="archief-maand">
+        <div class="archief-maand-header" onclick="toggleArchief(this)">
+          <span class="archief-pijl">▸</span>
+          <span class="archief-maand-label">${MNDNAMEN[mnd]}</span>
+          <span class="archief-tel">${mndItems.length}</span>
         </div>
-        <div class="ev-actions">
-          <button class="ev-btn edit" onclick="editEvent(${ev._idx})">✎ Aanpassen</button>
-          <button class="ev-btn del" onclick="deleteEvent(${ev._idx})">Verwijder</button>
+        <div class="archief-maand-body" style="display:none;">
+          ${mndItems.map(item =>
+            item.type === 'weekend'
+              ? renderWeekendGroep(item.wid, item.evs, true)
+              : renderEvRow(item.ev, true)
+          ).join('')}
         </div>
       </div>`;
-    }).join('');
+    });
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleArchief(header) {
+  const body  = header.nextElementSibling;
+  const pijl  = header.querySelector('.archief-pijl');
+  const open  = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  pijl.textContent   = open ? '▾' : '▸';
+}
+
+// ── Formulier helpers ─────────────────────────
+function toggleChk(item) { item.classList.toggle('on'); }
+
+// ── Startnummer per klasse helpers ────────────
+function updateStartnrFields(gridId, containerId, preValues) {
+  const grid      = document.getElementById(gridId);
+  const container = document.getElementById(containerId);
+  if (!grid || !container) return;
+  const selected = [...grid.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim());
+  const list     = container.querySelector('.startnr-list');
+  if (selected.length === 0) {
+    container.style.display = 'none';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  container.style.display = '';
+  list.innerHTML = selected.map(k => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <input class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" data-klasse="${k}" placeholder="#"
+        value="${(preValues && preValues[k]) ? preValues[k] : ''}"
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+    </div>`).join('');
+}
+function toggleKlasseChk(item, gridId, containerId) {
+  const container = document.getElementById(containerId);
+  const prev = {};
+  if (container) container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) prev[inp.dataset.klasse] = inp.value; });
+  item.classList.toggle('on');
+  updateStartnrFields(gridId, containerId, prev);
+}
+function getStartnummers(containerId) {
+  const result = {};
+  const container = document.getElementById(containerId);
+  if (!container) return result;
+  container.querySelectorAll('input[data-klasse]').forEach(inp => {
+    const v = parseInt(inp.value.trim(), 10);
+    if (!isNaN(v)) result[inp.dataset.klasse] = v;
+  });
+  return result;
+}
+
+function resetForm() {
+  document.getElementById('f-naam').value    = '';
+  document.getElementById('f-datum').value   = '';
+  document.getElementById('f-type').value    = '';
+  document.getElementById('f-circuit').value = '';
+  document.getElementById('f-circuit-nieuw').value = '';
+  document.getElementById('f-deadline').value = '';
+  document.querySelectorAll('#klassen-grid .chk-item').forEach(i => i.classList.remove('on'));
+}
+
+function cancelEdit() {
+  editEventId = null;
+  resetForm();
+  document.getElementById('edit-banner').classList.remove('show');
+  document.getElementById('event-overlay-titel').textContent = 'Evenement toevoegen';
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '+ Evenement toevoegen';
+  btn.classList.remove('edit-mode');
+  renderEvents();
+}
+
+function sluitEventOverlay() {
+  cancelEdit();
+  document.getElementById('event-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (location.hash === '#event-form') history.back();
+}
+
+function editEvent(id) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
+  const ev = _allEvents.find(e => e.id === id);
+  if (!ev) return;
+  editEventId = id;
+
+  document.getElementById('f-naam').value  = ev.naam;
+  document.getElementById('f-datum').value = ev.datum;
+  document.getElementById('f-type').value  = ev.type || '';
+  renderCircuitSelect(ev.circuit);
+
+  if (ev.deadline) {
+    const d = new Date(ev.deadline);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+    document.getElementById('f-deadline').value = local;
+  } else {
+    document.getElementById('f-deadline').value = '';
   }
 
-  function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
+  document.querySelectorAll('#klassen-grid .chk-item').forEach(i =>
+    i.classList.toggle('on', klassen.includes(i.dataset.klasse)));
+
+  document.getElementById('event-overlay-titel').textContent = ev.naam;
+  document.getElementById('edit-banner').classList.add('show');
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '✓ Wijzigingen opslaan';
+  btn.classList.add('edit-mode');
+
+  document.getElementById('event-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'event-form' }, '', '#event-form');
+  renderEvents();
+}
+
+async function toggleWeekendZichtbaar(wid) {
+  if (!document.body.classList.contains('kan-zichtbaarheid')) return;
+  const w = _allWeekenden.find(w => w.id === wid);
+  if (!w) return;
+  const nieuw = w.zichtbaar === false ? true : false;
+  const { error } = await _supabase.from('weekenden').update({ zichtbaar: nieuw }).eq('id', wid);
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+  w.zichtbaar = nieuw;
+  renderEvents();
+}
+
+async function deleteEvent(id) {
+  if (!document.body.classList.contains('kan-evenementen')) return;
+  if (!confirm('Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.')) return;
+  const deletedEv = _allEvents.find(e => e.id === id);
+  const { error } = await _supabase.from('evenementen').delete().eq('id', id);
+  if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+  if (editEventId === id) cancelEdit();
+  _allEvents = _allEvents.filter(e => e.id !== id);
+  renderEvents();
+  // Als weekenddetail open is, ververs die ook meteen
+  const detailView = document.getElementById('weekend-detail-view');
+  if (detailView && detailView.style.display !== 'none' && deletedEv?.weekend_id) {
+    const resterend = _allEvents.filter(e => e.weekend_id === deletedEv.weekend_id);
+    if (resterend.length > 0) {
+      openWeekendDetail(deletedEv.weekend_id);
+    } else {
+      sluitWeekendDetail();
+    }
+  }
+  showToast('Evenement verwijderd', 'yellow');
+}
+
+async function submitForm() {
+  if (!document.body.classList.contains('kan-evenementen')) return;
+  const naam    = document.getElementById('f-naam').value.trim();
+  const datum   = document.getElementById('f-datum').value;
+  const type    = document.getElementById('f-type').value;
+  const circuit = document.getElementById('f-circuit').value;
+  const dlRaw   = document.getElementById('f-deadline').value;
+  const klassen = [...document.querySelectorAll('#klassen-grid .chk-item.on')].map(i => i.dataset.klasse);
+
+  if (!naam || !datum || !circuit || !type) {
+    showToast('Vul naam, datum, type en circuit in', 'red'); return;
   }
 
-  function showToast(msg, color) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = `toast ${color} show`;
-    setTimeout(() => t.classList.remove('show'), 2500);
+  // Converteer deadline naar ISO (datetime-local geeft lokale tijd)
+  const deadline = dlRaw ? new Date(dlRaw).toISOString() : null;
+
+  saveDeadlineToHistory(dlRaw);
+
+  // Weekend automatisch bepalen op basis van datum
+  const weekend_id = await autoWeekendKoppelen(datum, circuit);
+
+  const ev = { naam, datum, type, circuit, deadline, klassen, weekend_id };
+  let error;
+
+  if (editEventId) {
+    ({ error } = await _supabase.from('evenementen').update(ev).eq('id', editEventId));
+    if (!error) showToast('Evenement aangepast!', 'yellow');
+  } else {
+    ({ error } = await _supabase.from('evenementen').insert(ev));
+    if (!error) showToast('Evenement toegevoegd!', 'green');
   }
 
-  load();
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
+  await loadEvents();
+  cancelEdit();
+}
+
+// ── Weekend helpers ───────────────────────────
+let _allWeekenden = [];
+const MAANDEN_LANG_W = ['januari','februari','maart','april','mei','juni',
+  'juli','augustus','september','oktober','november','december'];
+
+async function loadWeekenden() {
+  const { data } = await _supabase.from('weekenden').select('*').order('datum', { ascending: false });
+  _allWeekenden = data || [];
+}
+
+// Bouw een weekendnaam op basis van circuit en alle datums
+function buildWeekendNaam(circuit, datums) {
+  const sorted  = [...datums].sort();
+  const eerste  = new Date(sorted[0] + 'T12:00:00');
+  const laatste = new Date(sorted[sorted.length - 1] + 'T12:00:00');
+  const dagE    = eerste.getDate();
+  const dagL    = laatste.getDate();
+  const maandE  = MAANDEN_LANG_W[eerste.getMonth()];
+  const maandL  = MAANDEN_LANG_W[laatste.getMonth()];
+  const jaar    = laatste.getFullYear();
+
+  let datumStr;
+  if (eerste.getTime() === laatste.getTime()) {
+    datumStr = `${dagE} ${maandE} ${jaar}`;
+  } else if (eerste.getMonth() === laatste.getMonth() && eerste.getFullYear() === laatste.getFullYear()) {
+    datumStr = `${dagE}–${dagL} ${maandE} ${jaar}`;
+  } else {
+    datumStr = `${dagE} ${maandE} – ${dagL} ${maandL} ${jaar}`;
+  }
+  return `${circuit || 'Weekend'} · ${datumStr}`;
+}
+
+// Zoek een bestaand weekend binnen 3 dagen van de datum, of maak er automatisch één aan
+async function autoWeekendKoppelen(datum, circuit) {
+  const d = new Date(datum + 'T12:00:00');
+  const drempel = 3 * 24 * 60 * 60 * 1000; // 3 dagen
+
+  // Zoek event dat al een weekend heeft, dicht bij deze datum ligt én hetzelfde circuit heeft
+  const nabij = _allEvents.find(ev => {
+    if (!ev.weekend_id || ev.id === editEventId) return false;
+    const diff = Math.abs(new Date(ev.datum + 'T12:00:00') - d);
+    return diff <= drempel && ev.circuit === circuit;
+  });
+
+  if (nabij) {
+    // Weekend gevonden — naam bijwerken met de volledige datumrange
+    const wid = nabij.weekend_id;
+    const bestaandeDatums = _allEvents
+      .filter(ev => ev.weekend_id === wid && ev.id !== editEventId)
+      .map(ev => ev.datum);
+    const naam = buildWeekendNaam(circuit, [...bestaandeDatums, datum]);
+    await _supabase.from('weekenden').update({ naam }).eq('id', wid);
+    const w = _allWeekenden.find(w => w.id === wid);
+    if (w) w.naam = naam;
+    return wid;
+  }
+
+  // Geen match — nieuw weekend aanmaken
+  const naam = buildWeekendNaam(circuit, [datum]);
+  const { data, error } = await _supabase
+    .from('weekenden').insert({ naam, datum, zichtbaar: false }).select().single();
+  if (error) { showToast('Weekend aanmaken mislukt: ' + error.message, 'red'); return null; }
+  _allWeekenden.unshift(data);
+  return data.id;
+}
+
+// ── Circuit helpers ───────────────────────────
+async function loadCircuits() {
+  const { data, error } = await _supabase.from('circuits').select('naam').order('naam');
+  if (error) { console.error('Circuits laden mislukt:', error); return; }
+  circuits = (data || []).map(r => r.naam);
+  renderCircuitSelect();
+}
+
+function renderCircuitSelect(selected) {
+  const sel = document.getElementById('f-circuit');
+  const cur = selected !== undefined ? selected : sel.value;
+  sel.innerHTML = '<option value="">Selecteer circuit...</option>' +
+    circuits.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+  if (cur !== undefined) sel.value = cur;
+  const delBtn = document.getElementById('circuit-del-btn');
+  if (delBtn) delBtn.style.display = cur ? 'inline-flex' : 'none';
+}
+
+function onCircuitChange() {
+  const val = document.getElementById('f-circuit').value;
+  const delBtn = document.getElementById('circuit-del-btn');
+  if (delBtn) delBtn.style.display = val ? 'inline-flex' : 'none';
+}
+
+async function verwijderCircuit() {
+  if (!document.body.classList.contains('kan-evenementen')) return;
+  const sel  = document.getElementById('f-circuit');
+  const naam = sel.value;
+  if (!naam) return;
+  const { error } = await _supabase.from('circuits').delete().eq('naam', naam);
+  if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+  circuits = circuits.filter(c => c !== naam);
+  renderCircuitSelect('');
+  showToast('Circuit verwijderd', 'green');
+}
+
+async function addCircuit() {
+  const input = document.getElementById('f-circuit-nieuw');
+  const naam  = input.value.trim();
+  if (!naam) return;
+  if (circuits.includes(naam)) { showToast('Circuit bestaat al', 'yellow'); return; }
+  const { error } = await _supabase.from('circuits').insert({ naam });
+  if (error) { showToast('Toevoegen mislukt: ' + error.message, 'red'); return; }
+  circuits.push(naam); circuits.sort();
+  renderCircuitSelect(naam);
+  document.getElementById('f-circuit').value = naam;
+  input.value = '';
+  showToast('Circuit toegevoegd!', 'green');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement.id === 'f-circuit-nieuw') addCircuit();
+});
+
+// ── Deadline chips ────────────────────────────
+function renderDeadlineChips() {
+  const c = document.getElementById('dl-chips');
+  if (!deadlineHistory.length) { c.innerHTML = ''; return; }
+  c.innerHTML = '<span class="dl-chips-label">Eerder gebruikt:</span>' +
+    deadlineHistory.map((dl, i) =>
+      `<span class="dl-chip" onclick="pickDeadline('${dl}')">⏱ ${formatDate(dl)}<span class="dl-chip-del" onclick="removeDeadline(event,${i})">✕</span></span>`
+    ).join('');
+}
+function pickDeadline(val) { document.getElementById('f-deadline').value = val; }
+function removeDeadline(e, i) {
+  e.stopPropagation();
+  deadlineHistory.splice(i, 1);
+  localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory));
+  renderDeadlineChips();
+}
+function saveDeadlineToHistory(val) {
+  if (!val) return;
+  deadlineHistory = [val, ...deadlineHistory.filter(d => d !== val)].slice(0, 8);
+  localStorage.setItem('dfk_deadlines', JSON.stringify(deadlineHistory));
+  renderDeadlineChips();
+}
+
+// ── Evenement form tonen/verbergen ────────────
+function toggleEventForm() {
+  const overlay = document.getElementById('event-overlay');
+  if (overlay.classList.contains('open')) {
+    sluitEventOverlay();
+  } else {
+    cancelEdit();
+    document.getElementById('event-overlay-titel').textContent = 'Evenement toevoegen';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    history.pushState({ view: 'event-form' }, '', '#event-form');
+  }
+}
+
+// ── Tab wisseling ─────────────────────────────
+function switchAdminTab(tab) {
+  const tabs = ['evenementen', 'rijders', 'crew'];
+  // Gebruik data-tab zodat verborgen tabs de index niet verpesten
+  document.querySelectorAll('#dfk-root .nav-tab[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('#dfk-root .mobile-tab[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  tabs.forEach(t =>
+    document.getElementById('panel-' + t).classList.toggle('on', t === tab));
+  if (tab === 'rijders') loadRijders();
+  if (tab === 'crew')    loadCrew();
+  localStorage.setItem('dfk_admin_tab', tab);
+}
+
+// ── Crew ──────────────────────────────────────
+async function loadCrew() {
+  document.getElementById('crew-list').innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
+  if (!_allRijders.length) await loadRijders();
+  renderCrew(_allRijders.filter(r => ['admin','office','werkplaats'].includes(r.rol) && r.rol));
+}
+
+function renderCrew(lijst) {
+  const container = document.getElementById('crew-list');
+  lijst.sort((a, b) => `${a.naam||''} ${a.voornaam||''}`.localeCompare(`${b.naam||''} ${b.voornaam||''}`));
+  if (!lijst.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Geen crewleden gevonden</div>';
+    return;
+  }
+  container.innerHTML = lijst.map(r => {
+    const voornaam = r.voornaam || '';
+    const naam     = r.naam     || '';
+    const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+    const isEditing  = r.id === editRijderId;
+    const badgeType  = r.rol === 'admin' ? 'admin' : r.rol === 'office' ? 'office' : 'werkplaats';
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : r.rol === 'office' ? 'Office' : 'Werkplaats';
+    return `<div class="rider-row${isEditing?' editing':''}" onclick="editCrewlid('${r.id}')">
+      <div class="rider-avatar">${ini}</div>
+      <div class="rider-info">
+        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-meta">${r.email || '<span style="color:#444;font-style:italic;">e-mail niet beschikbaar</span>'}</div>
+      </div>
+      <div class="rider-actions">
+        <button class="ev-btn edit" onclick="event.stopPropagation(); editCrewlid('${r.id}')">✎</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editCrewlid(id) {
+  editRijderId = id;
+  const r = _allRijders.find(x => x.id === id) || {};
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
+  document.querySelector('#panel-crew .layout').classList.add('show-right');
+  const detail = document.getElementById('crew-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = _crewEditFormHTML(r);
+  _updateCrewRechten(false); // behoud bestaande rechten bij openen
+}
+
+function _crewEditFormHTML(r) {
+  const isAdmin = r.rol === 'admin';
+  const actief  = isAdmin ? RECHTEN_OPTIES.map(o => o.id) : (r.rechten || []);
+  const rechtenGrid = RECHTEN_OPTIES.map(opt => {
+    const aan = actief.includes(opt.id);
+    const dis = isAdmin;
+    return `<div class="recht-item${aan?' on':''}${dis?' disabled':''}" onclick="${dis ? '' : `toggleRecht(this,'${opt.id}')`}" data-recht="${opt.id}">
+      <div class="recht-box"><span class="recht-vinkje">✓</span></div>
+      <span class="recht-label">${opt.label}</span>
+      ${dis?'<span style="font-size:10px;color:#999;letter-spacing:1px;text-transform:uppercase;font-family:\'Barlow Condensed\',sans-serif;">Altijd aan</span>':''}
+    </div>`;
+  }).join('');
+
+  return `
+    <button class="close-panel-btn" onclick="cancelCrewEdit()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+
+    <div class="section-label">Naam</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="ce-voornaam" value="${r.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="ce-naam" value="${r.naam||''}" /></div>
+    </div>
+
+    <div class="section-label">Rol</div>
+    <select class="field-select" id="ce-rol" onchange="_updateCrewRechten()" style="margin-bottom:1.25rem;">
+      <option value="office"${r.rol==='office'?' selected':''}>Office</option>
+      <option value="werkplaats"${r.rol==='werkplaats'?' selected':''}>Werkplaats</option>
+      <option value="admin"${r.rol==='admin'?' selected':''}>Admin</option>
+    </select>
+
+    <div id="ce-rechten-wrap">
+      <div class="section-label">Rechten</div>
+      <div class="rechten-grid" id="rechten-grid">${rechtenGrid}</div>
+    </div>
+
+    <button class="add-btn" onclick="slaCrewlidOp('${r.id}')" style="margin-top:1rem;">✓ Opslaan</button>
+    <button class="reset-btn" onclick="cancelCrewEdit()">Annuleren</button>
+
+    <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #1e1e1e;">
+      <div class="section-label" style="color:#ff5555;">Gevaarlijke zone</div>
+      <button class="reset-btn" onclick="deleteRijder('${r.id}')" style="color:#ff5555;border-color:#3a1a1a;background:#1c1010;width:100%;margin-top:0.5rem;">✕ Account verwijderen</button>
+    </div>`;
+}
+
+function _updateCrewRechten(resetNaarStandaard = true) {
+  const rol  = document.getElementById('ce-rol')?.value;
+  const wrap = document.getElementById('ce-rechten-wrap');
+  const grid = document.getElementById('rechten-grid');
+  if (!rol || !wrap || !grid) return;
+  if (rol === 'admin') {
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = '';
+    if (resetNaarStandaard) {
+      const standaard = _standaardRechten(rol);
+      grid.querySelectorAll('.recht-item').forEach(el => {
+        el.classList.toggle('on', standaard.includes(el.dataset.recht));
+        el.classList.remove('disabled');
+        el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
+      });
+    }
+  }
+}
+
+function toggleRecht(el, rechtId) {
+  el.classList.toggle('on');
+}
+
+async function slaCrewlidOp(id) {
+  const voornaam = document.getElementById('ce-voornaam')?.value.trim();
+  const naam     = document.getElementById('ce-naam')?.value.trim();
+  const rol      = document.getElementById('ce-rol')?.value;
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
+
+  const rechten = rol === 'admin'
+    ? RECHTEN_OPTIES.map(o => o.id)
+    : [...(document.getElementById('rechten-grid')?.querySelectorAll('.recht-item.on') || [])].map(el => el.dataset.recht);
+
+  const { error } = await _supabase.from('profiles').update({ voornaam, naam, rol, rechten }).eq('id', id);
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
+
+  const r = _allRijders.find(x => x.id === id);
+  if (r) { r.voornaam = voornaam; r.naam = naam; r.rol = rol; r.rechten = rechten; }
+
+  showToast('Opgeslagen!', 'green');
+  await loadRijders();
+  cancelCrewEdit();
+}
+
+function cancelCrewEdit() {
+  editRijderId = null;
+  document.querySelector('#panel-crew .layout').classList.remove('show-right');
+  document.getElementById('crew-detail').style.display = '';
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
+}
+
+function nieuwCrewlid() {
+  editRijderId = null;
+  renderCrew(_allRijders.filter(x => ['admin','office','werkplaats'].includes(x.rol) && x.rol));
+  document.querySelector('#panel-crew .layout').classList.add('show-right');
+  const detail = document.getElementById('crew-detail');
+  detail.style.display = 'block';
+  detail.innerHTML = _nieuwCrewlidFormHTML();
+  _updateNieuwCrewRechten();
+}
+
+function _nieuwCrewlidFormHTML() {
+  const rechtenGrid = RECHTEN_OPTIES.map(opt => `
+    <div class="recht-item" onclick="toggleRecht(this,'${opt.id}')" data-recht="${opt.id}">
+      <div class="recht-box"><span class="recht-vinkje">✓</span></div>
+      <span class="recht-label">${opt.label}</span>
+    </div>`).join('');
+
+  return `
+    <button class="close-panel-btn" onclick="cancelCrewEdit()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">Nieuw crewlid</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">Account aanmaken</p>
+
+    <div class="section-label">Persoonlijke gegevens</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="nc-voornaam" type="text" placeholder="Jan" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="nc-naam" type="text" placeholder="Janssen" /></div>
+    </div>
+    <label class="field-label">Geboortedatum</label>
+    <input class="field-input" id="nc-geb" type="date" />
+    <label class="field-label">E-mailadres</label>
+    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" />
+    <label class="field-label">Telefoonnummer</label>
+    <input class="field-input" id="nc-tel" type="tel" placeholder="+32 477 00 00 00" />
+    <label class="field-label">Wachtwoord</label>
+    <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 8 tekens" oninput="_checkCrewPwMatch()" />
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <input class="field-input" id="nc-ww2" type="password" placeholder="Herhaal wachtwoord" oninput="_checkCrewPwMatch()" />
+    <p id="nc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:1rem;font-family:'Barlow',sans-serif;color:#E02020;"></p>
+
+    <div class="section-label">Rol</div>
+    <select class="field-select" id="nc-rol" onchange="_updateNieuwCrewRechten()" style="margin-bottom:1.25rem;">
+      <option value="office">Office</option>
+      <option value="werkplaats">Werkplaats</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <div id="nc-rechten-wrap">
+      <div class="section-label">Rechten</div>
+      <div class="rechten-grid" id="nc-rechten-grid">${rechtenGrid}</div>
+    </div>
+
+    <button class="add-btn" onclick="maakCrewlidAan()" style="margin-top:1rem;">✓ Account aanmaken</button>
+    <button class="reset-btn" onclick="cancelCrewEdit()">Annuleren</button>`;
+}
+
+function _checkCrewPwMatch() {
+  const pw  = document.getElementById('nc-ww')?.value  || '';
+  const pw2 = document.getElementById('nc-ww2')?.value || '';
+  const msg = document.getElementById('nc-pw-msg');
+  if (!msg) return;
+  if (!pw2)            { msg.textContent = ''; return; }
+  if (pw.length < 8)   { msg.style.color = '#E02020'; msg.textContent = 'Minimaal 8 tekens.'; return; }
+  if (pw !== pw2)      { msg.style.color = '#E02020'; msg.textContent = 'Wachtwoorden komen niet overeen.'; return; }
+  msg.style.color = '#4cff4c'; msg.textContent = '✓ Wachtwoorden komen overeen';
+}
+
+function _updateNieuwCrewRechten() {
+  const rol  = document.getElementById('nc-rol')?.value;
+  const wrap = document.getElementById('nc-rechten-wrap');
+  const grid = document.getElementById('nc-rechten-grid');
+  if (!rol || !wrap || !grid) return;
+
+  if (rol === 'admin') {
+    // Admin: alle rechten altijd aan, niet aanpasbaar
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = '';
+    const standaard = _standaardRechten(rol);
+    grid.querySelectorAll('.recht-item').forEach(el => {
+      el.classList.toggle('on', standaard.includes(el.dataset.recht));
+      el.classList.remove('disabled');
+      el.setAttribute('onclick', `toggleRecht(this,'${el.dataset.recht}')`);
+    });
+  }
+}
+
+function _standaardRechten(rol) {
+  if (rol === 'admin')      return RECHTEN_OPTIES.map(o => o.id);
+  if (rol === 'office')     return ['evenementen', 'zichtbaarheid', 'inschrijvingen', 'rijders'];
+  if (rol === 'werkplaats') return ['werkplaats'];
+  return [];
+}
+
+async function maakCrewlidAan() {
+  const voornaam = document.getElementById('nc-voornaam')?.value.trim();
+  const naam     = document.getElementById('nc-naam')?.value.trim();
+  const geb      = document.getElementById('nc-geb')?.value || '';
+  const email    = document.getElementById('nc-email')?.value.trim();
+  const tel      = document.getElementById('nc-tel')?.value.trim() || '';
+  const ww       = document.getElementById('nc-ww')?.value  || '';
+  const ww2      = document.getElementById('nc-ww2')?.value || '';
+  const rol      = document.getElementById('nc-rol')?.value;
+
+  if (!voornaam || !naam)  { showToast('Vul voornaam en naam in', 'red'); return; }
+  if (!email)              { showToast('Vul een e-mailadres in', 'red'); return; }
+  if (ww.length < 8)       { showToast('Wachtwoord moet minimaal 8 tekens zijn', 'red'); return; }
+  if (ww !== ww2)          { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
+
+  const rechten = rol === 'admin'
+    ? RECHTEN_OPTIES.map(o => o.id)
+    : [...(document.getElementById('nc-rechten-grid')?.querySelectorAll('.recht-item.on') || [])].map(el => el.dataset.recht);
+
+  const btn = document.querySelector('#crew-detail .add-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+
+  // Aparte client zodat admin-sessie niet wordt overschreven
+  const tijdelijkeClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
+
+  const { data, error } = await tijdelijkeClient.auth.signUp({ email, password: ww });
+
+  if (btn) { btn.disabled = false; btn.textContent = '✓ Account aanmaken'; }
+  if (error) { showToast('Aanmaken mislukt: ' + error.message, 'red'); return; }
+
+  const userId = data?.user?.id;
+  if (!userId) { showToast('Aanmaken mislukt: geen gebruiker teruggekomen', 'red'); return; }
+
+  // Korte wachttijd zodat de DB-trigger het profiel heeft aangemaakt
+  await new Promise(r => setTimeout(r, 600));
+
+  // Profiel bijwerken (trigger heeft het al aangemaakt met lege waarden)
+  const { error: profErr } = await _supabase.from('profiles').update({
+    voornaam, naam, email, rol, rechten,
+    account_id: userId,
+    geboortedatum: geb || null,
+    telefoon:     tel || null
+  }).eq('id', userId);
+
+  if (profErr) { showToast('Profiel opslaan mislukt: ' + profErr.message, 'red'); return; }
+
+  showToast(`${voornaam} ${naam} aangemaakt!`, 'green');
+  await loadRijders();
+  cancelCrewEdit();
+}
+
+// ── Rijders ───────────────────────────────────
+async function loadRijders() {
+  const container = document.getElementById('rider-list');
+  container.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Laden...</div>';
+  const { data, error } = await _supabase
+    .from('profiles')
+    .select('*')
+    .order('naam', { ascending: true });
+  if (error) { container.innerHTML = `<div class="empty">Fout: ${error.message}</div>`; return; }
+  // Dedupliceer op id (veiligheidsnet tegen dubbele rijen uit de DB)
+  const seen = new Set();
+  _allRijders = (data || []).filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+  renderRijders();
+}
+
+function renderRijders() {
+  const container = document.getElementById('rider-list');
+
+  // ── Zoek / sort / filter waarden ophalen ──────
+  const zoek   = (document.getElementById('rijder-zoek')?.value  || '').toLowerCase().trim();
+  const sort   =  document.getElementById('rijder-sort')?.value  || 'naam';
+  const filter =  document.getElementById('rijder-filter')?.value || '';
+
+  // ── Klasse-opties dynamisch bijhouden ─────────
+  const filterSel = document.getElementById('rijder-filter');
+  if (filterSel) {
+    const huidigeVal  = filterSel.value;
+    const alleKlassen   = [...new Set(_allRijders.flatMap(r => r.klassen || []))].sort();
+    const alleHuurTypes = [...new Set(_allRijders.filter(r => r.kart_type === 'huur' && r.huurkart_type).map(r => r.huurkart_type))].sort();
+    let opties = `<option value="">Alle rijders</option>
+      <option value="eigen">Eigen kart</option>
+      <option value="huur">Huurkart</option>`;
+    if (alleKlassen.length) {
+      opties += `<optgroup label="── Klasse ──">` +
+        alleKlassen.map(k => `<option value="k:${k}">` + k + `</option>`).join('') +
+        `</optgroup>`;
+    }
+    if (alleHuurTypes.length) {
+      opties += `<optgroup label="── Huurkart type ──">` +
+        alleHuurTypes.map(t => `<option value="h:${t}">` + t + `</option>`).join('') +
+        `</optgroup>`;
+    }
+    filterSel.innerHTML = opties;
+    filterSel.value = huidigeVal; // herstel selectie
+  }
+
+  // ── Enkel echte rijders tonen (rol === 'rijder') ──
+  const rijders = _allRijders.filter(r => r.rol === 'rijder');
+
+  // ── Filter toepassen (enkel op rijders) ───────
+  let lijst = [...rijders];
+  if      (filter === 'eigen') lijst = lijst.filter(r => r.kart_type !== 'huur');
+  else if (filter === 'huur')  lijst = lijst.filter(r => r.kart_type === 'huur');
+  else if (filter.startsWith('k:')) {
+    const kl = filter.slice(2);
+    lijst = lijst.filter(r => (r.klassen || []).includes(kl));
+  } else if (filter.startsWith('h:')) {
+    const ht = filter.slice(2);
+    lijst = lijst.filter(r => r.huurkart_type === ht);
+  }
+
+  // ── Zoektekst toepassen ───────────────────────
+  if (zoek) {
+    lijst = lijst.filter(r => `${r.voornaam||''} ${r.naam||''}`.toLowerCase().includes(zoek));
+  }
+
+  // ── Sortering toepassen ───────────────────────
+  lijst.sort((a, b) => {
+    const nA = `${a.naam||''} ${a.voornaam||''}`.trim();
+    const nB = `${b.naam||''} ${b.voornaam||''}`.trim();
+    if (sort === 'naam')   return nA.localeCompare(nB);
+    if (sort === 'naam_z') return nB.localeCompare(nA);
+    if (sort === 'klasse') {
+      const kA = (a.klassen||[])[0] || '￿';
+      const kB = (b.klassen||[])[0] || '￿';
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
+    if (sort === 'kart') {
+      const kA = a.kart_type === 'huur' ? (a.huurkart_type||'') : 'eigen';
+      const kB = b.kart_type === 'huur' ? (b.huurkart_type||'') : 'eigen';
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
+    return 0;
+  });
+
+  // ── Teller bijwerken ──────────────────────────
+  const countEl = document.getElementById('rijder-count');
+  if (countEl) {
+    const totaal = rijders.length;
+    countEl.textContent = totaal === 0 ? '' :
+      lijst.length === totaal
+        ? `${totaal} rijder${totaal !== 1 ? 's' : ''}`
+        : `${lijst.length} van ${totaal} rijder${totaal !== 1 ? 's' : ''}`;
+  }
+
+  if (rijders.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>Nog geen rijders geregistreerd</div>';
+    return;
+  }
+
+  function rijderKaart(r) {
+    const voornaam = r.voornaam || '';
+    const naam     = r.naam     || '';
+    const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+    const isEditing  = r.id === editRijderId;
+    const badgeType  = r.rol === 'admin' ? 'admin' : r.rol === 'werkplaats' ? 'werkplaats' : (r.kart_type === 'huur' ? 'huur' : 'eigen');
+    const badgeLabel = r.rol === 'admin' ? 'Admin' : r.rol === 'werkplaats' ? 'Werkplaats' : (r.kart_type === 'huur' ? 'Huurkart' : 'Eigen kart');
+    return `<div class="rider-row${isEditing?' editing':''}" onclick="toonRijderDetail('${r.id}')">
+      <div class="rider-avatar">${ini}</div>
+      <div class="rider-info">
+        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-meta">${r.klassen?.length
+          ? r.klassen.map(k => `${k}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
+          : (r.huurkart_type || '—')}</div>
+      </div>
+    </div>`;
+  }
+
+  if (lijst.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Geen rijders gevonden</div>';
+    return;
+  }
+
+  container.innerHTML = lijst.map(rijderKaart).join('');
+}
+
+function toonRijderDetail(id) {
+  const r = _allRijders.find(x => x.id === id);
+  if (!r) return;
+  const naam = `${r.voornaam || ''} ${r.naam || ''}`.trim();
+  const isEigen = r.kart_type !== 'huur';
+
+  const rij = (label, waarde) => waarde
+    ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #666;">
+        <span style="font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">${label}</span>
+        <span style="font-size:14px;color:#ccc;text-align:right;max-width:60%;">${waarde}</span>
+       </div>`
+    : '';
+
+  const klassen = r.klassen?.length
+    ? r.klassen.map(k => `${k}${r.startnummers?.[k] ? ' #'+r.startnummers[k] : ''}`).join(', ')
+    : null;
+
+  document.getElementById('rijder-overlay-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:2rem;">
+      <div style="width:56px;height:56px;border-radius:50%;background:#E02020;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
+        ${((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?'}
+      </div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;letter-spacing:2px;">${naam}</div>
+        <div style="font-size:13px;color:#999;">${r.email||''}</div>
+      </div>
+    </div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E02020;border-bottom:1px solid #2a2a2a;padding-bottom:8px;margin-bottom:0.5rem;">Gegevens</div>
+    ${rij('Geboortedatum', formatGeboortedatum(r.geboortedatum))}
+    ${rij('Telefoon', r.telefoon)}
+    ${rij('Kart type', isEigen ? 'Eigen kart' : 'Huurkart')}
+    ${isEigen ? rij('Klassen', klassen) : ''}
+    ${isEigen ? rij('Kampioenschappen', r.kampioenschappen?.join(', ')) : ''}
+    ${!isEigen ? rij('Huurkart type', r.huurkart_type) : ''}
+    ${!isEigen ? rij('Lengte / Gewicht', [r.lengte ? r.lengte+'cm' : null, r.gewicht ? r.gewicht+'kg' : null].filter(Boolean).join(' · ')) : ''}
+    ${isEigen ? rij('Benzine', r.benzine) : ''}
+
+    <div style="margin-top:2rem;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="vereist-rijders-edit" onclick="editRijder('${r.id}')"
+        style="flex:1;padding:14px;background:#E02020;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        ✎ Aanpassen
+      </button>
+      <button onclick="cancelRijderEdit()"
+        style="flex:1;padding:14px;background:transparent;color:#999;border:1px solid #222;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-width:140px;">
+        Sluiten
+      </button>
+    </div>
+  `;
+  document.getElementById('rijder-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'rijder-edit' }, '', '#rijder-edit');
+}
+
+function editRijder(id) {
+  if (!document.body.classList.contains('kan-rijders')) return;
+  editRijderId = id;
+  const r = _allRijders.find(x => x.id === id);
+  const naam = `${r?.voornaam || ''} ${r?.naam || ''}`.trim() || 'Rijder bewerken';
+  document.getElementById('rijder-overlay-body').innerHTML = rijderFormHTML(r);
+  document.getElementById('rijder-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ view: 'rijder-edit' }, '', '#rijder-edit');
+}
+
+function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
+  const kt = r?.kart_type || 'eigen';
+  const eigenVis = kt !== 'huur' ? 'block' : 'none';
+  const huurVis  = kt === 'huur' ? 'block' : 'none';
+  const kamp = r?.kampioenschappen || [];
+  const uitr = r?.uitrusting || [];
+  const benzine = r?.benzine || '';
+
+  const klassen      = Array.isArray(r?.klassen)    ? r.klassen    : [];
+  const startnummers = (r?.startnummers && typeof r.startnummers === 'object') ? r.startnummers : {};
+
+  const chk = (label, arr) => `
+    <div class="chk-item${arr.includes(label)?' on':''}" onclick="toggleChk(this)">
+      <div class="chk-box"><span class="chk-mark">✓</span></div>
+      <span class="chk-label">${label}</span>
+    </div>`;
+
+  const togRow = (label, isJa) => `
+    <div class="toggle-row"><span>${label}</span>
+      <div class="toggle-group">
+        <button class="tog-btn yes${isJa?' on':''}" onclick="tog(this)">Ja</button>
+        <button class="tog-btn no${!isJa?' on':''}"  onclick="tog(this)">Nee</button>
+      </div>
+    </div>`;
+
+  const benzIdx = BENZ_LABELS.findIndex(l => l === benzine);
+
+  return `
+    <button class="close-panel-btn" onclick="${cancelFn}()">✕ Sluiten</button>
+    <div class="page-title" style="margin-bottom:4px;">${(r?.voornaam||'')} ${(r?.naam||'')}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">Rijder aanpassen</p>
+
+    <div class="section-label vereist-crew">Rol</div>
+    <select class="rol-select field-select vereist-crew" id="r-rol" style="margin-bottom:1.5rem;">
+      <option value="rijder"${r?.rol==='rijder'?' selected':''}>Rijder</option>
+      <option value="admin"${r?.rol==='admin'?' selected':''}>Admin</option>
+      <option value="office"${r?.rol==='office'?' selected':''}>Office</option>
+      <option value="werkplaats"${r?.rol==='werkplaats'?' selected':''}>Werkplaats</option>
+    </select>
+
+    <div class="section-label">Persoonlijke gegevens</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r?.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r?.naam||''}" /></div>
+    </div>
+    <label class="field-label">Geboortedatum rijder</label>
+    <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
+    <label class="field-label">Telefoonnummer contactpersoon</label>
+    <input class="field-input" id="r-tel" type="tel" value="${r?.telefoon||''}" />
+
+    <div class="section-label">Kart type</div>
+    <div class="r-kart-keuze">
+      <button class="r-kart-type-btn${kt!=='huur'?' on':''}" onclick="pickKartTypeAdmin(this)">🏎️ Eigen kart</button>
+      <button class="r-kart-type-btn${kt==='huur'?' on':''}"  onclick="pickKartTypeAdmin(this)">🔑 Huur kart</button>
+    </div>
+
+    <!-- EIGEN KART -->
+    <div id="r-eigen-sectie" style="display:${eigenVis}">
+      <div class="section-label">Kart & Competitie</div>
+      <label class="field-label">Klasse(n)</label>
+      <p class="hint">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="r-klassen-grid">
+        ${['Iame Mini','KA100','X30 Junior','X30 Senior','Iame Super Shifter','Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax']
+          .map(k=>`<div class="chk-item${klassen.includes(k)?' on':''}" onclick="toggleKlasseChk(this,'r-klassen-grid','r-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span></div>`).join('')}
+      </div>
+      <div id="r-startnrs" style="display:${klassen.length?'':'none'};margin-bottom:1rem;">
+        <label class="field-label">Startnummer per klasse</label>
+        <div class="startnr-list">
+          ${klassen.map(k=>`
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+              <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+              <input class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" data-klasse="${k}" placeholder="#"
+                value="${startnummers[k]||''}"
+                style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+            </div>`).join('')}
+        </div>
+      </div>
+      <label class="field-label" style="margin-top:1rem;">Kampioenschap(pen)</label>
+      <div class="chk-grid" id="r-kamp-grid">
+        ${['Iame Benelux','NK Iame','GK4','Club Venray','Hobby'].map(k=>chk(k,kamp)).join('')}
+      </div>
+      <div class="section-label">Materiaal in werkplaats</div>
+      ${togRow('Kart in onze werkplaats',        !!r?.kart_in_werkplaats)}
+      ${togRow('Banden in onze werkplaats',       !!r?.banden_in_werkplaats)}
+      ${togRow('Bak met materiaal in werkplaats', !!r?.bak_in_werkplaats)}
+      <div class="section-label">Benzine</div>
+      <div class="benzine-opts" id="r-benz-opts">
+        ${BENZ_LABELS.map((lbl, i) => `<button class="benz-btn${i===benzIdx?' on':''}" onclick="pickBenzAdmin(this)">⛽&nbsp; ${lbl}</button>`).join('')}
+      </div>
+    </div>
+
+    <!-- HUUR KART -->
+    <div id="r-huur-sectie" style="display:${huurVis}">
+      <div class="section-label">Rijder afmetingen</div>
+      <div class="two-col">
+        <div><label class="field-label">Lengte (cm)</label><input class="field-input" id="r-lengte" type="number" value="${r?.lengte||''}" style="margin-bottom:0;" /></div>
+        <div><label class="field-label">Gewicht (kg)</label><input class="field-input" id="r-gewicht" type="number" value="${r?.gewicht||''}" style="margin-bottom:0;" /></div>
+      </div>
+      <div class="section-label">Kart huren</div>
+      <label class="field-label">Type kart</label>
+      <select class="field-select" id="r-huurkart">
+        <option value="">Selecteer een kart...</option>
+        ${['Formula Honda Cadet','Formula Honda Junior','Formula Honda Senior','Rotax Max']
+          .map(k=>`<option${r?.huurkart_type===k?' selected':''}>${k}</option>`).join('')}
+      </select>
+      <div class="section-label">Benodigde uitrusting</div>
+      <div class="chk-grid" id="r-uitr-grid">
+        ${['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(k=>chk(k,uitr)).join('')}
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="saveRijder('${r?.id}')" style="margin-top:1rem;">✓ Wijzigingen opslaan</button>
+    <button class="reset-btn" onclick="${cancelFn}()">Annuleren</button>
+    <div style="border-top:1px solid #2a2a2a; margin-top:2rem; padding-top:1.5rem;">
+      <div style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.8rem;">Gevaarlijke zone</div>
+      <button class="reset-btn" onclick="deleteRijder('${r?.id}')" style="color:#ff5555;border-color:#3a1a1a;background:#1c1010;">✕ Rijder volledig verwijderen</button>
+      <p style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;margin-top:0.5rem;">Verwijdert het profiel én het account definitief. Niet ongedaan te maken.</p>
+    </div>`;
+}
+
+function pickKartTypeAdmin(btn) {
+  btn.closest('.r-kart-keuze').querySelectorAll('.r-kart-type-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const isEigen = btn.textContent.includes('Eigen');
+  document.getElementById('r-eigen-sectie').style.display = isEigen ? 'block' : 'none';
+  document.getElementById('r-huur-sectie').style.display  = isEigen ? 'none'  : 'block';
+}
+
+function pickBenzAdmin(btn) {
+  btn.closest('#r-benz-opts').querySelectorAll('.benz-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function tog(btn) {
+  btn.closest('.toggle-group').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+async function saveRijder(id) {
+  const voornaam = (document.getElementById('r-voornaam')?.value || '').trim();
+  const naam     = (document.getElementById('r-naam')?.value     || '').trim();
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
+
+  const isEigen  = document.getElementById('r-eigen-sectie').style.display !== 'none';
+  const benzEl   = document.querySelector('#r-benz-opts .benz-btn.on');
+  const benzIdx  = benzEl ? [...document.querySelectorAll('#r-benz-opts .benz-btn')].indexOf(benzEl) : -1;
+  const togRows  = document.querySelectorAll('#r-eigen-sectie .toggle-row');
+
+  const profiel = {
+    voornaam,
+    naam,
+    geboortedatum:    document.getElementById('r-geb')?.value || null,
+    telefoon:         document.getElementById('r-tel')?.value || null,
+    rol:              document.getElementById('r-rol')?.value || _allRijders.find(x => x.id === id)?.rol || 'rijder',
+    kart_type:        isEigen ? 'eigen' : 'huur',
+    klassen:          isEigen ? [...document.querySelectorAll('#r-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
+    startnummers:     isEigen ? getStartnummers('r-startnrs') : {},
+    kampioenschappen: isEigen ? [...document.querySelectorAll('#r-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
+    kart_in_werkplaats:   isEigen ? !!(togRows[0]?.querySelector('.tog-btn.yes.on')) : null,
+    banden_in_werkplaats: isEigen ? !!(togRows[1]?.querySelector('.tog-btn.yes.on')) : null,
+    bak_in_werkplaats:    isEigen ? !!(togRows[2]?.querySelector('.tog-btn.yes.on')) : null,
+    benzine:          isEigen ? (benzIdx >= 0 ? BENZ_LABELS[benzIdx] : null) : null,
+    lengte:           !isEigen ? (parseInt(document.getElementById('r-lengte')?.value) || null) : null,
+    gewicht:          !isEigen ? (parseInt(document.getElementById('r-gewicht')?.value) || null) : null,
+    huurkart_type:    !isEigen ? (document.getElementById('r-huurkart')?.value || null) : null,
+    uitrusting:       !isEigen ? [...document.querySelectorAll('#r-uitr-grid .chk-item.on .chk-label')].map(el => el.textContent.trim()) : [],
+  };
+
+  const { error } = await _supabase.from('profiles').update(profiel).eq('id', id);
+  if (error) { showToast('Opslaan mislukt: ' + error.message, 'red'); return; }
+
+  showToast('Opgeslagen!', 'green');
+  await loadRijders();
+  if (document.getElementById('account-overlay').classList.contains('open')) {
+    _vulAccountForm();
+  } else {
+    const inCrew = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrew) cancelCrewEdit(); else cancelRijderEdit();
+  }
+}
+
+async function deleteRijder(id) {
+  const r = _allRijders.find(x => x.id === id);
+  const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'deze rijder';
+  const isPrimary = !r?.account_id || r.account_id === id;
+
+  if (isPrimary) {
+    if (!confirm(`"${naam}" volledig verwijderen?\n\nDit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.`)) return;
+    // Verwijder ALLE profielen gekoppeld aan dit account (op account_id én op id),
+    // anders blokkeert een eventueel dubbel profiel de FK-constraint op auth.users
+    await _supabase.from('profiles').delete().eq('account_id', id);
+    await _supabase.from('profiles').delete().eq('id', id);
+    // Dan het auth-account verwijderen
+    const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
+    // Altijd lijst verversen, ook bij fout (data kan al deels verwijderd zijn)
+    await loadRijders();
+    const inCrewA = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrewA) cancelCrewEdit(); else cancelRijderEdit();
+    if (rpcErr) { showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red'); return; }
+  } else {
+    if (!confirm(`"${naam}" verwijderen?\n\nDit verwijdert alleen dit rijdersprofiel, niet het inlogaccount.`)) return;
+    const { error } = await _supabase.from('profiles').delete().eq('id', id);
+    // Altijd lijst verversen, ook bij fout
+    await loadRijders();
+    const inCrewB = document.getElementById('panel-crew').classList.contains('on');
+    if (inCrewB) cancelCrewEdit(); else cancelRijderEdit();
+    if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+  }
+
+  showToast(`${naam} verwijderd`, 'yellow');
+}
+
+function cancelRijderEdit() {
+  editRijderId = null;
+  renderRijders();
+  document.getElementById('rijder-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (location.hash === '#rijder-edit') history.back();
+}
+
+// ── Inschrijvingen full-screen overlay ───────
+async function toonInschrijvingen(eventId) {
+  const ev = _allEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  _inschrEvent  = ev;
+  _inschrFilter = null;
+  _inschrSort   = 'klasse';
+
+  // Toon overlay, reset inhoud
+  document.getElementById('inschr-overlay').classList.add('open');
+  history.pushState({ view: 'inschrijvingen' }, '', '#inschrijvingen');
+  const d = new Date(ev.datum + 'T12:00:00');
+  document.getElementById('inschr-ev-naam').textContent = ev.naam;
+  document.getElementById('inschr-ev-sub').textContent  =
+    `${DAGEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} · ${ev.circuit}`;
+  document.getElementById('inschr-count').textContent   = '';
+  document.getElementById('inschr-filters').innerHTML   = '';
+  document.getElementById('inschr-grid').innerHTML      =
+    '<div style="color:#999;text-align:center;padding:3rem;font-family:\'Barlow\',sans-serif;font-size:13px;">Laden...</div>';
+
+  const inschrRes = await _supabase.from('inschrijvingen').select('*, profiles(*)').eq('event_id', eventId).order('bevestigd_op', { ascending: true });
+  const { data, error } = inschrRes;
+
+  if (error) {
+    document.getElementById('inschr-grid').innerHTML =
+      `<div style="color:#E02020;padding:1rem;font-size:13px;">Fout: ${error.message}</div>`;
+    return;
+  }
+
+  _inschrData = data || [];
+  _renderInschrFilters();
+  _renderInschrGrid();
+}
+
+function sluitInschrijvingenPanel() {
+  document.getElementById('inschr-overlay').classList.remove('open');
+  _inschrData  = [];
+  _inschrEvent = null;
+  if (location.hash === '#inschrijvingen') history.back();
+}
+
+
+// ── Admin rijder inschrijven ──────────────────
+let _aiGeselecteerdeRijder = null;
+let _aiKlasse   = null;
+let _aiStartnr  = null;
+
+async function openAdminInschrijfModal() {
+  if (!_inschrEvent) return;
+  if (!_allRijders.length) await loadRijders();
+
+  _aiGeselecteerdeRijder = null;
+  _aiKlasse  = null;
+  _aiStartnr = null;
+  document.getElementById('ai-zoek').value      = '';
+  document.getElementById('ai-rijder-id').value = '';
+  document.getElementById('ai-preview').style.display = 'none';
+  document.getElementById('ai-inschr-btn').disabled = true;
+  document.getElementById('ai-inschr-btn').style.opacity = '0.4';
+
+  renderAiRijders('');
+  document.getElementById('ai-backdrop').classList.add('open');
+  document.getElementById('ai-zoek').focus();
+  history.pushState({ view: 'inschr-modal' }, '', '#inschr-modal');
+}
+
+function sluitAdminInschrijfModal(e) {
+  if (e && e.target !== document.getElementById('ai-backdrop')) return;
+  document.getElementById('ai-backdrop').classList.remove('open');
+  document.getElementById('ai-lijst').classList.remove('open');
+  if (location.hash === '#inschr-modal') history.back();
+}
+
+function renderAiRijders(zoek) {
+  const lijst  = document.getElementById('ai-lijst');
+  const term   = zoek.toLowerCase();
+  const reeds  = new Set((_inschrData || []).map(r => r.rijder_id));
+
+  const gefilterd = _allRijders
+    .filter(r => r.rol === 'rijder')
+    .filter(r => {
+      if (!term) return true;
+      return `${r.voornaam||''} ${r.naam||''}`.toLowerCase().includes(term);
+    })
+    .sort((a, b) => (a.naam||'').localeCompare(b.naam||''));
+
+  if (!gefilterd.length) {
+    lijst.innerHTML = '<div class="ai-rijder-opt" style="color:#999;cursor:default;">Geen rijders gevonden</div>';
+    return;
+  }
+
+  lijst.innerHTML = gefilterd.map(r => {
+    const naam       = `${r.voornaam||''} ${r.naam||''}`.trim();
+    const alIn       = reeds.has(r.id);
+    const isSelected = _aiGeselecteerdeRijder?.id === r.id;
+    const subTxt     = alIn ? 'Al ingeschreven' : ((r.klassen && r.klassen.length) ? r.klassen.join(' · ') : (r.huurkart_type || ''));
+    const style      = alIn ? 'opacity:0.4;pointer-events:none;' : '';
+    return `<div class="ai-rijder-opt${isSelected ? ' selected' : ''}" style="${style}" onclick="selecteerAiRijder('${r.id}')">
+      ${naam}
+      <div class="ai-rijder-sub">${subTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterAiRijders() {
+  document.getElementById('ai-lijst').classList.add('open');
+  renderAiRijders(document.getElementById('ai-zoek').value);
+}
+
+function selecteerAiRijder(rijderId) {
+  _aiGeselecteerdeRijder = _allRijders.find(r => r.id === rijderId);
+  if (!_aiGeselecteerdeRijder) return;
+
+  const p    = _aiGeselecteerdeRijder;
+  const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+
+  document.getElementById('ai-zoek').value      = naam;
+  document.getElementById('ai-rijder-id').value = rijderId;
+  document.getElementById('ai-lijst').classList.remove('open');
+
+  // Klassen van het rijdersprofiel — huurkart gebruikt huurkart_type als klasse
+  const profielKlassen = p.klassen && p.klassen.length ? p.klassen
+                       : p.huurkart_type ? [p.huurkart_type] : [];
+  const evKlassen      = _inschrEvent.klassen || [];
+  const klassen        = profielKlassen.length ? profielKlassen : evKlassen;
+
+  if (klassen.length === 0) {
+    // Geen klassen bekend — gewoon inschrijven zonder klasse
+    _aiKlasse  = null;
+    _aiStartnr = null;
+    document.getElementById('ai-klasse-wrap').style.display = 'none';
+  } else if (klassen.length === 1) {
+    // Exact 1 klasse: automatisch invullen
+    _aiKlasse  = klassen[0];
+    _aiStartnr = p.startnummers?.[_aiKlasse] ?? null;
+    document.getElementById('ai-klasse-wrap').style.display = 'none';
+  } else {
+    // Meerdere klassen: toon select, eerste automatisch geselecteerd
+    const sel = document.getElementById('ai-klasse');
+    sel.innerHTML = klassen.map(k => `<option value="${k}">${k}</option>`).join('');
+    _aiKlasse  = klassen[0];
+    _aiStartnr = p.startnummers?.[_aiKlasse] ?? null;
+    document.getElementById('ai-klasse-wrap').style.display = 'block';
+  }
+
+  // Toon preview
+  const nrTxt  = _aiStartnr != null ? ` · #${_aiStartnr}` : '';
+  const subTxt = _aiKlasse ? `${_aiKlasse}${nrTxt}` : (p.huurkart_type || '—');
+  document.getElementById('ai-preview-naam').textContent = naam;
+  document.getElementById('ai-preview-info').textContent = subTxt;
+  document.getElementById('ai-preview').style.display = 'block';
+
+  // Activeer knop
+  document.getElementById('ai-inschr-btn').disabled = false;
+  document.getElementById('ai-inschr-btn').style.opacity = '1';
+
+  renderAiRijders(naam);
+}
+
+function aiKlasseGewijzigd() {
+  if (!_aiGeselecteerdeRijder) return;
+  _aiKlasse  = document.getElementById('ai-klasse').value;
+  _aiStartnr = _aiGeselecteerdeRijder.startnummers?.[_aiKlasse] ?? null;
+  const nrTxt  = _aiStartnr != null ? ` · #${_aiStartnr}` : '';
+  const p = _aiGeselecteerdeRijder;
+  document.getElementById('ai-preview-info').textContent =
+    _aiKlasse ? `${_aiKlasse}${nrTxt}` : (p.huurkart_type || '—');
+}
+
+async function adminUitschrijven(inschrijvingId, naam) {
+  if (!confirm(`${naam} uitschrijven voor dit event?`)) return;
+  const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
+  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+  // Update lokale state
+  _inschrData = _inschrData.filter(r => r.id !== inschrijvingId);
+  if (_inschrEvent) {
+    _inschrijvingen[_inschrEvent.id] = Math.max(0, (_inschrijvingen[_inschrEvent.id] || 1) - 1);
+  }
+  _renderInschrFilters();
+  _renderInschrGrid();
+  renderEvents();
+}
+
+async function bevestigAdminInschrijving() {
+  const rijderId = document.getElementById('ai-rijder-id').value;
+  if (!rijderId) { showToast('Selecteer een rijder', 'yellow'); return; }
+
+  const { error } = await _supabase.from('inschrijvingen').insert({
+    rijder_id:    rijderId,
+    event_id:     _inschrEvent.id,
+    klasse:       _aiKlasse,
+    startnummer:  _aiStartnr,
+    bevestigd_op: new Date().toISOString(),
+  });
+
+  if (error) {
+    showToast(error.code === '23505' ? 'Al ingeschreven' : 'Fout: ' + error.message, error.code === '23505' ? 'yellow' : 'red');
+    return;
+  }
+
+  showToast('Rijder ingeschreven!', 'green');
+  document.getElementById('ai-backdrop').classList.remove('open');
+  _inschrijvingen[_inschrEvent.id] = (_inschrijvingen[_inschrEvent.id] || 0) + 1;
+  await toonInschrijvingen(_inschrEvent.id);
+}
+
+async function exporteerInschrijvingen() {
+  const MAANDEN_LANG = ['januari','februari','maart','april','mei','juni',
+    'juli','augustus','september','oktober','november','december'];
+  const DAGEN_LANG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  // ── Zelfde sortering als het scherm ───────────
+  const lijst = _filterInschrData().sort((a, b) => {
+    const pa = a.profiles||{}, pb = b.profiles||{};
+    const nA = `${pa.naam||''} ${pa.voornaam||''}`.trim();
+    const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
+    if (_inschrSort==='naam')   return nA.localeCompare(nB);
+    if (_inschrSort==='naam_z') return nB.localeCompare(nA);
+    if (_inschrSort==='nr')     return (a.startnummer||9999)-(b.startnummer||9999);
+    if (_inschrSort==='datum')  return new Date(a.bevestigd_op)-new Date(b.bevestigd_op);
+    // standaard: klasse dan achternaam
+    const kA = pa.kart_type === 'huur' ? (pa.huurkart_type||'￿') : (a.klasse||'￿');
+    const kB = pb.kart_type === 'huur' ? (pb.huurkart_type||'￿') : (b.klasse||'￿');
+    return kA.localeCompare(kB) || nA.localeCompare(nB);
+  });
+
+  const ev       = _inschrEvent;
+  const d        = ev ? new Date(ev.datum+'T12:00:00') : new Date();
+  const datumStr = `${DAGEN_LANG[d.getDay()]} ${d.getDate()} ${MAANDEN_LANG[d.getMonth()]} ${d.getFullYear()}`;
+  const subtitel = `${ev?.circuit||''}  ·  ${lijst.length} rijder${lijst.length!==1?'s':''}${_inschrFilter?' · Filter: '+_inschrFilter:''}`;
+
+  // ── Logo laden als base64 ─────────────────────
+  const logoBase64 = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve({ data: canvas.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logos/dfk-logo.png';
+  });
+
+  // ── PDF opbouwen met jsPDF ────────────────────
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+
+  // Zwarte header balk
+  doc.setFillColor(17, 17, 17);
+  doc.rect(0, 0, W, 20, 'F');
+
+  // Logo rechts in de header
+  if (logoBase64) {
+    const logoH = 12;
+    const logoW = logoH * (logoBase64.w / logoBase64.h);
+    doc.addImage(logoBase64.data, 'PNG', W - logoW - 8, 4, logoW, logoH);
+  }
+
+  // Evenementnaam + datum op dezelfde lijn
+  const evNaam = (ev?.naam || 'Inschrijvingen').toUpperCase();
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(evNaam, 10, 13);
+  const naamBreedte = doc.getTextWidth(evNaam);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(180, 180, 180);
+  doc.text('  ·  ' + datumStr, 10 + naamBreedte, 13);
+
+  // Rode streep
+  doc.setFillColor(224, 32, 32);
+  doc.rect(0, 20, W, 1.5, 'F');
+
+  // Subline
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 21.5, W, 8, 'F');
+  doc.setTextColor(150, 150, 150);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(subtitel, 10, 27);
+
+  // ── Gedeelde stijlen en footer ────────────────
+  const baseStyles = {
+    font: 'helvetica',
+    fontSize: 8,
+    cellPadding: { top: 1.8, bottom: 1.8, left: 3, right: 3 },
+    textColor: [17, 17, 17],
+    lineColor: [220, 220, 220],
+    lineWidth: 0.2,
+  };
+  const drawFooter = () => {
+    const pageCount = doc.internal.getNumberOfPages();
+    const pageNr    = doc.internal.getCurrentPageInfo().pageNumber;
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    const now = new Date();
+    doc.text(`DFK Inschrijvingen · ${ev?.naam||''}`, 10, 292);
+    doc.text(`${now.getDate()} ${MAANDEN_LANG[now.getMonth()]} ${now.getFullYear()}  ·  ${pageNr}/${pageCount}`, W - 10, 292, { align: 'right' });
+  };
+
+  // ── Sectie 1: Eigen kart ──────────────────────
+  const eigenLijst = lijst.filter(r => (r.profiles||{}).kart_type !== 'huur');
+  const huurLijst  = lijst.filter(r => (r.profiles||{}).kart_type === 'huur');
+
+  // Sectietitel eigen kart
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(204, 26, 26);
+  doc.text(`EIGEN KART  (${eigenLijst.length})`, 10, 33);
+
+  doc.autoTable({
+    startY: 35,
+    head: [['#', 'Naam', 'Klasse']],
+    body: eigenLijst.map(r => {
+      const p    = r.profiles || {};
+      const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+      return [r.startnummer != null ? String(r.startnummer) : '', naam, r.klasse || ''];
+    }),
+    styles: baseStyles,
+    headStyles: {
+      fillColor: [204, 26, 26],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 7,
+      cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+    },
+    alternateRowStyles: { fillColor: [247, 247, 247] },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 15, fontStyle: 'bold', fontSize: 9 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 50 },
+    },
+    margin: { left: 10, right: 10 },
+    didDrawPage: drawFooter,
+  });
+
+  // ── Sectie 2: Huurkart ────────────────────────
+  if (huurLijst.length > 0) {
+    const afterEigen = doc.lastAutoTable.finalY + 10;
+
+    // Sectietitel huurkart
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(21, 101, 192);
+    doc.text(`HUURKART  (${huurLijst.length})`, 10, afterEigen - 3);
+
+    doc.autoTable({
+      startY: afterEigen,
+      head: [['Naam', 'Klasse']],
+      body: huurLijst.map(r => {
+        const p    = r.profiles || {};
+        const naam = `${p.voornaam||''} ${p.naam||''}`.trim();
+        return [naam, p.huurkart_type || '—'];
+      }),
+      styles: baseStyles,
+      headStyles: {
+        fillColor: [21, 101, 192],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 7,
+        cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+      },
+      alternateRowStyles: { fillColor: [240, 245, 255] },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 50 },
+      },
+      margin: { left: 10, right: 10 },
+      didDrawPage: drawFooter,
+    });
+  }
+
+  // ── Downloaden ────────────────────────────────
+  const slug     = (ev?.naam||'export').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_');
+  const dd       = String(d.getDate()).padStart(2,'0');
+  const mm       = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy     = d.getFullYear();
+  doc.save(`${slug}_${dd}-${mm}-${yyyy}.pdf`);
+}
+
+function _filterInschrData() {
+  if (!_inschrFilter) return _inschrData;
+  if (_inschrFilter === 'eigen') return _inschrData.filter(r => (r.profiles||{}).kart_type !== 'huur');
+  if (_inschrFilter === 'huur')  return _inschrData.filter(r => (r.profiles||{}).kart_type === 'huur');
+  if (_inschrFilter.startsWith('k:')) return _inschrData.filter(r => r.klasse === _inschrFilter.slice(2));
+  return _inschrData;
+}
+
+function _renderInschrFilters() {
+  const klassen = [...new Set(_inschrData.filter(r => r.klasse).map(r => r.klasse))].sort();
+  const bar = document.getElementById('inschr-filters');
+
+  const klasseOpties = klassen.length
+    ? `<optgroup label="── Klasse ──">${klassen.map(k =>
+        `<option value="k:${k}"${_inschrFilter==='k:'+k?' selected':''}>${k}</option>`
+      ).join('')}</optgroup>`
+    : '';
+
+  bar.innerHTML = `
+    <select class="rijder-sel" onchange="filterInschrijvingen(this.value)">
+      <option value=""${!_inschrFilter?' selected':''}>Alle</option>
+      <option value="eigen"${_inschrFilter==='eigen'?' selected':''}>Eigen kart</option>
+      <option value="huur"${_inschrFilter==='huur'?' selected':''}>Huurkart</option>
+      ${klasseOpties}
+    </select>
+    <select class="inschr-sort" onchange="sorteerInschrijvingen(this.value)">
+      <option value="naam"${_inschrSort==='naam'?' selected':''}>Naam A → Z</option>
+      <option value="naam_z"${_inschrSort==='naam_z'?' selected':''}>Naam Z → A</option>
+      <option value="klasse"${_inschrSort==='klasse'?' selected':''}>Klasse</option>
+      <option value="nr"${_inschrSort==='nr'?' selected':''}>Startnummer</option>
+      <option value="datum"${_inschrSort==='datum'?' selected':''}>Inschrijfdatum</option>
+    </select>`;
+}
+
+function filterInschrijvingen(waarde) {
+  _inschrFilter = waarde || null;
+  _renderInschrGrid();
+}
+
+function sorteerInschrijvingen(sort) {
+  _inschrSort = sort;
+  _renderInschrGrid();
+}
+
+function _renderInschrGrid() {
+  let lijst = [..._filterInschrData()].sort((a, b) => {
+    const pa = a.profiles || {}, pb = b.profiles || {};
+    const nA = `${pa.naam||''} ${pa.voornaam||''}`.trim();
+    const nB = `${pb.naam||''} ${pb.voornaam||''}`.trim();
+    if (_inschrSort === 'naam')   return nA.localeCompare(nB);
+    if (_inschrSort === 'naam_z') return nB.localeCompare(nA);
+    if (_inschrSort === 'klasse') {
+      const pa2 = a.profiles||{}, pb2 = b.profiles||{};
+      const kA = pa2.kart_type === 'huur' ? (pa2.huurkart_type||'￿') : (a.klasse||'￿');
+      const kB = pb2.kart_type === 'huur' ? (pb2.huurkart_type||'￿') : (b.klasse||'￿');
+      return kA.localeCompare(kB) || nA.localeCompare(nB);
+    }
+    if (_inschrSort === 'nr')     return (a.startnummer||9999) - (b.startnummer||9999);
+    if (_inschrSort === 'datum')  return new Date(a.bevestigd_op) - new Date(b.bevestigd_op);
+    return 0;
+  });
+
+  const total = _inschrData.length;
+  const count = lijst.length;
+  document.getElementById('inschr-count').textContent = _inschrFilter
+    ? `${count} van ${total} rijder${total !== 1 ? 's' : ''} · ${_inschrFilter}`
+    : `${total} ingeschreven rijder${total !== 1 ? 's' : ''}`;
+
+  document.getElementById('inschr-grid').innerHTML = lijst.length === 0
+    ? `<div class="empty"><div class="empty-icon">👥</div>Niemand ingeschreven${_inschrFilter ? ' in deze klasse' : ''}</div>`
+    : lijst.map(_inschrCardHTML).join('');
+}
+
+function _toggleInschrRow(el) {
+  el.classList.toggle('open');
+}
+
+function _inschrCardHTML(r) {
+  const p        = r.profiles || {};
+  const voornaam = p.voornaam || '';
+  const naam     = p.naam     || '';
+  const vollNaam = `${voornaam} ${naam}`.trim() || '—';
+  const ini      = ((voornaam[0]||'') + (naam[0]||'')).toUpperCase() || '?';
+  const isHuur   = p.kart_type === 'huur';
+  const badgeType  = isHuur ? 'huur' : 'eigen';
+  const badgeLabel = isHuur ? 'Huurkart' : 'Eigen kart';
+
+  // ── Rechterkant: klasse + nr (eigen) of kart type (huur) ──
+  let rechtsHTML = '';
+  if (!isHuur) {
+    const klasse = r.klasse || '';
+    const nr     = r.startnummer;
+    rechtsHTML = klasse
+      ? `<div class="inschr-klasse-badge">${klasse}${nr ? ` <span class="inschr-nr">#${nr}</span>` : ''}</div>`
+      : '';
+  } else {
+    rechtsHTML = p.huurkart_type
+      ? `<div class="inschr-klasse-badge" style="color:#4caaf0;">${p.huurkart_type}</div>`
+      : '';
+  }
+
+  // ── Uitklapbaar detail ────────────────────────
+  let expandHTML = '';
+  if (!isHuur) {
+    const werkpl = [];
+    if (p.kart_in_werkplaats)   werkpl.push('Kart');
+    if (p.banden_in_werkplaats) werkpl.push('Banden');
+    if (p.bak_in_werkplaats)    werkpl.push('Bak');
+    expandHTML = `
+      ${werkpl.length ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Materiaal in werkplaats</div>
+        <div class="inschr-chips">${werkpl.map(w => `<span class="inschr-chip ok">✓ ${w}</span>`).join('')}</div>
+      </div>` : `<div class="inschr-sectie"><div class="inschr-sectie-label">Materiaal in werkplaats</div><div class="inschr-sectie-value" style="color:#444;">Niets in werkplaats</div></div>`}
+      ${p.benzine ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Benzine</div>
+        <div class="inschr-chips"><span class="inschr-chip benzine">⛽ ${p.benzine}</span></div>
+      </div>` : ''}
+      ${p.telefoon ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label">Telefoon</div>
+        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+      </div>` : ''}
+      <div class="inschr-sectie">
+        <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>
+      <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
+  } else {
+    const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
+    expandHTML = `
+      ${p.huurkart_type ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label huur-label">Kart type</div>
+        <div class="inschr-sectie-value" style="font-size:15px;font-weight:700;color:#4caaf0;">${p.huurkart_type}</div>
+      </div>` : ''}
+      ${(p.lengte || p.gewicht) ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label huur-label">Afmetingen</div>
+        <div class="inschr-sectie-value">${p.lengte ? p.lengte + ' cm' : '—'} · ${p.gewicht ? p.gewicht + ' kg' : '—'}</div>
+      </div>` : ''}
+      ${uitr.length ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label huur-label">Uitrusting nodig</div>
+        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip" style="border-color:#1a3a5a;color:#4caaf0;background:#0a1a2a;">${u}</span>`).join('')}</div>
+      </div>` : ''}
+      ${p.telefoon ? `<div class="inschr-sectie">
+        <div class="inschr-sectie-label huur-label">Telefoon</div>
+        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+      </div>` : ''}
+      <div class="inschr-sectie">
+        <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>
+      <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
+  }
+
+  return `<div class="inschr-row${isHuur ? ' huur' : ''}" onclick="_toggleInschrRow(this)">
+    <div class="inschr-row-top">
+      <div class="rider-avatar" style="${isHuur ? 'background:#1565c0;' : ''}">${ini}</div>
+      <div class="inschr-row-meta">
+        <div class="inschr-naam" style="white-space:normal;">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="inschr-reg">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
+      </div>
+      <div class="inschr-row-rechts">
+        ${rechtsHTML}
+        <div class="inschr-row-arrow">▼</div>
+      </div>
+    </div>
+    <div class="inschr-expand">
+      ${expandHTML}
+    </div>
+  </div>`;
+}
+
+
+
+// ── Hulpfuncties ──────────────────────────────
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()} om ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// ── Mijn account overlay ─────────────────────
+function openAccountOverlay() {
+  toggleAdminDropdown();
+  if (!_allRijders.length) loadRijders().then(() => _vulAccountForm());
+  else _vulAccountForm();
+  document.getElementById('account-overlay').classList.add('open');
+  history.pushState({ view: 'account' }, '', '#account');
+}
+
+function _vulAccountForm() {
+  const r = _allRijders.find(x => x.id === _adminProfile.id) || _adminProfile;
+  const isCrew = ['admin', 'office', 'werkplaats'].includes(r.rol);
+  document.getElementById('account-body').innerHTML = isCrew
+    ? _crewAccountFormHTML(r)
+    : rijderFormHTML(r, 'sluitAccountOverlay');
+}
+
+function _crewAccountFormHTML(r) {
+  return `
+    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+
+    <div class="section-label">Naam</div>
+    <div class="two-col">
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r.voornaam||''}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r.naam||''}" /></div>
+    </div>
+
+    <div class="section-label" style="margin-top:1.25rem;">Wachtwoord wijzigen</div>
+    <label class="field-label">Nieuw wachtwoord <span style="color:#999;font-weight:400;">(laat leeg om niet te wijzigen)</span></label>
+    <div style="position:relative;">
+      <input class="field-input" id="r-ww" type="password" placeholder="Nieuw wachtwoord..." style="padding-right:48px;" />
+      <button onclick="var i=document.getElementById('r-ww');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button>
+    </div>
+    <label class="field-label">Wachtwoord bevestigen</label>
+    <div style="position:relative;">
+      <input class="field-input" id="r-ww2" type="password" placeholder="Herhaal wachtwoord..." style="padding-right:48px;" />
+      <button onclick="var i=document.getElementById('r-ww2');i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;">👁</button>
+    </div>
+
+    <button class="add-btn" onclick="slaCrewAccountOp('${r.id}')" style="margin-top:1.5rem;">✓ Opslaan</button>
+    <button class="reset-btn" onclick="sluitAccountOverlay()">Annuleren</button>`;
+}
+
+async function slaCrewAccountOp(id) {
+  const voornaam = document.getElementById('r-voornaam')?.value.trim();
+  const naam     = document.getElementById('r-naam')?.value.trim();
+  const ww       = document.getElementById('r-ww')?.value;
+  const ww2      = document.getElementById('r-ww2')?.value;
+  if (!voornaam || !naam) { showToast('Vul voornaam en naam in', 'red'); return; }
+
+  const { error: profErr } = await _supabase.from('profiles').update({ voornaam, naam }).eq('id', id);
+  if (profErr) { showToast('Opslaan mislukt: ' + profErr.message, 'red'); return; }
+
+  if (ww || ww2) {
+    if (ww.length < 6) { showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+    if (ww !== ww2) { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
+    const { error: wwErr } = await _supabase.auth.updateUser({ password: ww });
+    if (wwErr) { showToast('Wachtwoord wijzigen mislukt: ' + wwErr.message, 'red'); return; }
+  }
+
+  const r = _allRijders.find(x => x.id === id);
+  if (r) { r.voornaam = voornaam; r.naam = naam; }
+
+  showToast('Opgeslagen!', 'green');
+  _vulAccountForm();
+}
+
+function sluitAccountOverlay() {
+  document.getElementById('account-overlay').classList.remove('open');
+  if (location.hash === '#account') history.back();
+}
+
+function toggleWdDl(wid) {
+  const btn  = document.querySelector(`#wd-dl-wrapper-${wid} .wd-dl-btn`);
+  const menu = document.getElementById(`wd-dl-menu-${wid}`);
+  const open = menu.classList.contains('open');
+  // Sluit alle andere open dropdowns
+  document.querySelectorAll('.wd-dl-menu.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.wd-dl-btn.open').forEach(b => b.classList.remove('open'));
+  if (!open) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+function sluitWdDl(wid) {
+  document.getElementById(`wd-dl-menu-${wid}`)?.classList.remove('open');
+  document.querySelector(`#wd-dl-wrapper-${wid} .wd-dl-btn`)?.classList.remove('open');
+}
+// Klik buiten sluit dropdown
+document.addEventListener('click', e => {
+  if (!e.target.closest('.wd-dl-wrapper')) {
+    document.querySelectorAll('.wd-dl-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.wd-dl-btn.open').forEach(b => b.classList.remove('open'));
+  }
+});
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast ${color} show`;
+  const duur = color === 'red' ? 4500 : 2800;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duur);
+}
+</script>
+<script>
+(function() {
+  var meta = document.querySelector('meta[name="viewport"]');
+  document.addEventListener('touchend', function() {
+    meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
+    setTimeout(function() {
+      meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes';
+    }, 300);
+  });
+})();
 </script>
 </body>
 </html>
+

@@ -1,12 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="logos/dfk-logo.png" />
+  <link rel="apple-touch-icon" href="logos/dfk-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DFK – Inloggen</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0a0a0a; min-height: 100vh; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+    html, body { background: #0a0a0a; min-height: 100vh; overflow-x: hidden; max-width: 100%; }
 
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap');
 
@@ -16,21 +22,22 @@
     #dfk-root .bot-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #E02020; }
     #dfk-root .logo { text-align: center; margin-bottom: 2rem; }
     #dfk-root .logo-line { width: 40px; height: 3px; background: #E02020; margin: 10px auto 0; display: block; }
-    #dfk-root .card { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 4px; width: 100%; max-width: 460px; padding: 2rem; }
+    #dfk-root .card { background: #141414; border: 1px solid #2a2a2a; border-top: 3px solid #E02020; border-radius: 4px; width: 100%; max-width: 460px; padding: 2rem; overflow-x: hidden; }
     #dfk-root .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; }
     #dfk-root .tab-btn { flex: 1; padding: 10px; border-radius: 3px; border: 1px solid #555 !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; background-color: transparent !important; color: #cccccc !important; }
     #dfk-root .tab-btn.on { background-color: #E02020 !important; color: #ffffff !important; border-color: #E02020 !important; }
     #dfk-root .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E02020; margin: 1.4rem 0 0.8rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; display: block; }
-    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
-    #dfk-root .field-input { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+    #dfk-root .field-input { display: block; width: 100%; min-width: 0; max-width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .field-input:focus { border-color: #E02020 !important; }
+    #dfk-root input[type="date"] { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; -webkit-appearance: none; appearance: none; }
     #dfk-root .field-select { display: block; width: 100%; background: #1c1c1c; border: 1px solid #333 !important; color: #ffffff !important; padding: 11px 12px; font-size: 14px; border-radius: 3px; margin-bottom: 1rem; outline: none; font-family: 'Barlow', sans-serif; }
     #dfk-root .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     #dfk-root .two-col .field-input, #dfk-root .two-col .field-select { margin-bottom: 0; }
     #dfk-root .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #1c1c1c; border: 1px solid #333; border-radius: 3px; padding: 10px 12px; margin-bottom: 0.8rem; }
     #dfk-root .toggle-row span { font-size: 13px; color: #ccc; font-family: 'Barlow', sans-serif; }
     #dfk-root .toggle-group { display: flex; gap: 6px; }
-    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444 !important; background: transparent !important; color: #888 !important; }
+    #dfk-root .tog-btn { padding: 4px 14px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; border: 1px solid #444 !important; background: transparent !important; color: #aaa !important; }
     #dfk-root .tog-btn.yes.on { background: #1a5c1a !important; color: #4cff4c !important; border-color: #2a8a2a !important; }
     #dfk-root .tog-btn.no.on { background: #5c1a1a !important; color: #ff6666 !important; border-color: #8a2a2a !important; }
     #dfk-root .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1rem; }
@@ -47,23 +54,25 @@
     #dfk-root .benz-btn.on { background: #2a1010 !important; color: #ffffff !important; border-color: #E02020 !important; }
     #dfk-root .submit-btn { display: block; width: 100%; padding: 14px 20px; margin-top: 1rem; background-color: #E02020 !important; color: #ffffff !important; border: none !important; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
     #dfk-root .submit-btn:hover { background-color: #c01010 !important; }
-    #dfk-root .forgot { display: block; text-align: center; margin-top: 1rem; font-size: 12px; color: #888 !important; cursor: pointer; background: none !important; border: none !important; width: 100%; font-family: 'Barlow', sans-serif; }
+    #dfk-root .forgot { display: block; text-align: center; margin-top: 1rem; font-size: 12px; color: #aaa !important; cursor: pointer; background: none !important; border: none !important; width: 100%; font-family: 'Barlow', sans-serif; }
     #dfk-root .panel { display: none; }
     #dfk-root .panel.on { display: block; }
-    #dfk-root .terms { font-size: 11px; color: #555; text-align: center; margin-top: 1rem; line-height: 1.6; font-family: 'Barlow', sans-serif; }
+    #dfk-root .terms { font-size: 11px; color: #999; text-align: center; margin-top: 1rem; line-height: 1.6; font-family: 'Barlow', sans-serif; }
     #dfk-root .terms em { color: #E02020; font-style: normal; cursor: pointer; }
-    #dfk-root .scroll-panel { max-height: 480px; overflow-y: auto; padding-right: 6px; }
+    #dfk-root .scroll-panel { max-height: 480px; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
     #dfk-root .scroll-panel::-webkit-scrollbar { width: 4px; }
     #dfk-root .scroll-panel::-webkit-scrollbar-track { background: #111; }
     #dfk-root .scroll-panel::-webkit-scrollbar-thumb { background: #E02020; border-radius: 2px; }
-    #dfk-root .hint { font-size: 11px; color: #666; font-family: 'Barlow', sans-serif; margin-bottom: 0.6rem; margin-top: -0.4rem; }
+    #dfk-root .hint { font-size: 11px; color: #aaa; font-family: 'Barlow', sans-serif; margin-bottom: 0.6rem; margin-top: -0.4rem; }
     #dfk-root .kart-keuze-row { display: flex; gap: 10px; margin-bottom: 1.2rem; }
-    #dfk-root .kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c !important; border: 1px solid #444 !important; border-radius: 3px; color: #888 !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
-    #dfk-root .kart-type-btn:hover { border-color: #666 !important; color: #ccc !important; }
+    #dfk-root .kart-type-btn { flex: 1; padding: 13px 10px; background: #1c1c1c !important; border: 1px solid #444 !important; border-radius: 3px; color: #aaa !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-align: center; }
+    #dfk-root .kart-type-btn:hover { border-color: #999 !important; color: #ccc !important; }
     #dfk-root .kart-type-btn.on { background: #2a1010 !important; border-color: #E02020 !important; color: #fff !important; }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
 
@@ -85,11 +94,12 @@
     <!-- LOGIN -->
     <div id="p-login" class="panel on">
       <label class="field-label">E-mailadres</label>
-      <input class="field-input" type="email" placeholder="jouw@email.be" />
+      <input id="login-email" class="field-input" type="email" placeholder="jouw@email.be" onkeydown="if(event.key==='Enter') doLogin()" />
       <label class="field-label">Wachtwoord</label>
-      <input class="field-input" type="password" placeholder="••••••••" />
-      <button class="submit-btn" onclick="window.location.href='evenementen.html'">Inloggen →</button>
-      <button class="forgot">Wachtwoord vergeten?</button>
+      <input id="login-pw" class="field-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()" />
+      <p id="login-msg" style="font-size:12px; color:#E02020; margin-bottom:0.6rem; min-height:18px; font-family:'Barlow',sans-serif;"></p>
+      <button class="submit-btn" onclick="doLogin()">Inloggen →</button>
+      <button class="forgot" onclick="doResetPassword()">Wachtwoord vergeten?</button>
     </div>
 
     <!-- REGISTRATIE -->
@@ -100,26 +110,36 @@
 
         <div class="two-col">
           <div>
-            <label class="field-label">Voornaam</label>
-            <input class="field-input" type="text" placeholder="Jan" />
+            <label class="field-label">Voornaam rijder</label>
+            <input id="reg-voornaam" class="field-input" type="text" placeholder="Jan" />
           </div>
           <div>
-            <label class="field-label">Naam</label>
-            <input class="field-input" type="text" placeholder="Janssen" />
+            <label class="field-label">Naam rijder</label>
+            <input id="reg-naam" class="field-input" type="text" placeholder="Janssen" />
           </div>
         </div>
 
         <label class="field-label">Geboortedatum rijder</label>
-        <input class="field-input" type="date" />
+        <input id="reg-geboorte" class="field-input" type="date" />
 
         <label class="field-label">E-mailadres</label>
-        <input class="field-input" type="email" placeholder="jouw@email.be" />
+        <input id="reg-email" class="field-input" type="email" placeholder="jouw@email.be" style="margin-bottom:4px;" />
+        <p id="reg-email-msg" style="font-size:12px; color:#E02020; min-height:16px; margin-bottom:0.8rem; font-family:'Barlow',sans-serif;"></p>
 
         <label class="field-label">Telefoonnummer contactpersoon</label>
-        <input class="field-input" type="tel" placeholder="+32 477 00 00 00" />
+        <input id="reg-tel" class="field-input" type="tel" placeholder="+32 477 00 00 00" />
 
         <label class="field-label">Wachtwoord</label>
-        <input class="field-input" type="password" placeholder="Minimaal 8 tekens" />
+        <input id="reg-pw" class="field-input" type="password" placeholder="Minimaal 8 tekens" oninput="checkPwMatch()" />
+        <label class="field-label">Wachtwoord bevestigen</label>
+        <input id="reg-pw2" class="field-input" type="password" placeholder="Herhaal wachtwoord" oninput="checkPwMatch()" />
+        <p id="reg-msg" style="font-size:12px; color:#E02020; margin-bottom:0.6rem; min-height:18px; font-family:'Barlow',sans-serif;"></p>
+
+        <p style="font-size:12px; color:#aaa; font-family:'Barlow',sans-serif; background:#1a1a1a; border:1px solid #2a2a2a; border-left:3px solid #E02020; border-radius:3px; padding:10px 12px; margin-bottom:1.2rem; line-height:1.5;">
+          💡 <strong style="color:#ccc;">Meerdere rijders?</strong> Je kan na het aanmelden extra rijders toevoegen via je profiel.
+        </p>
+
+        <p style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:3px; text-transform:uppercase; color:#ffffff; text-align:center; margin-bottom:0.8rem;">Selecteer om door te gaan</p>
 
         <div class="kart-keuze-row">
           <button class="kart-type-btn" onclick="pickKartType(this)">🏎️ Eigen kart</button>
@@ -130,31 +150,27 @@
 
           <span class="section-title">Kart & Competitie</span>
 
-          <div class="two-col">
-            <div>
-              <label class="field-label">Klasse</label>
-              <select class="field-select">
-                <option value="">Selecteer...</option>
-                <option>Iame Mini</option>
-                <option>KA100</option>
-                <option>X30 Junior</option>
-                <option>X30 Senior</option>
-                <option>Iame Super Shifter</option>
-                <option>Formula Honda Cadet</option>
-                <option>Formula Honda Junior</option>
-                <option>Formula Honda Senior</option>
-                <option>Rotax</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label">Startnummer</label>
-              <input class="field-input" type="number" placeholder="bijv. 42" style="margin-bottom:0" />
-            </div>
+          <label class="field-label">Klasse(n)</label>
+          <p class="hint">Meerdere keuzes mogelijk</p>
+          <div class="chk-grid" id="reg-klassen-grid">
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Mini</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">KA100</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Junior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">X30 Senior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Super Shifter</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Cadet</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Junior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Formula Honda Senior</span></div>
+            <div class="chk-item" onclick="toggleKlasseChk(this,'reg-klassen-grid','reg-startnrs')"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Rotax</span></div>
+          </div>
+          <div id="reg-startnrs" style="display:none; margin-bottom:1rem;">
+            <label class="field-label">Startnummer per klasse</label>
+            <div class="startnr-list"></div>
           </div>
 
           <label class="field-label">Kampioenschap(pen)</label>
           <p class="hint">Meerdere keuzes mogelijk</p>
-          <div class="chk-grid">
+          <div class="chk-grid" id="reg-kamp-grid">
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Iame Benelux</span></div>
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">NK Iame</span></div>
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">GK4</span></div>
@@ -193,7 +209,8 @@
             <button class="benz-btn" onclick="pickBenz(this)">⛽&nbsp; Training: zelf — Wedstrijd: bij DFK</button>
           </div>
 
-          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <p style="font-size:12px; color:#999; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
+          <button id="btn-eigen" class="submit-btn" onclick="doRegister()">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
         </div>
@@ -205,18 +222,18 @@
           <div class="two-col">
             <div>
               <label class="field-label">Lengte (cm)</label>
-              <input class="field-input" type="number" placeholder="bijv. 165" style="margin-bottom:0" />
+              <input id="reg-lengte" class="field-input" type="number" placeholder="bijv. 165" style="margin-bottom:0" />
             </div>
             <div>
               <label class="field-label">Gewicht (kg)</label>
-              <input class="field-input" type="number" placeholder="bijv. 65" style="margin-bottom:0" />
+              <input id="reg-gewicht" class="field-input" type="number" placeholder="bijv. 65" style="margin-bottom:0" />
             </div>
           </div>
 
           <span class="section-title">Kart huren</span>
 
           <label class="field-label">Type kart</label>
-          <select class="field-select">
+          <select id="reg-huurkart" class="field-select">
             <option value="">Selecteer een kart...</option>
             <option>Formula Honda Cadet</option>
             <option>Formula Honda Junior</option>
@@ -234,7 +251,8 @@
             <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">Ribprotector</span></div>
           </div>
 
-          <button class="submit-btn" onclick="window.location.href='evenementen.html'">Account aanmaken →</button>
+          <p style="font-size:12px; color:#999; text-align:center; margin-top:1rem; margin-bottom:0.4rem; font-family:'Barlow',sans-serif; line-height:1.5;">Je kan je gegevens achteraf altijd aanpassen via <em style="color:#E02020; font-style:normal;">Mijn account</em>.</p>
+          <button id="btn-huur" class="submit-btn" onclick="doRegister()">Account aanmaken →</button>
           <p class="terms">Door te registreren ga je akkoord met de <em>gebruiksvoorwaarden</em> van DFK.</p>
 
         </div>
@@ -244,17 +262,17 @@
   </div>
 </div>
 
+
 <script>
+// ── UI helpers ────────────────────────────────
 function sw(tab) {
-  document.querySelectorAll('#dfk-root .tab-btn').forEach((b,i) => {
-    b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1));
-  });
+  document.querySelectorAll('#dfk-root .tab-btn').forEach((b,i) =>
+    b.classList.toggle('on', (tab==='login'&&i===0)||(tab==='reg'&&i===1)));
   document.getElementById('p-login').classList.toggle('on', tab==='login');
   document.getElementById('p-reg').classList.toggle('on', tab==='reg');
 }
 function tog(btn) {
-  const grp = btn.closest('.toggle-group');
-  grp.querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
+  btn.closest('.toggle-group').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
 }
 function pickBenz(btn) {
@@ -266,11 +284,245 @@ function pickKartType(btn) {
   btn.classList.add('on');
   const isEigen = btn.textContent.includes('Eigen');
   document.getElementById('eigen-kart-sectie').style.display = isEigen ? 'block' : 'none';
-  document.getElementById('huur-kart-sectie').style.display = isEigen ? 'none' : 'block';
+  document.getElementById('huur-kart-sectie').style.display  = isEigen ? 'none'  : 'block';
 }
-function toggleChk(item) {
+function toggleChk(item) { item.classList.toggle('on'); }
+
+// ── Startnummer per klasse helpers ────────────
+function updateStartnrFields(gridId, containerId, preValues) {
+  const grid      = document.getElementById(gridId);
+  const container = document.getElementById(containerId);
+  if (!grid || !container) return;
+  const selected = [...grid.querySelectorAll('.chk-item.on .chk-label')].map(el => el.textContent.trim());
+  const list     = container.querySelector('.startnr-list');
+  if (selected.length === 0) {
+    container.style.display = 'none';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  container.style.display = '';
+  list.innerHTML = selected.map(k => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <span style="font-size:13px;color:#aaa;flex:1;font-family:'Barlow',sans-serif;">${k}</span>
+      <input class="field-input" type="number" data-klasse="${k}" placeholder="#"
+        value="${(preValues && preValues[k]) ? preValues[k] : ''}"
+        style="margin-bottom:0;width:90px;text-align:center;padding:9px 6px;" />
+    </div>`).join('');
+}
+function toggleKlasseChk(item, gridId, containerId) {
+  const container = document.getElementById(containerId);
+  const prev = {};
+  if (container) container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) prev[inp.dataset.klasse] = inp.value; });
   item.classList.toggle('on');
+  updateStartnrFields(gridId, containerId, prev);
 }
+function getStartnummers(containerId) {
+  const result = {};
+  const container = document.getElementById(containerId);
+  if (!container) return result;
+  container.querySelectorAll('input[data-klasse]').forEach(inp => { if (inp.value) result[inp.dataset.klasse] = parseInt(inp.value); });
+  return result;
+}
+
+function setMsg(id, tekst, ok = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = tekst;
+  el.style.color = ok ? '#4cff4c' : '#E02020';
+  if (tekst) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function checkSupabase() {
+  if (typeof _supabase === 'undefined') {
+    alert('Kan geen verbinding maken met de server.\n\nOpen het bestand via een lokale webserver (bv. VS Code Live Server) in plaats van direct als bestand.');
+    return false;
+  }
+  return true;
+}
+
+// ── Init: redirect als al ingelogd ────────────
+(async () => {
+  try {
+    const session = await getSession();
+    if (session) {
+      const profile = await getProfile(session.user.id);
+      window.location.href = startpaginaVoorRol(profile?.rol);
+    }
+  } catch(e) { /* geen sessie of Supabase niet geladen */ }
+})();
+
+// ── E-mail bestaat check (via Supabase RPC) ───
+async function emailBestaat(email) {
+  const { data, error } = await _supabase.rpc('email_bestaat', { email_input: email });
+  if (error) return null; // onbekend bij fout
+  return data === true;
+}
+
+// ── Inloggen ──────────────────────────────────
+async function doLogin() {
+  if (!checkSupabase()) return;
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  setMsg('login-msg', '');
+
+  if (!email || !pw) { setMsg('login-msg', 'Vul e-mail en wachtwoord in.'); return; }
+
+  const btn = document.querySelector('#p-login .submit-btn');
+  btn.textContent = 'Bezig...'; btn.disabled = true;
+
+  try {
+    const { error } = await _supabase.auth.signInWithPassword({ email, password: pw });
+    if (error) {
+      // Controleer of het e-mailadres überhaupt bestaat
+      const bestaat = await emailBestaat(email);
+      if (bestaat === false) {
+        setMsg('login-msg', 'Geen account gevonden met dit e-mailadres. Maak eerst een account aan.');
+      } else {
+        setMsg('login-msg', 'Ongeldig wachtwoord. Probeer opnieuw of gebruik "Wachtwoord vergeten?".');
+      }
+      btn.textContent = 'Inloggen →'; btn.disabled = false;
+    } else {
+      const profile = await getProfile((await getUser()).id);
+      window.location.href = startpaginaVoorRol(profile?.rol);
+    }
+  } catch(e) {
+    setMsg('login-msg', 'Verbindingsfout: ' + e.message);
+    btn.textContent = 'Inloggen →'; btn.disabled = false;
+  }
+}
+
+// ── Wachtwoord bevestiging live-check ─────────
+function checkPwMatch() {
+  const pw  = document.getElementById('reg-pw')?.value  || '';
+  const pw2 = document.getElementById('reg-pw2')?.value || '';
+  const msg = document.getElementById('reg-msg');
+  if (!msg) return;
+  if (!pw2) { msg.textContent = ''; return; }
+  if (pw === pw2) {
+    msg.style.color   = '#4cff4c';
+    msg.textContent   = '✓ Wachtwoorden komen overeen';
+  } else {
+    msg.style.color   = '#E02020';
+    msg.textContent   = 'Wachtwoorden komen niet overeen';
+  }
+}
+
+// ── Wachtwoord reset ──────────────────────────
+async function doResetPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { setMsg('login-msg', 'Vul eerst je e-mailadres in.'); return; }
+
+  // Controleer of het e-mailadres bestaat voor we een reset sturen
+  const bestaat = await emailBestaat(email);
+  if (bestaat === false) {
+    setMsg('login-msg', 'Geen account gevonden met dit e-mailadres. Maak eerst een account aan.');
+    return;
+  }
+
+  const redirectTo = 'https://brentv02.github.io/DFK/reset-password.html';
+  await _supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  setMsg('login-msg', 'Reset-link verstuurd naar ' + email, true);
+}
+
+// ── Account aanmaken ──────────────────────────
+async function doRegister() {
+  if (!checkSupabase()) return;
+
+  const voornaam = document.getElementById('reg-voornaam').value.trim();
+  const naam     = document.getElementById('reg-naam').value.trim();
+  const geboorte = document.getElementById('reg-geboorte').value;
+  const email    = document.getElementById('reg-email').value.trim();
+  const tel      = document.getElementById('reg-tel').value.trim();
+  const pw       = document.getElementById('reg-pw').value;
+  const pw2      = document.getElementById('reg-pw2').value;
+  setMsg('reg-msg', '');
+  setMsg('reg-email-msg', '');
+
+  const isEigen = document.getElementById('eigen-kart-sectie').style.display !== 'none';
+  const isHuur  = document.getElementById('huur-kart-sectie').style.display  !== 'none';
+
+  if (!voornaam || !naam || !email || !pw) { setMsg('reg-msg', 'Vul alle verplichte velden in.'); return; }
+  if (pw.length < 8)                        { setMsg('reg-msg', 'Wachtwoord moet minimaal 8 tekens zijn.'); return; }
+  if (pw !== pw2)                           { setMsg('reg-msg', 'Wachtwoorden komen niet overeen.'); return; }
+  if (!isEigen && !isHuur)                  { setMsg('reg-msg', 'Selecteer eerst eigen kart of huur kart.'); return; }
+
+  const btn = document.getElementById(isEigen ? 'btn-eigen' : 'btn-huur');
+  btn.textContent = 'Bezig...'; btn.disabled = true;
+
+  try {
+    // 1. Registreer via Supabase Auth
+    const { data, error } = await _supabase.auth.signUp({ email, password: pw });
+    if (error) {
+      if (error.message.includes('already')) { setMsg('reg-email-msg', 'Dit e-mailadres is al in gebruik.'); }
+      else { setMsg('reg-msg', error.message); }
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    const userId = data.user?.id;
+    if (!userId) {
+      setMsg('reg-msg', 'Account aangemaakt! Controleer je e-mail om te bevestigen, dan kan je inloggen.');
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    // 2. Bouw profiel op
+    let profiel = { id: userId, account_id: userId, email, voornaam, naam, geboortedatum: geboorte || null, telefoon: tel, kart_type: isEigen ? 'eigen' : 'huur' };
+
+    if (isEigen) {
+      const togRows = document.querySelectorAll('#eigen-kart-sectie .toggle-row');
+      const benzEl  = document.querySelector('#eigen-kart-sectie .benz-btn.on');
+      Object.assign(profiel, {
+        klassen:              [...document.querySelectorAll('#reg-klassen-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+        startnummers:         getStartnummers('reg-startnrs'),
+        kampioenschappen:     [...document.querySelectorAll('#reg-kamp-grid .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+        kart_in_werkplaats:   !!(togRows[0]?.querySelector('.tog-btn.yes.on')),
+        banden_in_werkplaats: !!(togRows[1]?.querySelector('.tog-btn.yes.on')),
+        bak_in_werkplaats:    !!(togRows[2]?.querySelector('.tog-btn.yes.on')),
+        benzine:              benzEl ? benzEl.textContent.replace(/⛽\s*/, '').trim() : null,
+      });
+    } else {
+      Object.assign(profiel, {
+        lengte:        parseInt(document.getElementById('reg-lengte').value)  || null,
+        gewicht:       parseInt(document.getElementById('reg-gewicht').value) || null,
+        huurkart_type: document.getElementById('reg-huurkart').value          || null,
+        uitrusting:    [...document.querySelectorAll('#huur-kart-sectie .chk-item.on .chk-label')].map(e => e.textContent.trim()),
+      });
+    }
+
+    // 3. Wacht even zodat de DB-trigger het profiel heeft aangemaakt
+    await new Promise(r => setTimeout(r, 600));
+
+    // 4. Sla profiel op in Supabase
+    const { error: profErr } = await _supabase.from('profiles').update(profiel).eq('id', userId);
+    if (profErr) {
+      setMsg('reg-msg', 'Profiel opslaan mislukt: ' + profErr.message);
+      btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+      return;
+    }
+
+    // 5. Succes
+    btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+    setMsg('reg-msg', '✓ Account aangemaakt! Je kan nu inloggen.', true);
+    setTimeout(() => sw('login'), 1800);
+
+  } catch(e) {
+    setMsg('reg-msg', 'Fout: ' + e.message);
+    btn.textContent = 'Account aanmaken →'; btn.disabled = false;
+  }
+}
+</script>
+<script>
+(function() {
+  var meta = document.querySelector('meta[name="viewport"]');
+  document.addEventListener('touchend', function() {
+    meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
+    setTimeout(function() {
+      meta.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes';
+    }, 300);
+  });
+})();
 </script>
 </body>
 </html>
+
