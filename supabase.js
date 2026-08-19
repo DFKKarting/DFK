@@ -7,6 +7,15 @@
 const SUPABASE_URL  = 'https://zkcowflzazhihdmhcaeo.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_7kztQEoAdZvSNNnhaazKyw_ftT16HvZ';
 
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession:     true,

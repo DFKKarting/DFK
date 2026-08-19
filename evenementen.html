@@ -566,7 +566,7 @@ function renderEvents() {
       const namesHtml = evInschr.map(i => {
         const r    = _accountRijders.find(r => r.id === i.rijder_id);
         const naam = r ? `${r.voornaam||''} ${r.naam||''}`.trim() : 'Rijder';
-        return `<span style="display:block;font-size:12px;color:#16a34a;">✓ ${naam}</span>`;
+        return `<span style="display:block;font-size:12px;color:#16a34a;">✓ ${esc(naam)}</span>`;
       }).join('');
       if (alleIn) {
         inschrijfBtn = `<div class="inschrijf-btn ingeschreven" style="text-align:left;line-height:1.8;">${namesHtml}</div>`;
@@ -598,8 +598,8 @@ function renderEvents() {
           </div>
         </div>
         <div class="event-body">
-          <div class="event-name">${ev.naam}</div>
-          <div class="event-circuit">📍 ${ev.circuit}</div>
+          <div class="event-name">${esc(ev.naam)}</div>
+          <div class="event-circuit">📍 ${esc(ev.circuit)}</div>
           ${deadlineHtml}
           <div class="event-classes">${klassenHtml}</div>
           <div class="event-footer">${inschrijfBtn}</div>
@@ -811,10 +811,10 @@ function renderInschrijvingen() {
     return `
       <div class="inschrijving-card" style="${isPast ? 'border-left-color:#d1d5db;opacity:0.6;' : isVandaag ? 'border-left-color:#16a34a;background:#f0fdf4;' : ''}">
         <div class="inschrijving-info">
-          <div class="inschrijving-naam">${ev.naam}</div>
+          <div class="inschrijving-naam">${esc(ev.naam)}</div>
           <div class="inschrijving-meta">📅 ${datumStr}</div>
-          <div class="inschrijving-meta">📍 ${ev.circuit}${ev.type ? ' &nbsp;·&nbsp; ' + ev.type : ''}</div>
-          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta">👤 ${(rdr.voornaam||'')+' '+(rdr.naam||'')}</div>` : ''; })() : ''}
+          <div class="inschrijving-meta">📍 ${esc(ev.circuit)}${ev.type ? ' &nbsp;·&nbsp; ' + esc(ev.type) : ''}</div>
+          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta">👤 ${esc((rdr.voornaam||'')+' '+(rdr.naam||''))}</div>` : ''; })() : ''}
           ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
           <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
         </div>
@@ -875,7 +875,7 @@ function _renderAccLijst() {
   document.getElementById('acc-body').innerHTML = `
     <span class="section-title">Account</span>
     <label class="field-label">E-mailadres</label>
-    <input class="field-input" type="email" value="${email}" disabled style="color:#999;" />
+    <input class="field-input" type="email" value="${esc(email)}" disabled style="color:#999;" />
     <label class="field-label">Wachtwoord wijzigen</label>
     <input id="acc-pw" class="field-input" type="password" placeholder="Nieuw wachtwoord" oninput="checkAccPwMatch()" />
     <label class="field-label">Wachtwoord bevestigen</label>
@@ -888,7 +888,7 @@ function _renderAccLijst() {
     ${_accountRijders.map(r => `
       <div class="rijder-kaart" onclick="_editRijder('${r.id}')">
         <div>
-          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-naam">${esc((r.voornaam||'')+' '+(r.naam||''))}</div>
           <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
         </div>
         <span style="color:#999;font-size:20px;">›</span>
@@ -1188,15 +1188,15 @@ function _toonRijderKeuze() {
 
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="ev-confirm-box">
-      <div class="ev-confirm-name">${ev.naam}</div>
-      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+      <div class="ev-confirm-name">${esc(ev.naam)}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${esc(ev.circuit)}</div>
     </div>
     <div class="confirm-vraag">Voor wie inschrijven?</div>
     <p class="confirm-hint">Kies de rijder voor dit event.</p>
     ${beschikbaar.map(r => `
       <div class="rijder-kaart" onclick="_kiesRijderEnSchrijfIn('${r.id}')">
         <div>
-          <div class="rijder-kaart-naam">${(r.voornaam||'')+' '+(r.naam||'')}</div>
+          <div class="rijder-kaart-naam">${esc((r.voornaam||'')+' '+(r.naam||''))}</div>
           <div class="rijder-kaart-sub">${r.kart_type === 'huur' ? 'Huurkart' : ((r.klassen||[]).join(', ') || 'Eigen kart')}</div>
         </div>
         <span style="color:#999;font-size:20px;">›</span>
@@ -1226,14 +1226,14 @@ function _openInschrijvenForm() {
         <div class="cf-field"><span class="cf-label">Lengte</span><span class="cf-value">${acc.lengte ? acc.lengte+' cm' : '—'}</span></div>
         <div class="cf-field"><span class="cf-label">Gewicht</span><span class="cf-value">${acc.gewicht ? acc.gewicht+' kg' : '—'}</span></div>
       </div>
-      <div class="cf-field"><span class="cf-label">Type huurkart</span><span class="cf-value">${acc.huurkartType || '—'}</span></div>
-      <div class="cf-field"><span class="cf-label">Uitrusting nodig</span><span class="cf-value">${acc.uitrusting.join(', ') || '—'}</span></div>`;
+      <div class="cf-field"><span class="cf-label">Type huurkart</span><span class="cf-value">${esc(acc.huurkartType || '—')}</span></div>
+      <div class="cf-field"><span class="cf-label">Uitrusting nodig</span><span class="cf-value">${esc(acc.uitrusting.join(', ') || '—')}</span></div>`;
   } else {
     kartInfoHtml = `
       <span class="section-title">Kart & Competitie</span>
       ${acc.klassen.length ? acc.klassen.map(k => `
       <div class="cf-two">
-        <div class="cf-field"><span class="cf-label">Klasse</span><span class="cf-value">${k}</span></div>
+        <div class="cf-field"><span class="cf-label">Klasse</span><span class="cf-value">${esc(k)}</span></div>
         <div class="cf-field"><span class="cf-label">Startnummer</span><span class="cf-value">${acc.startnummers[k] ? '#'+acc.startnummers[k] : '—'}</span></div>
       </div>`).join('') : `<div class="cf-field"><span class="cf-label">Klasse(n)</span><span class="cf-value">—</span></div>`}
       <div class="cf-field"><span class="cf-label">Kampioenschappen</span><span class="cf-value">${acc.kampioenen.join(', ') || '—'}</span></div>
@@ -1246,18 +1246,18 @@ function _openInschrijvenForm() {
 
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="ev-confirm-box">
-      <div class="ev-confirm-name">${ev.naam}</div>
-      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+      <div class="ev-confirm-name">${esc(ev.naam)}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${esc(ev.circuit)}</div>
     </div>
 
     <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
     <div class="cf-two">
-      <div class="cf-field"><span class="cf-label">Voornaam</span><span class="cf-value">${acc.voornaam || '—'}</span></div>
-      <div class="cf-field"><span class="cf-label">Naam</span><span class="cf-value">${acc.naam || '—'}</span></div>
+      <div class="cf-field"><span class="cf-label">Voornaam</span><span class="cf-value">${esc(acc.voornaam || '—')}</span></div>
+      <div class="cf-field"><span class="cf-label">Naam</span><span class="cf-value">${esc(acc.naam || '—')}</span></div>
     </div>
     <div class="cf-field"><span class="cf-label">Geboortedatum</span><span class="cf-value">${gebStr || '—'}</span></div>
-    <div class="cf-field"><span class="cf-label">E-mailadres</span><span class="cf-value">${acc.email || '—'}</span></div>
-    <div class="cf-field"><span class="cf-label">Telefoonnummer</span><span class="cf-value">${acc.telefoon || '—'}</span></div>
+    <div class="cf-field"><span class="cf-label">E-mailadres</span><span class="cf-value">${esc(acc.email || '—')}</span></div>
+    <div class="cf-field"><span class="cf-label">Telefoonnummer</span><span class="cf-value">${esc(acc.telefoon || '—')}</span></div>
 
     ${kartInfoHtml}
 
@@ -1341,9 +1341,9 @@ async function _toonBevestiging() {
       <p style="font-size:13px; color:#6b7280; margin-bottom:2rem;">Je inschrijving is succesvol ingediend.</p>
     </div>
     <div class="ev-confirm-box" style="margin-bottom:2rem;">
-      <div class="ev-confirm-name">${ev.naam}</div>
+      <div class="ev-confirm-name">${esc(ev.naam)}</div>
       <div class="ev-confirm-meta" style="margin-top:6px;">📅 ${datumStr}</div>
-      <div class="ev-confirm-meta">📍 ${ev.circuit}</div>
+      <div class="ev-confirm-meta">📍 ${esc(ev.circuit)}</div>
       ${klasse ? `<div class="ev-confirm-meta" style="margin-top:6px;">🏁 ${klasse}${startnummer ? ' — #'+startnummer : ''}</div>` : ''}
     </div>
     <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
@@ -1430,20 +1430,20 @@ function enableInschrijfEdit() {
 
   document.getElementById('inschrijf-body').innerHTML = `
     <div class="ev-confirm-box">
-      <div class="ev-confirm-name">${ev.naam}</div>
-      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${ev.circuit}</div>
+      <div class="ev-confirm-name">${esc(ev.naam)}</div>
+      <div class="ev-confirm-meta">📅 ${datumStr} &nbsp;·&nbsp; 📍 ${esc(ev.circuit)}</div>
     </div>
     <span class="section-title" style="margin-top:0;">Persoonlijke gegevens</span>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${acc.voornaam}" /></div>
-      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${acc.naam}" /></div>
+      <div><label class="field-label">Voornaam</label><input id="inp-voornaam" class="field-input" type="text" value="${esc(acc.voornaam)}" /></div>
+      <div><label class="field-label">Naam</label><input id="inp-naam" class="field-input" type="text" value="${esc(acc.naam)}" /></div>
     </div>
     <label class="field-label">Geboortedatum rijder</label>
     <input id="inp-geboorte" class="field-input" type="date" value="${acc.geboorte}" />
     <label class="field-label">E-mailadres</label>
-    <input id="inp-email" class="field-input" type="email" value="${acc.email}" />
+    <input id="inp-email" class="field-input" type="email" value="${esc(acc.email)}" />
     <label class="field-label">Telefoonnummer</label>
-    <input id="inp-tel" class="field-input" type="tel" value="${acc.telefoon}" />
+    <input id="inp-tel" class="field-input" type="tel" value="${esc(acc.telefoon)}" />
     ${kartEditHtml}
     <span class="section-title">Klasse voor dit event</span>
     ${buildKlasseKeuzeHtml(acc.klassen, acc.startnummers)}

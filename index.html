@@ -375,12 +375,7 @@ async function doLogin() {
   try {
     const { error } = await _supabase.auth.signInWithPassword({ email, password: pw });
     if (error) {
-      const bestaat = await emailBestaat(email);
-      if (bestaat === false) {
-        setMsg('login-error', 'Geen account gevonden met dit e-mailadres.');
-      } else {
-        setMsg('login-error', 'Ongeldig wachtwoord. Probeer opnieuw of gebruik "Wachtwoord vergeten?".');
-      }
+      setMsg('login-error', 'E-mailadres of wachtwoord is onjuist.');
       btn.textContent = 'Inloggen'; btn.disabled = false;
     } else {
       const profile = await getProfile((await getUser()).id);
@@ -404,15 +399,9 @@ async function doResetPassword() {
   const email = document.getElementById('login-email').value.trim();
   if (!email) { setMsg('login-error', 'Vul eerst je e-mailadres in.'); return; }
 
-  const bestaat = await emailBestaat(email);
-  if (bestaat === false) {
-    setMsg('login-error', 'Geen account gevonden met dit e-mailadres.');
-    return;
-  }
-
   const redirectTo = 'https://dfkkarting.github.io/DFK/reset-password.html';
   await _supabase.auth.resetPasswordForEmail(email, { redirectTo });
-  setMsg('login-error', '✓ Reset-link verstuurd naar ' + email, true);
+  setMsg('login-error', 'Als dit e-mailadres gekend is, ontvang je een resetlink.', true);
 }
 
 async function doRegister() {

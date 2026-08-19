@@ -858,8 +858,8 @@ function renderEvRow(ev, isPast) {
     </div>
     <div class="ev-divider"></div>
     <div class="ev-info">
-      <div class="ev-name">${ev.naam}</div>
-      <div class="ev-meta">${ev.circuit}${ev.type ? ' · ' + ev.type : ''}</div>
+      <div class="ev-name">${esc(ev.naam)}</div>
+      <div class="ev-meta">${esc(ev.circuit)}${ev.type ? ' · ' + esc(ev.type) : ''}</div>
       ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
       ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
       ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#4cff4c;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
@@ -1629,7 +1629,7 @@ function openWeekendDetail(wid) {
     <button class="wd-back" onclick="sluitWeekendDetail()">← Terug naar evenementen</button>
     <div class="wd-header">
       <div class="wd-titel-rij">
-        <div class="wd-titel" id="wd-naam-display">${weekend.naam}</div>
+        <div class="wd-titel" id="wd-naam-display">${esc(weekend.naam)}</div>
         <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>
       </div>
       <div class="wd-datum">${datumStr}</div>
@@ -2290,8 +2290,8 @@ function renderCrew(lijst) {
     return `<div class="rider-row${isEditing?' editing':''}" onclick="editCrewlid('${r.id}')">
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
-        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
-        <div class="rider-meta">${r.email || '<span style="color:#444;font-style:italic;">e-mail niet beschikbaar</span>'}</div>
+        <div class="rider-name">${esc(voornaam)} ${esc(naam)}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-meta">${r.email ? esc(r.email) : '<span style="color:#444;font-style:italic;">e-mail niet beschikbaar</span>'}</div>
       </div>
       <div class="rider-actions">
         <button class="ev-btn edit" onclick="event.stopPropagation(); editCrewlid('${r.id}')">✎</button>
@@ -2326,13 +2326,13 @@ function _crewEditFormHTML(r) {
 
   return `
     <button class="close-panel-btn" onclick="cancelCrewEdit()">✕ Sluiten</button>
-    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
-    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+    <div class="page-title" style="margin-bottom:4px;">${esc(r.voornaam||'')} ${esc(r.naam||'')}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${esc(r.email||'')}</p>
 
     <div class="section-label">Naam</div>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input class="field-input" id="ce-voornaam" value="${r.voornaam||''}" /></div>
-      <div><label class="field-label">Naam</label><input class="field-input" id="ce-naam" value="${r.naam||''}" /></div>
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="ce-voornaam" value="${esc(r.voornaam||'')}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="ce-naam" value="${esc(r.naam||'')}" /></div>
     </div>
 
     <div class="section-label">Rol</div>
@@ -2664,10 +2664,10 @@ function renderRijders() {
     return `<div class="rider-row${isEditing?' editing':''}" onclick="toonRijderDetail('${r.id}')">
       <div class="rider-avatar">${ini}</div>
       <div class="rider-info">
-        <div class="rider-name">${voornaam} ${naam}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="rider-name">${esc(voornaam)} ${esc(naam)}<span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
         <div class="rider-meta">${r.klassen?.length
-          ? r.klassen.map(k => `${k}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
-          : (r.huurkart_type || '—')}</div>
+          ? r.klassen.map(k => `${esc(k)}${(r.startnummers?.[k]) ? ' #'+r.startnummers[k] : ''}`).join(' · ')
+          : esc(r.huurkart_type || '—')}</div>
       </div>
     </div>`;
   }
@@ -2703,20 +2703,20 @@ function toonRijderDetail(id) {
         ${((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?'}
       </div>
       <div>
-        <div style="font-weight:700;font-size:22px;color:#111827;letter-spacing:0.5px;">${naam}</div>
-        <div style="font-size:13px;color:#6b7280;">${r.email||''}</div>
+        <div style="font-weight:700;font-size:22px;color:#111827;letter-spacing:0.5px;">${esc(naam)}</div>
+        <div style="font-size:13px;color:#6b7280;">${esc(r.email||'')}</div>
       </div>
     </div>
 
     <div style="font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#dc2626;border-bottom:1px solid #e5e7eb;padding-bottom:8px;margin-bottom:0.5rem;">Gegevens</div>
     ${rij('Geboortedatum', formatGeboortedatum(r.geboortedatum))}
-    ${rij('Telefoon', r.telefoon)}
+    ${rij('Telefoon', esc(r.telefoon))}
     ${rij('Kart type', isEigen ? 'Eigen kart' : 'Huurkart')}
-    ${isEigen ? rij('Klassen', klassen) : ''}
-    ${isEigen ? rij('Kampioenschappen', r.kampioenschappen?.join(', ')) : ''}
-    ${!isEigen ? rij('Huurkart type', r.huurkart_type) : ''}
+    ${isEigen ? rij('Klassen', esc(klassen)) : ''}
+    ${isEigen ? rij('Kampioenschappen', esc(r.kampioenschappen?.join(', '))) : ''}
+    ${!isEigen ? rij('Huurkart type', esc(r.huurkart_type)) : ''}
     ${!isEigen ? rij('Lengte / Gewicht', [r.lengte ? r.lengte+'cm' : null, r.gewicht ? r.gewicht+'kg' : null].filter(Boolean).join(' · ')) : ''}
-    ${isEigen ? rij('Benzine', r.benzine) : ''}
+    ${isEigen ? rij('Benzine', esc(r.benzine)) : ''}
 
     <div style="margin-top:2rem;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="vereist-rijders-edit" onclick="editRijder('${r.id}')"
@@ -2774,7 +2774,7 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
 
   return `
     <button class="close-panel-btn" onclick="${cancelFn}()">✕ Sluiten</button>
-    <div class="page-title" style="margin-bottom:4px;">${(r?.voornaam||'')} ${(r?.naam||'')}</div>
+    <div class="page-title" style="margin-bottom:4px;">${esc(r?.voornaam||'')} ${esc(r?.naam||'')}</div>
     <p class="page-sub" style="margin-bottom:1.5rem;">Rijder aanpassen</p>
 
     <div class="section-label vereist-crew">Rol</div>
@@ -2787,13 +2787,13 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
 
     <div class="section-label">Persoonlijke gegevens</div>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r?.voornaam||''}" /></div>
-      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r?.naam||''}" /></div>
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${esc(r?.voornaam||'')}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${esc(r?.naam||'')}" /></div>
     </div>
     <label class="field-label">Geboortedatum rijder</label>
     <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
     <label class="field-label">Telefoonnummer contactpersoon</label>
-    <input class="field-input" id="r-tel" type="tel" value="${r?.telefoon||''}" />
+    <input class="field-input" id="r-tel" type="tel" value="${esc(r?.telefoon||'')}" />
 
     <div class="section-label">Kart type</div>
     <div class="r-kart-keuze">
@@ -3134,6 +3134,8 @@ function aiKlasseGewijzigd() {
     _aiKlasse ? `${_aiKlasse}${nrTxt}` : (p.huurkart_type || '—');
 }
 
+function adminUitschrijvenBtn(btn) { adminUitschrijven(btn.dataset.id, btn.dataset.naam); }
+
 async function adminUitschrijven(inschrijvingId, naam) {
   if (!confirm(`${naam} uitschrijven voor dit event?`)) return;
   const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
@@ -3443,11 +3445,11 @@ function _inschrCardHTML(r) {
     const klasse = r.klasse || '';
     const nr     = r.startnummer;
     rechtsHTML = klasse
-      ? `<div class="inschr-klasse-badge">${klasse}${nr ? ` <span class="inschr-nr">#${nr}</span>` : ''}</div>`
+      ? `<div class="inschr-klasse-badge">${esc(klasse)}${nr ? ` <span class="inschr-nr">#${nr}</span>` : ''}</div>`
       : '';
   } else {
     rechtsHTML = p.huurkart_type
-      ? `<div class="inschr-klasse-badge" style="color:#4caaf0;">${p.huurkart_type}</div>`
+      ? `<div class="inschr-klasse-badge" style="color:#4caaf0;">${esc(p.huurkart_type)}</div>`
       : '';
   }
 
@@ -3465,22 +3467,22 @@ function _inschrCardHTML(r) {
       </div>` : `<div class="inschr-sectie"><div class="inschr-sectie-label">Materiaal in werkplaats</div><div class="inschr-sectie-value" style="color:#444;">Niets in werkplaats</div></div>`}
       ${p.benzine ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Benzine</div>
-        <div class="inschr-chips"><span class="inschr-chip benzine">⛽ ${p.benzine}</span></div>
+        <div class="inschr-chips"><span class="inschr-chip benzine">⛽ ${esc(p.benzine)}</span></div>
       </div>` : ''}
       ${p.telefoon ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label">Telefoon</div>
-        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+        <div class="inschr-sectie-value">📞 ${esc(p.telefoon)}</div>
       </div>` : ''}
       <div class="inschr-sectie">
         <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
-      <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
+      <button class="inschr-uitschr-btn" data-id="${r.id}" data-naam="${esc(vollNaam)}" onclick="event.stopPropagation(); adminUitschrijvenBtn(this)">✕ Uitschrijven</button>`;
   } else {
     const uitr = Array.isArray(p.uitrusting) ? p.uitrusting : [];
     expandHTML = `
       ${p.huurkart_type ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label huur-label">Kart type</div>
-        <div class="inschr-sectie-value" style="font-size:15px;font-weight:700;color:#4caaf0;">${p.huurkart_type}</div>
+        <div class="inschr-sectie-value" style="font-size:15px;font-weight:700;color:#4caaf0;">${esc(p.huurkart_type)}</div>
       </div>` : ''}
       ${(p.lengte || p.gewicht) ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label huur-label">Afmetingen</div>
@@ -3488,23 +3490,23 @@ function _inschrCardHTML(r) {
       </div>` : ''}
       ${uitr.length ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label huur-label">Uitrusting nodig</div>
-        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip" style="border-color:#1a3a5a;color:#4caaf0;background:#0a1a2a;">${u}</span>`).join('')}</div>
+        <div class="inschr-chips">${uitr.map(u => `<span class="inschr-chip" style="border-color:#1a3a5a;color:#4caaf0;background:#0a1a2a;">${esc(u)}</span>`).join('')}</div>
       </div>` : ''}
       ${p.telefoon ? `<div class="inschr-sectie">
         <div class="inschr-sectie-label huur-label">Telefoon</div>
-        <div class="inschr-sectie-value">📞 ${p.telefoon}</div>
+        <div class="inschr-sectie-value">📞 ${esc(p.telefoon)}</div>
       </div>` : ''}
       <div class="inschr-sectie">
         <div class="inschr-sectie-value" style="color:#444;font-size:11px;">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
-      <button class="inschr-uitschr-btn" onclick="event.stopPropagation(); adminUitschrijven('${r.id}', '${vollNaam}')">✕ Uitschrijven</button>`;
+      <button class="inschr-uitschr-btn" data-id="${r.id}" data-naam="${esc(vollNaam)}" onclick="event.stopPropagation(); adminUitschrijvenBtn(this)">✕ Uitschrijven</button>`;
   }
 
   return `<div class="inschr-row${isHuur ? ' huur' : ''}" onclick="_toggleInschrRow(this)">
     <div class="inschr-row-top">
       <div class="rider-avatar" style="${isHuur ? 'background:#1565c0;' : ''}">${ini}</div>
       <div class="inschr-row-meta">
-        <div class="inschr-naam" style="white-space:normal;">${vollNaam} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
+        <div class="inschr-naam" style="white-space:normal;">${esc(vollNaam)} <span class="rider-badge ${badgeType}">${badgeLabel}</span></div>
         <div class="inschr-reg">Ingeschreven ${formatDate(r.bevestigd_op)}</div>
       </div>
       <div class="inschr-row-rechts">
