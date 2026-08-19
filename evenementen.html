@@ -1244,14 +1244,10 @@ async function _slaExtraRijderOp(btn) {
   const isHuur = document.getElementById('er-huur')?.classList.contains('on');
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
 
-  const nieuwId = crypto.randomUUID();
-  const { error } = await _supabase.from('profiles').insert({
-    id:         nieuwId,
-    account_id: _currentUser.id,
-    voornaam,
-    naam,
-    rol:        'rijder',
-    kart_type:  isHuur ? 'huur' : 'eigen',
+  const { data: nieuwId, error } = await _supabase.rpc('maak_extra_rijder', {
+    p_voornaam:  voornaam,
+    p_naam:      naam,
+    p_kart_type: isHuur ? 'huur' : 'eigen',
   });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; }
