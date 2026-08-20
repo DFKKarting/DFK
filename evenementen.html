@@ -1454,40 +1454,6 @@ function sluitInschrijven() {
   _selectedRijder = null;
 }
 
-function _maakIcsInhoud(ev, klasse, startnummer) {
-  const d = ev.datum.replace(/-/g, '');
-  const beschr = [klasse, startnummer ? '#' + startnummer : ''].filter(Boolean).join(' — ');
-  const naam = (ev.naam || '').replace(/,/g, '\\,').replace(/\n/g, '\\n');
-  const loc  = (ev.circuit || '').replace(/,/g, '\\,');
-  return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//DFK Karting//NL',
-    'BEGIN:VEVENT',
-    'UID:dfk-' + ev.id + '@dfkkarting',
-    'DTSTART;VALUE=DATE:' + d,
-    'DTEND;VALUE=DATE:' + d,
-    'SUMMARY:' + naam,
-    'LOCATION:' + loc,
-    beschr ? 'DESCRIPTION:' + beschr : '',
-    'END:VEVENT', 'END:VCALENDAR'
-  ].filter(Boolean).join('\r\n');
-}
-
-function _downloadIcs(ev, klasse, startnummer) {
-  const ics = _maakIcsInhoud(ev, klasse, startnummer);
-  // iOS Safari: navigeer naar data URI → opent automatisch de Agenda-app
-  if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-    window.location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
-    return;
-  }
-  // Android / desktop: download het bestand
-  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), { href: url, download: 'dfk-event.ics' });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 async function _toonBevestiging() {
   const ev = _currentEvent;
@@ -1548,7 +1514,6 @@ async function _toonBevestiging() {
       <div class="ev-confirm-meta">📍 ${esc(ev.circuit)}</div>
       ${klasse ? `<div class="ev-confirm-meta" style="margin-top:6px;">🏁 ${klasse}${startnummer ? ' — #'+startnummer : ''}</div>` : ''}
     </div>
-    <button onclick="_downloadIcs(_currentEvent,'${klasse}','${startnummer||''}')" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:#15803d;border:1.5px solid #86efac;border-radius:8px;font-weight:700;font-size:14px;text-align:center;cursor:pointer;margin-bottom:10px;">📅 Toevoegen aan agenda</button>
     <button class="bevestig-btn" onclick="sluitInschrijven()">Sluiten</button>`;
 }
 
