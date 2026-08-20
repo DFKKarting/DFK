@@ -366,6 +366,9 @@ let _selectedKlasse   = null;
     updateNavbar();
     await Promise.all([loadEvents(), loadMyInschrijvingen()]);
     renderEvents();
+    if (document.getElementById('tab-inschrijvingen')?.classList.contains('on')) {
+      renderInschrijvingen();
+    }
 
     // ── Realtime ──────────────────────────────
     _supabase.channel('ev-realtime')
