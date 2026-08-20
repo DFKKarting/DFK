@@ -87,7 +87,7 @@
     .events-empty-icon{font-size:36px;margin-bottom:.6rem}
 
     /* ── Mijn Inschrijvingen ── */
-    .inschrijving-card{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .inschrijving-card{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #dc2626;border-radius:8px;padding:14px 16px;margin-bottom:12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.04)}
     .inschrijving-info{flex:1}
     .inschrijving-naam{font-weight:700;font-size:17px;color:#111827;margin-bottom:4px}
     .inschrijving-meta{font-size:13px;color:#6b7280;margin-bottom:2px}
@@ -285,6 +285,17 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="overlay" id="overlay" onclick="closeAccount()"></div>
 
   <div class="inschrijf-overlay" id="inschrijf-overlay" onclick="sluitInschrijven()"></div>
+
+  <!-- Bevestig-modal voor uitschrijven -->
+  <div id="bevestig-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;" onclick="sluitBevestigModal()"></div>
+  <div id="bevestig-modal" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:14px;padding:24px 20px;width:calc(100vw - 2.5rem);max-width:340px;z-index:901;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    <div id="bevestig-titel" style="font-weight:800;font-size:17px;color:#111827;margin-bottom:8px;"></div>
+    <div id="bevestig-tekst" style="font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.5;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="sluitBevestigModal()" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-weight:600;font-size:14px;cursor:pointer;">Annuleren</button>
+      <button id="bevestig-ok" style="flex:1;padding:11px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:14px;cursor:pointer;">Uitschrijven</button>
+    </div>
+  </div>
   <div class="inschrijf-panel" id="inschrijf-panel">
     <div class="panel-header">
       <span class="panel-title">Inschrijven</span>
@@ -860,14 +871,40 @@ function renderInschrijvingen() {
   startCountdowns();
 }
 
-async function uitschrijven(inschrijvingId, eventId) {
-  if (!confirm('Zeker dat je je wil uitschrijven?')) return;
-  const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
-  if (error) { alert('Uitschrijven mislukt: ' + error.message); return; }
-  _myInschrijvingen = _myInschrijvingen.filter(i => i.id !== inschrijvingId);
-  if (!_myInschrijvingen.some(i => i.event_id === eventId)) _myEventIds.delete(eventId);
-  renderInschrijvingen();
-  renderEvents();
+function sluitBevestigModal() {
+  document.getElementById('bevestig-overlay').style.display = 'none';
+  document.getElementById('bevestig-modal').style.display   = 'none';
+}
+
+function uitschrijven(inschrijvingId, eventId) {
+  const inschrijving = _myInschrijvingen.find(i => i.id === inschrijvingId);
+  const rdr = inschrijving ? _accountRijders.find(r => r.id === inschrijving.rijder_id) : null;
+  const naam = rdr ? `${rdr.voornaam||''} ${rdr.naam||''}`.trim() : 'deze rijder';
+
+  document.getElementById('bevestig-titel').textContent = 'Uitschrijven';
+  document.getElementById('bevestig-tekst').textContent = `Wil je ${naam} uitschrijven voor dit event?`;
+  document.getElementById('bevestig-overlay').style.display = 'block';
+  document.getElementById('bevestig-modal').style.display   = 'block';
+
+  const okBtn = document.getElementById('bevestig-ok');
+  okBtn.onclick = async () => {
+    okBtn.disabled = true; okBtn.textContent = 'Bezig...';
+    const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
+    sluitBevestigModal();
+    okBtn.disabled = false; okBtn.textContent = 'Uitschrijven';
+    if (error) {
+      document.getElementById('bevestig-titel').textContent = 'Fout';
+      document.getElementById('bevestig-tekst').textContent = 'Uitschrijven mislukt: ' + error.message;
+      document.getElementById('bevestig-overlay').style.display = 'block';
+      document.getElementById('bevestig-modal').style.display   = 'block';
+      document.getElementById('bevestig-ok').style.display = 'none';
+      return;
+    }
+    _myInschrijvingen = _myInschrijvingen.filter(i => i.id !== inschrijvingId);
+    if (!_myInschrijvingen.some(i => i.event_id === eventId)) _myEventIds.delete(eventId);
+    renderInschrijvingen();
+    renderEvents();
+  };
 }
 
 // ── Account paneel ───────────────────────────
