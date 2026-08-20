@@ -763,87 +763,99 @@ function renderInschrijvingen() {
     return;
   }
 
-  const komend    = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') >= today)
-                         .sort((a, b) => new Date(a.evenementen.datum) - new Date(b.evenementen.datum));
-  const afgelopen = lijst.filter(i => new Date(i.evenementen.datum + 'T12:00:00') < today)
-                         .sort((a, b) => new Date(b.evenementen.datum) - new Date(a.evenementen.datum));
+  // Groepeer per event
+  const perEvent = new Map();
+  lijst.forEach(i => {
+    if (!perEvent.has(i.event_id)) perEvent.set(i.event_id, { ev: i.evenementen, inschrijvingen: [] });
+    perEvent.get(i.event_id).inschrijvingen.push(i);
+  });
 
-  function renderKaart(r) {
-    const ev  = r.evenementen;
-    const d   = new Date(ev.datum + 'T12:00:00');
-    const datumStr = `${DAGEN_KORT[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
-    const reg    = new Date(r.bevestigd_op);
-    const regStr = `${reg.getDate()} ${MAANDEN[reg.getMonth()]} ${reg.getFullYear()} om ${reg.getHours().toString().padStart(2,'0')}:${reg.getMinutes().toString().padStart(2,'0')}`;
+  const evGroepen = [...perEvent.values()];
+  const komend    = evGroepen.filter(g => new Date(g.ev.datum + 'T12:00:00') >= today)
+                             .sort((a, b) => new Date(a.ev.datum) - new Date(b.ev.datum));
+  const afgelopen = evGroepen.filter(g => new Date(g.ev.datum + 'T12:00:00') < today)
+                             .sort((a, b) => new Date(b.ev.datum) - new Date(a.ev.datum));
+
+  const DAGEN_LANG = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+
+  function renderGroep(g) {
+    const ev = g.ev;
+    const d  = new Date(ev.datum + 'T12:00:00');
     const isPast    = d < today;
     const isVandaag = !isPast && d.toDateString() === now.toDateString();
+    const dl        = ev.deadline ? new Date(ev.deadline) : null;
+    const dlPassed  = dl && dl < now;
 
-    // ── Deadline-logica voor uitschrijven ──
-    const dl         = ev.deadline ? new Date(ev.deadline) : null;
-    const dlPassed   = dl && dl < now;
-
-    let rechts;
-    if (isVandaag) {
-      rechts = `<span style="font-size:11px;color:#16a34a;letter-spacing:1px;text-transform:uppercase;font-weight:700;animation:bezig-pulse 2s ease-in-out infinite;">Bezig</span>`;
-    } else if (isPast) {
-      rechts = `<span style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;font-weight:700;">Afgelopen</span>`;
-    } else if (dlPassed) {
-      rechts = `<span style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;font-weight:700;text-align:right;line-height:1.6;">Inschrijving<br>gesloten</span>`;
-    } else {
-      // Knop + eventuele countdown
-      let cdHtml = '';
-      if (dl) {
-        const msLeft = dl - now;
-        const dlUur  = dl.getHours().toString().padStart(2,'0');
-        const dlMin  = dl.getMinutes().toString().padStart(2,'0');
-        const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} ${dlUur}:${dlMin}`;
-        if (msLeft < 24 * 3600 * 1000) {
-          // Minder dan 24u: live afteller
-          const totMin = Math.floor(msLeft / 60000);
-          const uren   = Math.floor(totMin / 60);
-          const rMin   = totMin % 60;
-          const txt    = uren > 0 ? `${uren}u ${rMin}min` : `${rMin}min`;
-          cdHtml = `<div class="uitschrijf-dl urgent" data-deadline="${dl.toISOString()}">⏱ Sluit over <strong>${txt}</strong></div>`;
-        } else {
-          // Meer dan 24u: vaste datum tonen
-          cdHtml = `<div class="uitschrijf-dl">Deadline<br>${tijdStr}</div>`;
-        }
-      }
-      rechts = `<div class="uitschrijf-side">
-        <button class="uitschrijf-btn" onclick="uitschrijven('${r.id}','${ev.id}')">Uitschrijven</button>
-        ${cdHtml}
+    // Datum-blok: dag groot, datum eronder
+    const dagNaam  = DAGEN_LANG[d.getDay()].toUpperCase();
+    const dagNum   = d.getDate();
+    const maandJr  = `${MAANDEN[d.getMonth()]} ${d.getFullYear()}`;
+    const datumBlok = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid ${isPast?'#e5e7eb':isVandaag?'#bbf7d0':'#e5e7eb'};">
+        <div style="background:${isPast?'#f3f4f6':isVandaag?'#16a34a':'#dc2626'};color:#fff;border-radius:8px;padding:6px 12px;text-align:center;min-width:52px;flex-shrink:0;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;">${dagNaam}</div>
+          <div style="font-size:22px;font-weight:900;line-height:1.1;">${dagNum}</div>
+          <div style="font-size:10px;opacity:.85;">${maandJr}</div>
+        </div>
+        <div>
+          <div style="font-weight:800;font-size:17px;color:#111827;line-height:1.2;">${esc(ev.naam)}</div>
+          <div style="font-size:13px;color:#6b7280;margin-top:2px;">📍 ${esc(ev.circuit)}${ev.type ? ' · ' + esc(ev.type) : ''}</div>
+          ${isVandaag ? `<div style="font-size:11px;color:#16a34a;font-weight:700;margin-top:3px;">● Bezig</div>` : ''}
+        </div>
       </div>`;
+
+    // Deadline / status info
+    let statusHtml = '';
+    if (!isPast && !isVandaag && dl) {
+      const msLeft  = dl - now;
+      const dlUur   = dl.getHours().toString().padStart(2,'0');
+      const dlMin   = dl.getMinutes().toString().padStart(2,'0');
+      const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} ${dlUur}:${dlMin}`;
+      if (dlPassed) {
+        statusHtml = `<div style="font-size:12px;color:#9ca3af;margin-bottom:10px;">Uitschrijven niet meer mogelijk (deadline verstreken)</div>`;
+      } else if (msLeft < 24 * 3600 * 1000) {
+        const totMin = Math.floor(msLeft / 60000);
+        const uren = Math.floor(totMin / 60); const rMin = totMin % 60;
+        statusHtml = `<div class="uitschrijf-dl urgent" data-deadline="${dl.toISOString()}" style="margin-bottom:8px;">⏱ Uitschrijven sluit over <strong>${uren>0?uren+'u '+rMin+'min':rMin+'min'}</strong></div>`;
+      } else {
+        statusHtml = `<div style="font-size:12px;color:#9ca3af;margin-bottom:8px;">Uitschrijven mogelijk tot ${tijdStr}</div>`;
+      }
     }
 
+    // Rijders
+    const rijdersHtml = g.inschrijvingen.map(r => {
+      const rdr = _accountRijders.find(x => x.id === r.rijder_id);
+      const naam = rdr ? esc((rdr.voornaam||'')+' '+(rdr.naam||'')).trim() : 'Rijder';
+      const klasse = r.klasse ? `<span style="font-size:12px;color:#6b7280;margin-left:6px;">🏁 ${esc(r.klasse)}${r.startnummer ? ' #'+r.startnummer : ''}</span>` : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px solid #f3f4f6;">
+        <div style="font-size:14px;font-weight:600;color:#111827;">👤 ${naam}${klasse}</div>
+        ${(!isPast && !isVandaag && !dlPassed) ? `<button onclick="uitschrijven('${r.id}','${ev.id}')" style="font-size:12px;padding:4px 10px;background:#fff;border:1px solid #d1d5db;border-radius:6px;color:#374151;cursor:pointer;white-space:nowrap;">Uitschrijven</button>` : ''}
+      </div>`;
+    }).join('');
+
+    const borderColor = isPast ? '#d1d5db' : isVandaag ? '#16a34a' : '#dc2626';
+    const bgColor     = isVandaag ? '#f0fdf4' : '#fff';
     return `
-      <div class="inschrijving-card" style="${isPast ? 'border-left-color:#d1d5db;opacity:0.6;' : isVandaag ? 'border-left-color:#16a34a;background:#f0fdf4;' : ''}">
-        <div class="inschrijving-info">
-          <div class="inschrijving-naam">${esc(ev.naam)}</div>
-          <div class="inschrijving-meta">📅 ${datumStr}</div>
-          <div class="inschrijving-meta">📍 ${esc(ev.circuit)}${ev.type ? ' &nbsp;·&nbsp; ' + esc(ev.type) : ''}</div>
-          ${_accountRijders.length > 1 ? (() => { const rdr = _accountRijders.find(x => x.id === r.rijder_id); return rdr ? `<div class="inschrijving-meta">👤 ${esc((rdr.voornaam||'')+' '+(rdr.naam||''))}</div>` : ''; })() : ''}
-          ${r.klasse ? `<div class="inschrijving-meta">🏁 ${r.klasse}${r.startnummer ? ' — #'+r.startnummer : ''}</div>` : ''}
-          <div class="inschrijving-reg">Ingeschreven op ${regStr}</div>
-        </div>
-        ${rechts}
+      <div class="inschrijving-card" style="border-left-color:${borderColor};background:${bgColor};${isPast?'opacity:0.6;':''}">
+        ${datumBlok}
+        ${statusHtml}
+        ${rijdersHtml}
       </div>`;
   }
 
   let html = '';
-
   if (komend.length > 0) {
-    html += komend.map(renderKaart).join('');
+    html += komend.map(renderGroep).join('');
   } else {
     html += `<div class="inschrijvingen-empty" style="margin-bottom:1rem;"><div class="inschrijvingen-empty-icon">📋</div>Geen aankomende inschrijvingen.</div>`;
   }
-
   if (afgelopen.length > 0) {
     html += `<div style="margin:1.6rem 0 0.8rem;display:flex;align-items:center;gap:10px;">
       <span style="font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;">Afgelopen events</span>
       <div style="flex:1;height:1px;background:#e5e7eb;"></div>
     </div>`;
-    html += afgelopen.map(renderKaart).join('');
+    html += afgelopen.map(renderGroep).join('');
   }
-
   container.innerHTML = html;
   startCountdowns();
 }
