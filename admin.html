@@ -854,7 +854,7 @@ function renderEvRow(ev, isPast) {
       <div class="ev-meta">${esc(ev.circuit)}${ev.type ? ' · ' + esc(ev.type) : ''}</div>
       ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
       ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
-      ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#4cff4c;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
+      ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#16a34a;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
     </div>
     <div class="ev-actions">
       <button class="ev-btn riders vereist-inschrijvingen" onclick="toonInschrijvingen('${ev.id}')">👥 ${inCount}</button>

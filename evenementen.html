@@ -69,8 +69,9 @@
     .event-body{padding:16px}
     .event-name{font-weight:700;font-size:17px;color:#111827;margin-bottom:4px}
     .event-circuit{font-size:13px;color:#6b7280;margin-bottom:10px}
-    .event-deadline{font-size:12px;color:#6b7280;margin-bottom:8px}
+    .event-deadline{font-size:12px;color:#16a34a;font-weight:600;margin-bottom:8px}
     .event-deadline.urgent{color:#dc2626}
+    .event-deadline.closed{color:#6b7280;font-weight:400}
     .countdown-top{font-weight:600;font-size:12px;color:rgba(255,255,255,.9)}
     .countdown-top strong{color:#fff;font-size:13px}
     .countdown-top.vandaag{color:#fff;font-size:14px}
@@ -528,7 +529,7 @@ function renderEvents() {
       const dlMin = dl.getMinutes().toString().padStart(2,'0');
       const tijdStr = `${dl.getDate()} ${MAANDEN[dl.getMonth()]} ${dl.getFullYear()} om ${dlUur}:${dlMin}`;
       if (deadlinePassed) {
-        deadlineHtml = `<div class="event-deadline">⏱ Inschrijving gesloten</div>`;
+        deadlineHtml = `<div class="event-deadline closed">⏱ Inschrijving gesloten</div>`;
       } else if (isWithin24h) {
         const totMin = Math.floor(msLeft / 60000);
         const uren   = Math.floor(totMin / 60);
