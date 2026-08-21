@@ -275,11 +275,14 @@
 
     #dfk-root .inschr-overlay{display:none;position:fixed;inset:0;background:#f3f4f6;z-index:300;flex-direction:column;overflow:hidden}
     #dfk-root .inschr-overlay.open{display:flex}
-    #dfk-root .inschr-topbar{background:#111827;padding:0 1.5rem;height:54px;display:flex;align-items:center;gap:1.5rem;flex-shrink:0;position:sticky;top:0;z-index:10}
+    #dfk-root .inschr-topbar{background:#111827;padding:0 1.25rem;height:54px;display:flex;align-items:center;gap:1rem;flex-shrink:0}
     #dfk-root .inschr-ev-info{flex:1;min-width:0;overflow:hidden}
-    #dfk-root .inschr-ev-naam{font-weight:800;font-size:18px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #dfk-root .inschr-ev-sub{font-size:12px;color:#9ca3af;margin-top:1px}
-    #dfk-root .inschr-body{flex:1;overflow-y:auto;padding:1.5rem}
+    #dfk-root .inschr-ev-naam{font-weight:800;font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #dfk-root .inschr-ev-sub{font-size:11px;color:#9ca3af;margin-top:1px}
+    #dfk-root .inschr-body{flex:1;overflow-y:auto;padding:1.25rem;padding-bottom:80px}
+    #dfk-root .inschr-actiebar{background:#fff;border-top:1px solid #e5e7eb;padding:10px 1.25rem;display:flex;gap:10px;flex-shrink:0;position:sticky;bottom:0;z-index:10;box-shadow:0 -2px 8px rgba(0,0,0,.07)}
+    #dfk-root .inschr-actiebar .actie-pdf{flex:1;padding:10px;border-radius:8px;background:#f3f4f6;border:1.5px solid #d1d5db;color:#374151;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;text-align:center}
+    #dfk-root .inschr-actiebar .actie-inschrijven{flex:2;padding:10px;border-radius:8px;background:#16a34a;border:none;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;text-align:center}
     #dfk-root .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.2rem;align-items:center}
     #dfk-root .filter-chip{padding:6px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;transition:all .1s;font-family:inherit}
     #dfk-root .filter-chip.on{background:#fef2f2;border-color:#dc2626;color:#111827}
@@ -314,10 +317,7 @@
     #dfk-root .inschr-uitschr-btn{margin-top:10px;padding:6px 14px;background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit}
     #dfk-root .inschr-uitschr-btn:hover{background:#fee2e2;border-color:#f87171}
     @media(max-width:768px){
-      #dfk-root .inschr-topbar{padding:.6rem 1rem;height:auto;flex-wrap:wrap;gap:.5rem}
-      #dfk-root .inschr-ev-info{order:-1;width:100%}
-      #dfk-root .inschr-ev-naam{font-size:15px;white-space:normal}
-      #dfk-root .inschr-body{padding:1rem}
+      #dfk-root .inschr-body{padding:.75rem}
       #dfk-root .inschr-expand{padding-left:10px}
     }
 
@@ -521,18 +521,20 @@ document.addEventListener('DOMContentLoaded', function() {
   <!-- ── Inschrijvingen full-screen overlay ── -->
   <div id="inschr-overlay" class="inschr-overlay">
     <div class="inschr-topbar">
-      <button class="nav-back" onclick="sluitInschrijvingenPanel()" style="padding:6px 14px;border:1px solid #2a2a2a;border-radius:3px;white-space:nowrap;flex-shrink:0;">← Terug</button>
+      <button class="nav-back" onclick="sluitInschrijvingenPanel()" style="padding:6px 14px;border:1px solid #374151;border-radius:6px;white-space:nowrap;flex-shrink:0;">← Terug</button>
       <div class="inschr-ev-info">
         <div class="inschr-ev-naam" id="inschr-ev-naam"></div>
         <div class="inschr-ev-sub" id="inschr-ev-sub"></div>
       </div>
-      <button class="open-form-btn" onclick="exporteerInschrijvingen()" style="flex-shrink:0;padding:7px 12px;">⬇ PDF</button>
-      <button class="open-form-btn" onclick="openAdminInschrijfModal()" style="flex-shrink:0;background:#1a2a1a;border-color:#3aaa3a;color:#6de86d;padding:7px 12px;">+ Inschrijven</button>
     </div>
     <div class="inschr-body">
       <div class="section-label" id="inschr-count" style="margin-bottom:1rem;"></div>
       <div class="filter-bar" id="inschr-filters"></div>
       <div class="inschr-grid" id="inschr-grid"></div>
+    </div>
+    <div class="inschr-actiebar">
+      <button class="actie-pdf" onclick="exporteerInschrijvingen()">⬇ PDF</button>
+      <button class="actie-inschrijven" onclick="openAdminInschrijfModal()">+ Inschrijven</button>
     </div>
   </div>
 
