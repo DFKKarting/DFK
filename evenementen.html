@@ -1322,27 +1322,108 @@ function _toonExtraRijderForm() {
     <input class="field-input" id="er-tel" type="tel" placeholder="0471 12 34 56" />
     <label class="field-label" style="${lbl}">Kart type</label>
     <div style="display:flex;gap:10px;margin-bottom:1rem;">
-      <button class="kart-type-keuze-btn on" id="er-eigen" onclick="document.getElementById('er-eigen').classList.add('on');document.getElementById('er-huur').classList.remove('on')">🏎️ Eigen kart</button>
-      <button class="kart-type-keuze-btn" id="er-huur"  onclick="document.getElementById('er-huur').classList.add('on');document.getElementById('er-eigen').classList.remove('on')">🔑 Huur kart</button>
+      <button class="kart-type-keuze-btn on" id="er-eigen" onclick="document.getElementById('er-eigen').classList.add('on');document.getElementById('er-huur').classList.remove('on');_renderErKartVelden(false)">🏎️ Eigen kart</button>
+      <button class="kart-type-keuze-btn" id="er-huur"  onclick="document.getElementById('er-huur').classList.add('on');document.getElementById('er-eigen').classList.remove('on');_renderErKartVelden(true)">🔑 Huur kart</button>
     </div>
+    <div id="er-kart-velden"></div>
     <p id="er-fout" style="color:#dc2626;font-size:13px;min-height:18px;margin-bottom:0.5rem;"></p>
     <button class="bevestig-btn" onclick="_slaExtraRijderOp(this)">Toevoegen →</button>
     <button class="annuleer-btn" onclick="_toonRijderKeuze()">← Terug</button>
   `;
+  _renderErKartVelden(false);
+}
+
+function _renderErKartVelden(isHuur) {
+  const lbl = 'display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px;';
+  const container = document.getElementById('er-kart-velden');
+  if (!container) return;
+  if (!isHuur) {
+    const klassenHtml = KLASSEN.map(k =>
+      `<div class="chk-item" onclick="toggleKlasseChk(this,'er-klassen-grid','er-startnrs')">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+      </div>`).join('');
+    const kampHtml = KAMPIOENSCHAPPEN.map(k =>
+      `<div class="chk-item" onclick="toggleChk(this)">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${k}</span>
+      </div>`).join('');
+    const benzHtml = BENZ_LABELS.map(txt =>
+      `<button class="benz-btn" onclick="pickBenzInschrijf(this)">⛽&nbsp; ${txt}</button>`).join('');
+    container.innerHTML = `
+      <span class="section-title">Klasse(n)</span>
+      <p style="font-size:11px;color:#999;font-family:'Barlow',sans-serif;margin-bottom:0.5rem;margin-top:3px;">Meerdere keuzes mogelijk</p>
+      <div class="chk-grid" id="er-klassen-grid">${klassenHtml}</div>
+      <div id="er-startnrs" style="display:none;margin-bottom:1rem;">
+        <span class="section-title">Startnummer(s)</span>
+        <div class="startnr-list"></div>
+      </div>
+      <span class="section-title">Kampioenschappen</span>
+      <div class="chk-grid" id="er-kamp-grid">${kampHtml}</div>
+      <span class="section-title">Materiaal in werkplaats</span>
+      <div class="toggle-row" id="er-tog-kart"><span>Kart in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="er-tog-banden"><span>Banden in onze werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <div class="toggle-row" id="er-tog-bak"><span>Bak met materiaal in werkplaats</span><div class="toggle-group"><button class="tog-btn yes" onclick="tog(this)">Ja</button><button class="tog-btn no" onclick="tog(this)">Nee</button></div></div>
+      <span class="section-title">Benzine</span>
+      <div class="benzine-opts" id="er-benz-opts">${benzHtml}</div>
+    `;
+  } else {
+    const uitrHtml = ['Helm','Pak','Handschoenen','Schoenen','Ribprotector'].map(u =>
+      `<div class="chk-item" onclick="toggleChk(this)">
+        <div class="chk-box"><span class="chk-mark">✓</span></div><span class="chk-label">${u}</span>
+      </div>`).join('');
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;">
+        <div><label class="field-label" style="${lbl}">Lengte (cm)</label><input id="er-lengte" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+        <div><label class="field-label" style="${lbl}">Gewicht (kg)</label><input id="er-gewicht" class="field-input" type="text" inputmode="numeric" pattern="[0-9]*" style="margin-bottom:0" /></div>
+      </div>
+      <span class="section-title">Kart huren</span>
+      <label class="field-label" style="${lbl}">Type kart</label>
+      <select id="er-huurkart" class="field-select">
+        <option value="">Selecteer een kart...</option>
+        <option>Formula Honda Cadet</option>
+        <option>Formula Honda Junior</option>
+        <option>Formula Honda Senior</option>
+        <option>Rotax Max</option>
+      </select>
+      <span class="section-title">Benodigde uitrusting</span>
+      <div class="chk-grid" id="er-uitrusting-grid">${uitrHtml}</div>
+    `;
+  }
 }
 
 async function _slaExtraRijderOp(btn) {
   const g = id => (document.getElementById(id)?.value || '').trim();
-  const voornaam    = g('er-voornaam');
-  const naam        = g('er-naam');
+  const voornaam      = g('er-voornaam');
+  const naam          = g('er-naam');
   const geboortedatum = g('er-geboorte');
-  const telefoon    = g('er-tel');
-  const fout        = document.getElementById('er-fout');
+  const telefoon      = g('er-tel');
+  const fout          = document.getElementById('er-fout');
   if (!voornaam || !naam)  { if (fout) fout.textContent = 'Vul voornaam en naam in.'; return; }
   if (!geboortedatum)      { if (fout) fout.textContent = 'Vul de geboortedatum in.'; return; }
   if (!telefoon)           { if (fout) fout.textContent = 'Vul het telefoonnummer in.'; return; }
 
   const isHuur = document.getElementById('er-huur')?.classList.contains('on');
+  let extraVelden = {};
+  if (!isHuur) {
+    const klassen = [...document.querySelectorAll('#er-klassen-grid .chk-item.on .chk-label')].map(el => el.textContent.trim());
+    if (!klassen.length) { if (fout) fout.textContent = 'Selecteer minstens één klasse.'; return; }
+    const startnummers = getStartnummers('er-startnrs');
+    const kampioenschappen = [...document.querySelectorAll('#er-kamp-grid .chk-item.on .chk-label')].map(el => el.textContent.trim());
+    const kart_in_werkplaats   = !!document.querySelector('#er-tog-kart .tog-btn.yes.on');
+    const banden_in_werkplaats = !!document.querySelector('#er-tog-banden .tog-btn.yes.on');
+    const bak_in_werkplaats    = !!document.querySelector('#er-tog-bak .tog-btn.yes.on');
+    const benzIdx = [...document.querySelectorAll('#er-benz-opts .benz-btn')].findIndex(b => b.classList.contains('on'));
+    const benzine = benzIdx >= 0 ? BENZ_LABELS[benzIdx] : null;
+    extraVelden = { klassen, startnummers, kampioenschappen, kart_in_werkplaats, banden_in_werkplaats, bak_in_werkplaats, benzine };
+  } else {
+    const lengte      = parseInt(g('er-lengte'))  || null;
+    const gewicht     = parseInt(g('er-gewicht')) || null;
+    const huurkart_type = g('er-huurkart');
+    if (!lengte || !gewicht)  { if (fout) fout.textContent = 'Vul lengte en gewicht in.'; return; }
+    if (!huurkart_type)       { if (fout) fout.textContent = 'Selecteer een type huurkart.'; return; }
+    const uitrusting = [...document.querySelectorAll('#er-uitrusting-grid .chk-item.on .chk-label')].map(el => el.textContent.trim());
+    extraVelden = { lengte, gewicht, huurkart_type, uitrusting };
+  }
+
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
 
   const { data: nieuwId, error } = await _supabase.rpc('maak_extra_rijder', {
@@ -1353,13 +1434,12 @@ async function _slaExtraRijderOp(btn) {
 
   if (error) { if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; } if (fout) fout.textContent = 'Fout: ' + error.message; return; }
 
-  // Sla extra velden op via update (UPDATE policy staat toe omdat account_id = auth.uid())
-  await _supabase.from('profiles').update({ geboortedatum, telefoon }).eq('id', nieuwId);
+  await _supabase.from('profiles').update({ geboortedatum, telefoon, ...extraVelden }).eq('id', nieuwId);
 
   if (btn) { btn.disabled = false; btn.textContent = 'Toevoegen →'; }
 
   const nieuwRijder = { id: nieuwId, account_id: _currentUser.id, voornaam, naam, rol: 'rijder',
-    geboortedatum, telefoon, kart_type: isHuur ? 'huur' : 'eigen', klassen: [], startnummers: {}, kampioenschappen: [], uitrusting: [] };
+    geboortedatum, telefoon, kart_type: isHuur ? 'huur' : 'eigen', ...extraVelden };
   _accountRijders.push(nieuwRijder);
   _selectedRijder = nieuwRijder;
   _openInschrijvenForm();
