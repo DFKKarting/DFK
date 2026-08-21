@@ -29,13 +29,12 @@
     .nav-chevron{font-size:10px;color:#9ca3af}
 
     /* ── Dropdown ── */
-    .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:12px;min-width:200px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:10px;min-width:190px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}
     .dropdown.open{display:block}
-    .dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#d1d5db;font-size:14px;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
+    .dropdown-item{padding:12px 18px;color:#e5e7eb;font-size:14px;font-weight:500;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
     .dropdown-item:last-child{border-bottom:none}
     .dropdown-item:hover{background:#374151;color:#fff}
     .dropdown-item.danger{color:#f87171}
-    .di-icon{font-size:15px;width:18px;text-align:center}
 
     /* ── Tab bar ── */
     .tab-bar{background:#111827;border-bottom:1px solid #374151;display:flex;position:sticky;top:54px;z-index:99}
@@ -237,18 +236,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="nav-chevron">▼</span>
       </button>
       <div class="dropdown" id="user-dropdown">
-        <div class="dropdown-item" onclick="openAccount()">
-          <span class="di-icon">👤</span> Mijn account
-        </div>
-        <div class="dropdown-item" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">
-          <span class="di-icon">⚙</span> Admin
-        </div>
-        <div class="dropdown-item" id="werkplaats-link" style="display:none;" onclick="window.location.href='werkplaats.html'">
-          <span class="di-icon">🔧</span> Werkplaats
-        </div>
-        <div class="dropdown-item danger" onclick="uitloggen()">
-          <span class="di-icon">↩</span> Uitloggen
-        </div>
+        <div class="dropdown-item" onclick="openAccount()">Mijn account</div>
+        <div class="dropdown-item" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">Admin</div>
+        <div class="dropdown-item" id="werkplaats-link" style="display:none;" onclick="window.location.href='werkplaats.html'">Werkplaats</div>
+        <div class="dropdown-item danger" onclick="uitloggen()">Uitloggen</div>
       </div>
     </div>
   </nav>

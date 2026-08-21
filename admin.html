@@ -31,13 +31,12 @@
     #dfk-root .nav-avatar{width:28px;height:28px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
     #dfk-root .nav-naam{font-size:13px;color:#d1d5db}
     #dfk-root .nav-chevron{font-size:10px;color:#9ca3af}
-    #dfk-root .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:12px;min-width:200px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    #dfk-root .dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1f2937;border:1px solid #374151;border-radius:10px;min-width:190px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}
     #dfk-root .dropdown.open{display:block}
-    #dfk-root .dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#d1d5db;font-size:14px;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
+    #dfk-root .dropdown-item{padding:12px 18px;color:#e5e7eb;font-size:14px;font-weight:500;cursor:pointer;border-bottom:1px solid #374151;font-family:inherit}
     #dfk-root .dropdown-item:last-child{border-bottom:none}
     #dfk-root .dropdown-item:hover{background:#374151;color:#fff}
     #dfk-root .dropdown-item.danger{color:#f87171}
-    #dfk-root .di-icon{font-size:15px;width:18px;text-align:center}
 
     #dfk-root .layout{display:grid;grid-template-columns:1fr;gap:0;flex:1}
     #dfk-root .layout.show-right{grid-template-columns:1fr 420px}
@@ -419,18 +418,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="nav-chevron">▼</span>
       </button>
       <div class="dropdown" id="admin-dropdown">
-        <div class="dropdown-item" onclick="openAccountOverlay()">
-          <span class="di-icon">👤</span> Mijn account
-        </div>
-        <div class="dropdown-item niet-admin" style="display:none;" onclick="window.location.href='evenementen.html'">
-          <span class="di-icon">🏁</span> Naar de site
-        </div>
-        <div class="dropdown-item vereist-werkplaats" onclick="window.location.href='werkplaats.html'">
-          <span class="di-icon">🔧</span> Werkplaats
-        </div>
-        <div class="dropdown-item danger" onclick="uitloggen()">
-          <span class="di-icon">↩</span> Uitloggen
-        </div>
+        <div class="dropdown-item" onclick="openAccountOverlay()">Mijn account</div>
+        <div class="dropdown-item niet-admin" style="display:none;" onclick="window.location.href='evenementen.html'">Naar de site</div>
+        <div class="dropdown-item vereist-werkplaats" onclick="window.location.href='werkplaats.html'">Werkplaats</div>
+        <div class="dropdown-item danger" onclick="uitloggen()">Uitloggen</div>
       </div>
     </div>
   </nav>
