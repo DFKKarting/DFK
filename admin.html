@@ -2470,14 +2470,14 @@ function _nieuwCrewlidFormHTML() {
     </div>
     <label class="field-label">Geboortedatum</label>
     <input class="field-input" id="nc-geb" type="date" />
-    <label class="field-label">E-mailadres</label>
-    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" />
     <label class="field-label">Telefoonnummer</label>
-    <input class="field-input" id="nc-tel" type="tel" placeholder="+32 477 00 00 00" />
+    <input class="field-input" id="nc-tel" type="tel" placeholder="+32 477 00 00 00" autocomplete="off" />
+    <label class="field-label">E-mailadres</label>
+    <input class="field-input" id="nc-email" type="email" placeholder="email@voorbeeld.com" autocomplete="off" />
     <label class="field-label">Wachtwoord</label>
-    <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 8 tekens" oninput="_checkCrewPwMatch()" />
+    <input class="field-input" id="nc-ww" type="password" placeholder="Minimaal 8 tekens" oninput="_checkCrewPwMatch()" autocomplete="new-password" />
     <label class="field-label">Wachtwoord bevestigen</label>
-    <input class="field-input" id="nc-ww2" type="password" placeholder="Herhaal wachtwoord" oninput="_checkCrewPwMatch()" />
+    <input class="field-input" id="nc-ww2" type="password" placeholder="Herhaal wachtwoord" oninput="_checkCrewPwMatch()" autocomplete="new-password" />
     <p id="nc-pw-msg" style="font-size:12px;min-height:16px;margin-top:-0.5rem;margin-bottom:1rem;color:#dc2626;"></p>
 
     <div class="section-label">Rol</div>
@@ -2826,7 +2826,7 @@ function rijderFormHTML(r, cancelFn = 'cancelRijderEdit') {
     <label class="field-label">Geboortedatum rijder</label>
     <input class="field-input" id="r-geb" type="date" value="${r?.geboortedatum||''}" />
     <label class="field-label">Telefoonnummer contactpersoon</label>
-    <input class="field-input" id="r-tel" type="tel" value="${esc(r?.telefoon||'')}" />
+    <input class="field-input" id="r-tel" type="tel" value="${esc(r?.telefoon||'')}" autocomplete="off" />
 
     <div class="section-label">Kart type</div>
     <div class="r-kart-keuze">
