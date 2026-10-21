@@ -20,7 +20,7 @@
 
     /* ── Nav ── */
     .nav{background:#111827;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
-    .nav-logo{display:flex;align-items:center;gap:14px}
+    .nav-logo{display:flex;align-items:center;gap:14px;height:100%}
     .nav-divider{width:1px;height:28px;background:#374151;margin:0 4px}
     .nav-right{display:flex;align-items:center;gap:12px;position:relative}
     .nav-user-btn{display:flex;align-items:center;gap:8px;background:#1f2937;border:1.5px solid #374151;border-radius:8px;padding:6px 12px;cursor:pointer;color:#d1d5db;font-size:13px;font-family:inherit}
@@ -37,9 +37,17 @@
     .dropdown-item.danger{color:#f87171}
 
     /* ── Tab bar ── */
-    .tab-bar{background:#111827;border-bottom:1px solid #374151;display:flex;position:sticky;top:54px;z-index:99}
-    .tab-btn{flex:1;padding:12px 8px;text-align:center;font-weight:600;font-size:13px;color:#9ca3af;border:none;border-bottom:2px solid transparent;background:transparent;cursor:pointer;margin-bottom:-1px;transition:color .15s;font-family:inherit}
+    .nav-tabs{display:flex;height:100%}
+    .tab-btn{display:flex;align-items:center;padding:0 18px;height:100%;font-weight:600;font-size:13px;color:#9ca3af;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:color .15s;font-family:inherit}
+    .tab-btn:hover{color:#d1d5db}
     .tab-btn.on{color:#fff;border-bottom-color:#dc2626}
+    .mobile-tab-bar{display:none;background:#111827;border-bottom:1px solid #374151;position:sticky;top:54px;z-index:99}
+    .mobile-tab{flex:1;padding:12px 8px;text-align:center;font-weight:600;font-size:13px;color:#9ca3af;border:none;border-bottom:2px solid transparent;background:transparent;cursor:pointer;margin-bottom:-1px;font-family:inherit}
+    .mobile-tab.on{color:#fff;border-bottom-color:#dc2626}
+    @media(max-width:768px){
+      .nav-tabs,.nav-divider{display:none!important}
+      .mobile-tab-bar{display:flex}
+    }
     .tab-panel{display:none}
     .tab-panel.on{display:block}
 
@@ -211,8 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const isRefresh = performance.getEntriesByType('navigation')[0]?.type === 'reload';
   const tab = isRefresh ? localStorage.getItem('dfk_ev_tab') : 'evenementen';
   if (tab && tab !== 'evenementen') {
-    document.querySelectorAll('#dfk-root .tab-btn').forEach(function(b, i) {
-      b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1);
+    document.querySelectorAll('#dfk-root .tab-btn, #dfk-root .mobile-tab').forEach(function(b) {
+      b.classList.toggle('on', b.dataset.tab === tab);
     });
     var evEl = document.getElementById('tab-evenementen');
     var inEl = document.getElementById('tab-inschrijvingen');
@@ -229,6 +237,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="nav-logo">
       <img src="logos/dfk-logo.png" alt="DFK Logo" style="height:38px; width:auto;" />
       <div class="nav-divider"></div>
+      <div class="nav-tabs">
+        <button class="tab-btn on" data-tab="evenementen" onclick="switchTab('evenementen')">Evenementen</button>
+        <button class="tab-btn" data-tab="inschrijvingen" onclick="switchTab('inschrijvingen')">Mijn Inschrijvingen</button>
+      </div>
     </div>
     <div class="nav-right">
       <button class="nav-user-btn" onclick="toggleDropdown()">
@@ -245,9 +257,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </nav>
 
-  <div class="tab-bar">
-    <button class="tab-btn on" onclick="switchTab('evenementen')">Evenementen</button>
-    <button class="tab-btn" onclick="switchTab('inschrijvingen')">Mijn Inschrijvingen</button>
+  <div class="mobile-tab-bar">
+    <button class="mobile-tab on" data-tab="evenementen" onclick="switchTab('evenementen')">Evenementen</button>
+    <button class="mobile-tab" data-tab="inschrijvingen" onclick="switchTab('inschrijvingen')">Mijn Inschrijvingen</button>
   </div>
 
   <div id="tab-evenementen" class="tab-panel on">
@@ -746,8 +758,8 @@ document.addEventListener('click', e => {
 
 // ── Tabs ─────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('#dfk-root .tab-btn').forEach((b, i) =>
-    b.classList.toggle('on', tab === 'evenementen' ? i === 0 : i === 1));
+  document.querySelectorAll('#dfk-root .tab-btn, #dfk-root .mobile-tab').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
   document.getElementById('tab-evenementen').classList.toggle('on', tab === 'evenementen');
   document.getElementById('tab-inschrijvingen').classList.toggle('on', tab === 'inschrijvingen');
   if (tab === 'inschrijvingen') {
