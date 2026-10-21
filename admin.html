@@ -567,6 +567,18 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
+  <!-- ── Bevestig modal (vervangt browser confirm) ── -->
+  <div id="bev-backdrop" class="ai-backdrop" onclick="sluitBevModal()">
+    <div class="ai-modal" onclick="event.stopPropagation()" style="border-top-color:#dc2626;">
+      <div class="ai-titel" id="bev-titel"></div>
+      <p id="bev-tekst" style="font-size:14px;color:#374151;margin:0 0 1.4rem;line-height:1.5;white-space:pre-line;"></p>
+      <div class="ai-footer">
+        <button class="ai-btn" onclick="sluitBevModal()">Annuleren</button>
+        <button class="ai-btn primary" id="bev-ok-btn" onclick="_bevOk()">Verwijderen</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ── Event formulier overlay ── -->
   <div id="event-overlay" class="event-overlay">
@@ -1978,9 +1990,36 @@ async function toggleWeekendZichtbaar(wid) {
   renderEvents();
 }
 
+let _bevCallback = null;
+function toonBevModal(titel, tekst, okLabel, callback) {
+  _bevCallback = callback;
+  document.getElementById('bev-titel').textContent = titel;
+  document.getElementById('bev-tekst').textContent = tekst;
+  document.getElementById('bev-ok-btn').textContent = okLabel;
+  document.getElementById('bev-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function sluitBevModal() {
+  _bevCallback = null;
+  document.getElementById('bev-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function _bevOk() {
+  const cb = _bevCallback;
+  sluitBevModal();
+  if (cb) cb();
+}
+
 async function deleteEvent(id) {
   if (!document.body.classList.contains('kan-evenementen')) return;
-  if (!confirm('Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.')) return;
+  toonBevModal(
+    'Evenement verwijderen',
+    'Dit evenement verwijderen? Alle inschrijvingen gaan ook verloren.',
+    'Verwijderen',
+    () => _deleteEventBevestigd(id)
+  );
+}
+async function _deleteEventBevestigd(id) {
   const deletedEv = _allEvents.find(e => e.id === id);
   const { error } = await _supabase.from('evenementen').delete().eq('id', id);
   if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
@@ -2926,26 +2965,33 @@ async function deleteRijder(id) {
   const isPrimary = !r?.account_id || r.account_id === id;
 
   if (isPrimary) {
-    if (!confirm(`"${naam}" volledig verwijderen?\n\nDit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.`)) return;
-    // Verwijder ALLE profielen gekoppeld aan dit account (op account_id én op id),
-    // anders blokkeert een eventueel dubbel profiel de FK-constraint op auth.users
-    await _supabase.from('profiles').delete().eq('account_id', id);
-    await _supabase.from('profiles').delete().eq('id', id);
-    // Dan het auth-account verwijderen
-    const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
-    // Altijd lijst verversen, ook bij fout (data kan al deels verwijderd zijn)
-    await loadRijders();
-    const inCrewA = document.getElementById('panel-crew').classList.contains('on');
-    if (inCrewA) cancelCrewEdit(); else cancelRijderEdit();
-    if (rpcErr) { showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red'); return; }
+    toonBevModal(
+      `"${naam}" verwijderen?`,
+      'Dit verwijdert zowel het profiel als het inlogaccount. Dit kan niet ongedaan gemaakt worden.',
+      'Verwijderen',
+      async () => {
+        await _supabase.from('profiles').delete().eq('account_id', id);
+        await _supabase.from('profiles').delete().eq('id', id);
+        const { error: rpcErr } = await _supabase.rpc('delete_user_account', { target_user_id: id });
+        await loadRijders();
+        const inCrewA = document.getElementById('panel-crew').classList.contains('on');
+        if (inCrewA) cancelCrewEdit(); else cancelRijderEdit();
+        if (rpcErr) { showToast('Account verwijderen mislukt: ' + rpcErr.message, 'red'); return; }
+      }
+    );
   } else {
-    if (!confirm(`"${naam}" verwijderen?\n\nDit verwijdert alleen dit rijdersprofiel, niet het inlogaccount.`)) return;
-    const { error } = await _supabase.from('profiles').delete().eq('id', id);
-    // Altijd lijst verversen, ook bij fout
-    await loadRijders();
-    const inCrewB = document.getElementById('panel-crew').classList.contains('on');
-    if (inCrewB) cancelCrewEdit(); else cancelRijderEdit();
-    if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+    toonBevModal(
+      `"${naam}" verwijderen?`,
+      'Dit verwijdert alleen dit rijdersprofiel, niet het inlogaccount.',
+      'Verwijderen',
+      async () => {
+        const { error } = await _supabase.from('profiles').delete().eq('id', id);
+        await loadRijders();
+        const inCrewB = document.getElementById('panel-crew').classList.contains('on');
+        if (inCrewB) cancelCrewEdit(); else cancelRijderEdit();
+        if (error) { showToast('Verwijderen mislukt: ' + error.message, 'red'); return; }
+      }
+    );
   }
 
   showToast(`${naam} verwijderd`, 'yellow');
@@ -3131,17 +3177,22 @@ function aiKlasseGewijzigd() {
 function adminUitschrijvenBtn(btn) { adminUitschrijven(btn.dataset.id, btn.dataset.naam); }
 
 async function adminUitschrijven(inschrijvingId, naam) {
-  if (!confirm(`${naam} uitschrijven voor dit event?`)) return;
-  const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
-  if (error) { showToast('Fout: ' + error.message, 'red'); return; }
-  // Update lokale state
-  _inschrData = _inschrData.filter(r => r.id !== inschrijvingId);
-  if (_inschrEvent) {
-    _inschrijvingen[_inschrEvent.id] = Math.max(0, (_inschrijvingen[_inschrEvent.id] || 1) - 1);
-  }
-  _renderInschrFilters();
-  _renderInschrGrid();
-  renderEvents();
+  toonBevModal(
+    `${naam} uitschrijven?`,
+    'Deze rijder wordt uitgeschreven voor dit event.',
+    'Uitschrijven',
+    async () => {
+      const { error } = await _supabase.from('inschrijvingen').delete().eq('id', inschrijvingId);
+      if (error) { showToast('Fout: ' + error.message, 'red'); return; }
+      _inschrData = _inschrData.filter(r => r.id !== inschrijvingId);
+      if (_inschrEvent) {
+        _inschrijvingen[_inschrEvent.id] = Math.max(0, (_inschrijvingen[_inschrEvent.id] || 1) - 1);
+      }
+      _renderInschrFilters();
+      _renderInschrGrid();
+      renderEvents();
+    }
+  );
 }
 
 async function bevestigAdminInschrijving() {
