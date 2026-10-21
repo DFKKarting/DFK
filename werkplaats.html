@@ -165,6 +165,11 @@
 <!-- PANEEL: LADEN VRACHTWAGEN -->
 <div class="tab-panel on" id="panel-laden">
 
+  <div class="sectie-rij">
+    <div class="sectie-titel">Laadlijst</div>
+    <button class="pdf-btn" id="pdf-btn" style="display:none;" onclick="drukAfAlsPDF()">📄 PDF afdrukken</button>
+  </div>
+
   <div class="wk-selector">
     <div id="wk-huidig-bar" style="display:none;" class="wk-huidig" onclick="toggleWkLijst()">
       <div style="flex:1;">
@@ -178,11 +183,6 @@
         <div style="color:#9ca3af;font-size:13px;grid-column:1/-1;"><span class="spinner"></span> Weekenden laden...</div>
       </div>
     </div>
-  </div>
-
-  <div class="sectie-rij">
-    <div class="sectie-titel">Laadlijst</div>
-    <button class="pdf-btn" id="pdf-btn" style="display:none;" onclick="drukAfAlsPDF()">📄 PDF afdrukken</button>
   </div>
   <div class="laad-teller" id="laad-teller"></div>
 
