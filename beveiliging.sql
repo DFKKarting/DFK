@@ -7,6 +7,9 @@
 --  `rol` en `rechten`. Daardoor kon iedereen die een account
 --  aanmaakt zichzelf admin maken via de API.
 --
+--  Daarnaast mag office geen crewprofielen of -accounts meer
+--  verwijderen (alleen rijders).
+--
 --  Oplossing: een trigger die rol, rechten en account_id
 --  bewaakt. Alleen een gebruiker met rol 'admin' mag rollen
 --  en rechten wijzigen (office dus niet). De SQL Editor, het
@@ -100,6 +103,44 @@ CREATE TRIGGER bescherm_profiel_rechten
 
 ALTER FUNCTION public.is_admin()      SET search_path = public;
 ALTER FUNCTION public.is_werkplaats() SET search_path = public;
+
+
+-- ── 5. Profielen verwijderen: office enkel rijders ────
+--  Anders kon office het profiel van een admin (of ander
+--  crewlid) verwijderen en zo diens rechten afnemen.
+
+DROP POLICY IF EXISTS "Admin verwijdert profielen" ON public.profiles;
+
+CREATE POLICY "Admin verwijdert profielen"
+  ON public.profiles FOR DELETE
+  USING (public.is_hoofdadmin() OR (public.is_admin() AND rol = 'rijder'));
+
+
+-- ── 6. Accounts verwijderen: office enkel rijders ─────
+
+CREATE OR REPLACE FUNCTION public.delete_user_account(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Geen toegang';
+  END IF;
+
+  -- Office mag geen account van admin, office of werkplaats verwijderen
+  IF NOT public.is_hoofdadmin() AND EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = target_user_id AND rol <> 'rijder'
+  ) THEN
+    RAISE EXCEPTION 'Alleen een admin kan crewaccounts verwijderen';
+  END IF;
+
+  -- Verwijder het auth account (cascadeert naar profiles via FK)
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$;
 
 
 -- ══════════════════════════════════════════════════════
