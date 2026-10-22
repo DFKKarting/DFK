@@ -743,12 +743,13 @@ const RECHTEN_OPTIES = [
   { id: 'inschrijvingen', label: 'Inschrijvingen & PDFs beheren' },
   { id: 'rijders',        label: 'Rijders bekijken & aanpassen' },
   { id: 'werkplaats',     label: 'Werkplaats toegang' },
-  { id: 'crew',           label: 'Crew & rollen beheren' },
+  { id: 'crew',           label: 'Crew & rollen beheren (enkel admin)' },
 ];
 
 function _pasRechtenToe(profile) {
   const isAdmin = profile.rol === 'admin';
-  const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []);
+  // Rollen beheren kan enkel een admin (afgedwongen in beveiliging.sql)
+  const actief  = isAdmin ? RECHTEN_OPTIES.map(r => r.id) : (profile.rechten || []).filter(r => r !== 'crew');
   actief.forEach(r => document.body.classList.add('kan-' + r));
 
   if (isAdmin) {

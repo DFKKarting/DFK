@@ -8,8 +8,9 @@
 --  aanmaakt zichzelf admin maken via de API.
 --
 --  Oplossing: een trigger die rol, rechten en account_id
---  bewaakt. Alleen admin/office (is_admin()) mag die
---  wijzigen. De SQL Editor, het Supabase-dashboard en
+--  bewaakt. Alleen een gebruiker met rol 'admin' mag rollen
+--  en rechten wijzigen (office dus niet). De SQL Editor, het
+--  Supabase-dashboard en
 --  SECURITY DEFINER-functies (zoals handle_new_user en
 --  maak_extra_rijder) blijven gewoon werken.
 --
@@ -17,7 +18,23 @@
 -- ══════════════════════════════════════════════════════
 
 
--- ── 1. Trigger-functie ────────────────────────────────
+-- ── 1. Is de huidige gebruiker echt admin (niet office)? ──
+
+CREATE OR REPLACE FUNCTION public.is_hoofdadmin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+      AND rol = 'admin'
+  );
+$$;
+
+
+-- ── 2. Trigger-functie ────────────────────────────────
 --  SECURITY INVOKER (standaard): zo is current_user de rol van
 --  het API-verzoek ('authenticated' / 'anon'). Verzoeken met een
 --  andere rol (postgres, service_role, security-definer-functies)
@@ -34,16 +51,17 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Admin en office mogen rollen en rechten beheren
-  IF public.is_admin() THEN
+  -- Alleen admin mag rollen en rechten beheren
+  IF public.is_hoofdadmin() THEN
     RETURN NEW;
   END IF;
 
   IF TG_OP = 'INSERT' THEN
-    -- Nieuw profiel door een gewone gebruiker: altijd rijder zonder extra rechten
+    -- Nieuw profiel door office of een gewone gebruiker: altijd rijder zonder extra rechten
     NEW.rol     := 'rijder';
     NEW.rechten := '{}';
-    IF NEW.account_id IS NOT NULL AND NEW.account_id <> auth.uid() THEN
+    IF NOT public.is_admin()
+       AND NEW.account_id IS NOT NULL AND NEW.account_id <> auth.uid() THEN
       RAISE EXCEPTION 'Je kunt geen profiel aan een ander account koppelen'
         USING ERRCODE = '42501';
     END IF;
@@ -53,11 +71,12 @@ BEGIN
   -- UPDATE
   IF NEW.rol IS DISTINCT FROM OLD.rol
      OR NEW.rechten IS DISTINCT FROM OLD.rechten THEN
-    RAISE EXCEPTION 'Je mag je rol of rechten niet zelf wijzigen'
+    RAISE EXCEPTION 'Alleen een admin kan rollen of rechten wijzigen'
       USING ERRCODE = '42501';
   END IF;
 
-  IF NEW.account_id IS DISTINCT FROM OLD.account_id
+  IF NOT public.is_admin()
+     AND NEW.account_id IS DISTINCT FROM OLD.account_id
      AND NEW.account_id IS DISTINCT FROM auth.uid() THEN
     RAISE EXCEPTION 'Je kunt geen profiel aan een ander account koppelen'
       USING ERRCODE = '42501';
@@ -68,7 +87,7 @@ END;
 $$;
 
 
--- ── 2. Trigger koppelen aan profiles ──────────────────
+-- ── 3. Trigger koppelen aan profiles ──────────────────
 
 DROP TRIGGER IF EXISTS bescherm_profiel_rechten ON public.profiles;
 
@@ -77,7 +96,7 @@ CREATE TRIGGER bescherm_profiel_rechten
   FOR EACH ROW EXECUTE FUNCTION public.bescherm_profiel_rechten();
 
 
--- ── 3. Hulpfuncties: vaste search_path (Supabase-advies) ──
+-- ── 4. Hulpfuncties: vaste search_path (Supabase-advies) ──
 
 ALTER FUNCTION public.is_admin()      SET search_path = public;
 ALTER FUNCTION public.is_werkplaats() SET search_path = public;
