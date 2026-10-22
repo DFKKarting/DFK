@@ -4,6 +4,9 @@
 //  (te vinden in Supabase → Project Settings → API)
 // ─────────────────────────────────────────────
 
+// Niet laten insluiten in een iframe van een andere site (clickjacking)
+if (window.top !== window.self) window.top.location = window.location.href;
+
 const SUPABASE_URL  = 'https://zkcowflzazhihdmhcaeo.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_7kztQEoAdZvSNNnhaazKyw_ftT16HvZ';
 

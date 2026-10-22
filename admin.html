@@ -867,7 +867,7 @@ function renderEvRow(ev, isPast) {
     <div class="ev-info">
       <div class="ev-name">${esc(ev.naam)}</div>
       <div class="ev-meta">${esc(ev.circuit)}${ev.type ? ' · ' + esc(ev.type) : ''}</div>
-      ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${k}</span>`).join('')}</div>` : ''}
+      ${klassen.length ? `<div class="ev-klassen">${klassen.map(k => `<span class="ev-klasse-tag">${esc(k)}</span>`).join('')}</div>` : ''}
       ${isVandaag ? `<div class="ev-meta" style="color:#4cff4c;font-weight:700;">Bezig</div>` : ''}
       ${deadlineTxt ? `<div class="ev-deadline${deadlinePassed ? ' closed' : ''}"${!deadlinePassed ? ' style="color:#16a34a;font-weight:600;"' : ''}>${deadlineTxt}</div>` : ''}
     </div>
@@ -914,7 +914,7 @@ function renderWeekendGroep(wid, evs, isPast) {
       <div class="ev-month">${maand}</div>
     </div>
     <div class="ev-info" style="flex:1; cursor:pointer;" onclick="openWeekendDetail('${wid}')">
-      <div class="ev-name">${naam}</div>
+      <div class="ev-name">${esc(naam)}</div>
       <div class="ev-meta">${datumStr} · ${evs.length} dag${evs.length !== 1 ? 'en' : ''}</div>
       ${totInschr > 0 ? `<div class="ev-inschrijvingen">👥 ${totInschr} inschrijvingen</div>` : ''}
     </div>
@@ -1685,7 +1685,7 @@ function bewerkWeekendNaam(wid) {
   const w   = _allWeekenden.find(w => w.id === wid);
   if (!rij || !w) return;
   rij.innerHTML = `
-    <input class="wd-naam-input" id="wd-naam-input" value="${w.naam}" maxlength="120" />
+    <input class="wd-naam-input" id="wd-naam-input" value="${esc(w.naam)}" maxlength="120" />
     <button class="wd-naam-opslaan" onclick="slaWeekendNaamOp('${wid}')">✓ Opslaan</button>
     <button class="wd-naam-annuleer" onclick="annuleerWeekendNaam('${wid}')">✕</button>`;
   const inp = document.getElementById('wd-naam-input');
@@ -1715,7 +1715,7 @@ async function slaWeekendNaamOp(wid) {
   // Herstel de titel-rij
   const rij = document.querySelector('.wd-titel-rij');
   if (rij) rij.innerHTML = `
-    <div class="wd-titel" id="wd-naam-display">${naam}</div>
+    <div class="wd-titel" id="wd-naam-display">${esc(naam)}</div>
     <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
   renderEvents();
 }
@@ -1725,7 +1725,7 @@ function annuleerWeekendNaam(wid) {
   const rij = document.querySelector('.wd-titel-rij');
   if (!rij || !w) return;
   rij.innerHTML = `
-    <div class="wd-titel" id="wd-naam-display">${w.naam}</div>
+    <div class="wd-titel" id="wd-naam-display">${esc(w.naam)}</div>
     <button class="wd-edit-btn vereist-evenementen" onclick="bewerkWeekendNaam('${wid}')" title="Naam aanpassen">✎</button>`;
 }
 
@@ -2206,7 +2206,7 @@ function renderCircuitSelect(selected) {
   const sel = document.getElementById('f-circuit');
   const cur = selected !== undefined ? selected : sel.value;
   sel.innerHTML = '<option value="">Selecteer circuit...</option>' +
-    circuits.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+    circuits.map(c => `<option value="${esc(c)}"${c===cur?' selected':''}>${esc(c)}</option>`).join('');
   if (cur !== undefined) sel.value = cur;
   const delBtn = document.getElementById('circuit-del-btn');
   if (delBtn) delBtn.style.display = cur ? 'inline-flex' : 'none';

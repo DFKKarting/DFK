@@ -569,7 +569,7 @@ function renderEvents() {
     // ── Klassen ──
     const klassen = Array.isArray(ev.klassen) ? ev.klassen : [];
     const klassenHtml = klassen.length
-      ? klassen.map(k => `<span class="class-tag">${k}</span>`).join('')
+      ? klassen.map(k => `<span class="class-tag">${esc(k)}</span>`).join('')
       : '<span class="class-tag">Alle klassen</span>';
 
     // ── Inschrijf-knop ──
@@ -1728,12 +1728,12 @@ function buildKlasseKeuzeHtml(klassen, startnummers) {
       ${klassen.map(k => {
         const nr  = startnummers?.[k];
         const isOn = k === _selectedKlasse;
-        return `<div class="chk-item${isOn?' on':''}" data-klasse="${k}"
+        return `<div class="chk-item${isOn?' on':''}" data-klasse="${esc(k)}"
                   onclick="selectKlasseVoorEvent(this)"
                   style="justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="chk-box"><span class="chk-mark">✓</span></div>
-            <span class="chk-label">${k}</span>
+            <span class="chk-label">${esc(k)}</span>
           </div>
           ${nr ? `<span style="font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#fff;flex-shrink:0;margin-left:8px;">#${nr}</span>` : ''}
         </div>`;

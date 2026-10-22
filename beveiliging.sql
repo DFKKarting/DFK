@@ -9,7 +9,8 @@
 --
 --  Daarnaast mag office geen crewprofielen of -accounts meer
 --  verwijderen (alleen rijders), en controleert de database
---  bij in- en uitschrijven de deadline en zichtbaarheid.
+--  bij in- en uitschrijven de deadline en zichtbaarheid, met
+--  maximale lengtes en max. 10 extra rijders per account.
 --
 --  Oplossing: een trigger die rol, rechten en account_id
 --  bewaakt. Alleen een gebruiker met rol 'admin' mag rollen
@@ -190,6 +191,57 @@ DROP TRIGGER IF EXISTS controleer_inschrijving ON public.inschrijvingen;
 CREATE TRIGGER controleer_inschrijving
   BEFORE INSERT OR UPDATE OR DELETE ON public.inschrijvingen
   FOR EACH ROW EXECUTE FUNCTION public.controleer_inschrijving();
+
+
+-- ── 8. Maximale lengtes (tegen misbruik met enorme teksten) ──
+--  NOT VALID: bestaande rijen worden niet gecontroleerd, enkel
+--  nieuwe en gewijzigde. Zo kan dit nooit falen op oude data.
+
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_lengtes_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_lengtes_check CHECK (
+  coalesce(length(voornaam), 0)      <= 100 AND
+  coalesce(length(naam), 0)          <= 100 AND
+  coalesce(length(email), 0)         <= 254 AND
+  coalesce(length(telefoon), 0)      <= 40  AND
+  coalesce(length(benzine), 0)       <= 60  AND
+  coalesce(length(huurkart_type), 0) <= 60  AND
+  coalesce(cardinality(klassen), 0)          <= 20 AND
+  coalesce(cardinality(kampioenschappen), 0) <= 20 AND
+  coalesce(cardinality(uitrusting), 0)       <= 20 AND
+  coalesce(cardinality(rechten), 0)          <= 10 AND
+  length(coalesce(startnummers, '{}'::jsonb)::text) <= 1000
+) NOT VALID;
+
+ALTER TABLE public.inschrijvingen DROP CONSTRAINT IF EXISTS inschrijvingen_lengtes_check;
+ALTER TABLE public.inschrijvingen ADD CONSTRAINT inschrijvingen_lengtes_check CHECK (
+  coalesce(length(klasse), 0)    <= 60 AND
+  coalesce(length(opmerking), 0) <= 1000
+) NOT VALID;
+
+
+-- ── 9. Extra rijders: maximaal 10 per account ─────────
+
+CREATE OR REPLACE FUNCTION public.maak_extra_rijder(p_voornaam TEXT, p_naam TEXT, p_kart_type TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Niet ingelogd';
+  END IF;
+  IF (SELECT count(*) FROM profiles WHERE account_id = auth.uid() AND id <> auth.uid()) >= 10 THEN
+    RAISE EXCEPTION 'Maximaal 10 extra rijders per account';
+  END IF;
+  v_id := gen_random_uuid();
+  INSERT INTO profiles (id, account_id, voornaam, naam, rol, kart_type)
+  VALUES (v_id, auth.uid(), p_voornaam, p_naam, 'rijder', p_kart_type);
+  RETURN v_id;
+END;
+$$;
 
 
 -- ══════════════════════════════════════════════════════

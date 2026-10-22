@@ -383,9 +383,9 @@ function _kaartHTML(w) {
   const circuit  = evs[0]?.circuit || '';
   const gesel    = _geselecteerdWid === w.id;
   return `<div class="event-kaart${gesel ? ' geselecteerd' : ''}" onclick="selecteerWeekend('${w.id}')">
-    <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${w.naam}</div>
+    <div class="event-kaart-naam">${gesel ? '✓ ' : ''}${esc(w.naam)}</div>
     ${datumStr ? `<div class="event-kaart-meta">📅 ${datumStr}</div>` : ''}
-    ${circuit  ? `<div class="event-kaart-meta">📍 ${circuit}</div>` : ''}
+    ${circuit  ? `<div class="event-kaart-meta">📍 ${esc(circuit)}</div>` : ''}
   </div>`;
 }
 

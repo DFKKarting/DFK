@@ -133,6 +133,32 @@ CREATE TABLE IF NOT EXISTS laad_status (
 );
 
 
+-- ── Maximale lengtes (tegen misbruik met enorme teksten) ──
+--  NOT VALID: bestaande rijen worden niet gecontroleerd, enkel
+--  nieuwe en gewijzigde. Zo kan dit nooit falen op oude data.
+
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_lengtes_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_lengtes_check CHECK (
+  coalesce(length(voornaam), 0)      <= 100 AND
+  coalesce(length(naam), 0)          <= 100 AND
+  coalesce(length(email), 0)         <= 254 AND
+  coalesce(length(telefoon), 0)      <= 40  AND
+  coalesce(length(benzine), 0)       <= 60  AND
+  coalesce(length(huurkart_type), 0) <= 60  AND
+  coalesce(cardinality(klassen), 0)          <= 20 AND
+  coalesce(cardinality(kampioenschappen), 0) <= 20 AND
+  coalesce(cardinality(uitrusting), 0)       <= 20 AND
+  coalesce(cardinality(rechten), 0)          <= 10 AND
+  length(coalesce(startnummers, '{}'::jsonb)::text) <= 1000
+) NOT VALID;
+
+ALTER TABLE public.inschrijvingen DROP CONSTRAINT IF EXISTS inschrijvingen_lengtes_check;
+ALTER TABLE public.inschrijvingen ADD CONSTRAINT inschrijvingen_lengtes_check CHECK (
+  coalesce(length(klasse), 0)    <= 60 AND
+  coalesce(length(opmerking), 0) <= 1000
+) NOT VALID;
+
+
 -- ══════════════════════════════════════════════════════
 --  Indexen
 -- ══════════════════════════════════════════════════════
@@ -389,7 +415,7 @@ CREATE POLICY "Admin ziet laad_status"
 --  Functies die de website aanroept (RPC)
 -- ══════════════════════════════════════════════════════
 
--- Extra rijder (sub-rijder) aanmaken onder het eigen account
+-- Extra rijder (sub-rijder) aanmaken onder het eigen account (max. 10)
 CREATE OR REPLACE FUNCTION maak_extra_rijder(p_voornaam TEXT, p_naam TEXT, p_kart_type TEXT)
 RETURNS UUID
 LANGUAGE plpgsql
@@ -401,6 +427,9 @@ DECLARE
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'Niet ingelogd';
+  END IF;
+  IF (SELECT count(*) FROM profiles WHERE account_id = auth.uid() AND id <> auth.uid()) >= 10 THEN
+    RAISE EXCEPTION 'Maximaal 10 extra rijders per account';
   END IF;
   v_id := gen_random_uuid();
   INSERT INTO profiles (id, account_id, voornaam, naam, rol, kart_type)
