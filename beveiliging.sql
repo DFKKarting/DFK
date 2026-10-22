@@ -244,6 +244,16 @@ END;
 $$;
 
 
+-- ── 10. Extra rijders enkel via maak_extra_rijder ─────
+--  Deze policy liet rechtstreeks profielen invoegen met
+--  account_id = jezelf, waardoor de limiet van 10 extra
+--  rijders omzeild kon worden. De site gebruikt hiervoor
+--  enkel de functie maak_extra_rijder, dus de policy is
+--  niet nodig.
+
+DROP POLICY IF EXISTS "Gebruiker voegt extra rijder toe" ON public.profiles;
+
+
 -- ══════════════════════════════════════════════════════
 --  Controle (los uitvoeren na de fix)
 -- ══════════════════════════════════════════════════════

@@ -285,9 +285,8 @@ CREATE POLICY "Eigen profiel aanpassen"
 CREATE POLICY "Account eigenaar ziet sub-rijders"
   ON profiles FOR SELECT USING (account_id = auth.uid());
 
-CREATE POLICY "Gebruiker voegt extra rijder toe"
-  ON profiles FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL AND account_id = auth.uid());
+-- Extra rijders worden enkel aangemaakt via maak_extra_rijder()
+-- (geen rechtstreekse INSERT, zodat de limiet van 10 geldt)
 
 CREATE POLICY "Account beheerder past sub-rijder aan"
   ON profiles FOR UPDATE
