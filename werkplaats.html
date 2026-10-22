@@ -617,9 +617,9 @@ function renderLaadlijst() {
     const klasseStr = entry.klassen.length
       ? entry.klassen.map(k => {
           const nr = p.startnummers?.[k];
-          return k + (nr ? ` #${nr}` : '');
+          return esc(k) + (nr ? ` #${esc(nr)}` : '');
         }).join(' · ')
-      : (isHuur ? (p.huurkart_type || '—') : '—');
+      : (isHuur ? esc(p.huurkart_type || '—') : '—');
 
     const evStr = _aantalEvents > 1
       ? `<div class="rij-events">${entry.events.join(' · ')}</div>`

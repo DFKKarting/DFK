@@ -3103,8 +3103,8 @@ function renderAiRijders(zoek) {
     const subTxt     = alIn ? 'Al ingeschreven' : ((r.klassen && r.klassen.length) ? r.klassen.join(' · ') : (r.huurkart_type || ''));
     const style      = alIn ? 'opacity:0.4;pointer-events:none;' : '';
     return `<div class="ai-rijder-opt${isSelected ? ' selected' : ''}" style="${style}" onclick="selecteerAiRijder('${r.id}')">
-      ${naam}
-      <div class="ai-rijder-sub">${subTxt}</div>
+      ${esc(naam)}
+      <div class="ai-rijder-sub">${esc(subTxt)}</div>
     </div>`;
   }).join('');
 }
@@ -3411,7 +3411,7 @@ function _renderInschrFilters() {
 
   const klasseOpties = klassen.length
     ? `<optgroup label="── Klasse ──">${klassen.map(k =>
-        `<option value="k:${k}"${_inschrFilter==='k:'+k?' selected':''}>${k}</option>`
+        `<option value="k:${esc(k)}"${_inschrFilter==='k:'+k?' selected':''}>${esc(k)}</option>`
       ).join('')}</optgroup>`
     : '';
 
