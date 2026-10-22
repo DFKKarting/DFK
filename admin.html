@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>DFK – Admin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js" integrity="sha384-UagCvVPT5XXA0Hx+nJYUAGBFseHT9zBgpJMSebsAxl9lciTwbT+39j5VfRjdP5Tp" crossorigin="anonymous"></script>
   <script src="supabase.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3" crossorigin="anonymous"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#f3f4f6;font-family:'Inter',system-ui,sans-serif}
@@ -2622,12 +2622,12 @@ function renderRijders() {
       <option value="huur">Huurkart</option>`;
     if (alleKlassen.length) {
       opties += `<optgroup label="── Klasse ──">` +
-        alleKlassen.map(k => `<option value="k:${k}">` + k + `</option>`).join('') +
+        alleKlassen.map(k => `<option value="k:${esc(k)}">` + esc(k) + `</option>`).join('') +
         `</optgroup>`;
     }
     if (alleHuurTypes.length) {
       opties += `<optgroup label="── Huurkart type ──">` +
-        alleHuurTypes.map(t => `<option value="h:${t}">` + t + `</option>`).join('') +
+        alleHuurTypes.map(t => `<option value="h:${esc(t)}">` + esc(t) + `</option>`).join('') +
         `</optgroup>`;
     }
     filterSel.innerHTML = opties;
@@ -2734,7 +2734,7 @@ function toonRijderDetail(id) {
   document.getElementById('rijder-overlay-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:2rem;">
       <div style="width:56px;height:56px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#fff;flex-shrink:0;">
-        ${((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?'}
+        ${esc(((r.voornaam?.[0]||'')+(r.naam?.[0]||'')).toUpperCase()||'?')}
       </div>
       <div>
         <div style="font-weight:700;font-size:22px;color:#111827;letter-spacing:0.5px;">${esc(naam)}</div>
@@ -3145,7 +3145,7 @@ function selecteerAiRijder(rijderId) {
   } else {
     // Meerdere klassen: toon select, eerste automatisch geselecteerd
     const sel = document.getElementById('ai-klasse');
-    sel.innerHTML = klassen.map(k => `<option value="${k}">${k}</option>`).join('');
+    sel.innerHTML = klassen.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
     _aiKlasse  = klassen[0];
     _aiStartnr = p.startnummers?.[_aiKlasse] ?? null;
     document.getElementById('ai-klasse-wrap').style.display = 'block';
@@ -3593,13 +3593,13 @@ function _vulAccountForm() {
 
 function _crewAccountFormHTML(r) {
   return `
-    <div class="page-title" style="margin-bottom:4px;">${r.voornaam||''} ${r.naam||''}</div>
-    <p class="page-sub" style="margin-bottom:1.5rem;">${r.email||''}</p>
+    <div class="page-title" style="margin-bottom:4px;">${esc(r.voornaam)} ${esc(r.naam)}</div>
+    <p class="page-sub" style="margin-bottom:1.5rem;">${esc(r.email)}</p>
 
     <div class="section-label">Naam</div>
     <div class="two-col">
-      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${r.voornaam||''}" /></div>
-      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${r.naam||''}" /></div>
+      <div><label class="field-label">Voornaam</label><input class="field-input" id="r-voornaam" value="${esc(r.voornaam)}" /></div>
+      <div><label class="field-label">Naam</label><input class="field-input" id="r-naam" value="${esc(r.naam)}" /></div>
     </div>
 
     <div class="section-label" style="margin-top:1.25rem;">Wachtwoord wijzigen</div>
@@ -3629,7 +3629,7 @@ async function slaCrewAccountOp(id) {
   if (profErr) { showToast('Opslaan mislukt: ' + profErr.message, 'red'); return; }
 
   if (ww || ww2) {
-    if (ww.length < 6) { showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+    if (ww.length < 8) { showToast('Wachtwoord moet minimaal 8 tekens zijn', 'red'); return; }
     if (ww !== ww2) { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
     const { error: wwErr } = await _supabase.auth.updateUser({ password: ww });
     if (wwErr) { showToast('Wachtwoord wijzigen mislukt: ' + wwErr.message, 'red'); return; }

@@ -518,6 +518,54 @@ CREATE TRIGGER bescherm_profiel_rechten
   FOR EACH ROW EXECUTE FUNCTION bescherm_profiel_rechten();
 
 
+-- Inschrijven/uitschrijven: deadline en zichtbaarheid ──
+--  Rijders kunnen zich enkel in- of uitschrijven voor een
+--  zichtbaar evenement dat nog niet begonnen is en waarvan de
+--  deadline nog niet voorbij is. Admin/office mag altijd.
+
+CREATE OR REPLACE FUNCTION public.controleer_inschrijving()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  v_event_id UUID := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;
+  v_ok       BOOLEAN;
+BEGIN
+  -- Alleen verzoeken via de website/API controleren
+  IF current_user NOT IN ('authenticated', 'anon') THEN
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  END IF;
+
+  IF public.is_admin() THEN
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  END IF;
+
+  SELECT
+    e.datum > (now() AT TIME ZONE 'Europe/Brussels')::date
+    AND (e.deadline IS NULL OR e.deadline > now())
+    AND (e.weekend_id IS NULL OR w.zichtbaar = true)
+  INTO v_ok
+  FROM evenementen e
+  LEFT JOIN weekenden w ON w.id = e.weekend_id
+  WHERE e.id = v_event_id;
+
+  IF v_ok IS NOT TRUE THEN
+    RAISE EXCEPTION 'Inschrijvingen voor dit evenement zijn gesloten'
+      USING ERRCODE = '42501';
+  END IF;
+
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS controleer_inschrijving ON public.inschrijvingen;
+
+CREATE TRIGGER controleer_inschrijving
+  BEFORE INSERT OR UPDATE OR DELETE ON public.inschrijvingen
+  FOR EACH ROW EXECUTE FUNCTION public.controleer_inschrijving();
+
+
 -- ══════════════════════════════════════════════════════
 --  Realtime
 --  De website luistert naar wijzigingen in deze tabellen.

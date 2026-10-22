@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="DFK" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>DFK – Werkplaats</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js" integrity="sha384-UagCvVPT5XXA0Hx+nJYUAGBFseHT9zBgpJMSebsAxl9lciTwbT+39j5VfRjdP5Tp" crossorigin="anonymous"></script>
   <script src="supabase.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3" crossorigin="anonymous"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{background:#f3f4f6;min-height:100vh;font-family:'Inter',system-ui,sans-serif}
@@ -952,7 +952,7 @@ async function slaWerkplaatsAccountOp(id) {
   if (profErr) { showToast('Opslaan mislukt: ' + profErr.message, 'red'); return; }
 
   if (ww || ww2) {
-    if (ww.length < 6) { showToast('Wachtwoord moet minimaal 6 tekens zijn', 'red'); return; }
+    if (ww.length < 8) { showToast('Wachtwoord moet minimaal 8 tekens zijn', 'red'); return; }
     if (ww !== ww2)    { showToast('Wachtwoorden komen niet overeen', 'red'); return; }
     const { error: wwErr } = await _supabase.auth.updateUser({ password: ww });
     if (wwErr) { showToast('Wachtwoord wijzigen mislukt: ' + wwErr.message, 'red'); return; }
